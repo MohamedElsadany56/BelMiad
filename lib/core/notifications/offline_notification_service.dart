@@ -1,4 +1,4 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';\nimport 'package:timezone/timezone.dart' as tz;
 
 class OfflineNotificationService {
   OfflineNotificationService(this.plugin);
@@ -10,8 +10,9 @@ class OfflineNotificationService {
   }
 
   Future<void> scheduleDose({required int id, required String patientName, required String medicineName, required DateTime when}) async {
-    await plugin.zonedSchedule(id, '$medicineName for $patientName', 'Medication dose is due', when as dynamic, const NotificationDetails(android: AndroidNotificationDetails('medication', 'Medication reminders', channelDescription: 'Offline medication reminders', importance: Importance.high), iOS: DarwinNotificationDetails()), androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime);
+    await plugin.zonedSchedule(id, '$medicineName for $patientName', 'Medication dose is due', tz.TZDateTime.from(when, tz.local), const NotificationDetails(android: AndroidNotificationDetails('medication', 'Medication reminders', channelDescription: 'Offline medication reminders', importance: Importance.high), iOS: DarwinNotificationDetails()), androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime);
   }
 
   Future<void> cancel(int id) => plugin.cancel(id);
 }
+
