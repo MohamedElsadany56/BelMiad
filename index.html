@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0c1f2b" />
+<title>BelMiad — بالميعاد</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231bc5bd'/%3E%3Cpath d='M18 33h28M32 19v28' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-mark">+</div><div><strong>BelMiad</strong><span>بالميعاد</span></div></div>
+    <div class="profile-card"><div class="avatar">م</div><div><small>Current patient</small><strong id="patientName">Mother</strong></div><button class="icon-btn" id="switchPatient" aria-label="Switch patient">⌄</button></div>
+    <nav class="nav"><button class="nav-item active" data-view="dashboard"><span>⌂</span>Dashboard</button><button class="nav-item" data-view="medicines"><span>✚</span>Medicines</button><button class="nav-item" data-view="stock"><span>▣</span>Stock & batches</button><button class="nav-item" data-view="schedule"><span>◷</span>Medicine schedule</button><button class="nav-item" data-view="patients"><span>♙</span>Patients</button><button class="nav-item" data-view="records"><span>⌁</span>Health records</button></nav>
+    <div class="sidebar-bottom"><button class="nav-item" data-view="settings"><span>⚙</span>Settings</button><div class="offline-pill"><i></i>Offline mode</div></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><button class="menu-toggle" id="menuToggle">☰</button><div><p class="eyebrow" id="eyebrow">Monday, 28 September 2026</p><h1 id="pageTitle">Good morning, caregiver</h1></div><div class="top-actions"><button class="ghost-btn" id="languageBtn">عربي</button><button class="round-btn">⌕</button><div class="avatar small">م</div></div></header>
+    <section class="content" id="content"></section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modal"></div></div>
+<script src="app.js"></script>
+</body>
+</html>
