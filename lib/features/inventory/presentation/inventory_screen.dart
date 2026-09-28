@@ -1,52 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:drift/drift.dart' as drift;
 import '../../../app/app_scaffold.dart';
 import '../../../core/providers/database_provider.dart';
 
-final inventoryBatchesProvider = FutureProvider.autoDispose((ref) async {
-  final db = await ref.watch(databaseProvider.future);
-  return db.select(db.inventoryBatches).get();
-});
+final inventoryBatchesProvider = FutureProvider.autoDispose((ref) async { final db = await ref.watch(databaseProvider.future); return db.select(db.inventoryBatches).get(); });
 
-class InventoryScreen extends ConsumerWidget {
-  const InventoryScreen({super.key});
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final batches = ref.watch(inventoryBatchesProvider);
-    return AppScaffold(
-        title: 'Stock & batches',
-        child: batches.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Unable to load stock: $e')),
-          data: (items) =>
-              ListView(padding: const EdgeInsets.all(24), children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('Stock & batches',
-                  style: Theme.of(context).textTheme.headlineMedium),
-              FilledButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add stock'))
-            ]),
-            const SizedBox(height: 18),
-            if (items.isEmpty)
-              const Card(
-                  child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text(
-                          'No stock batches recorded. Medicines can remain active without inventory.'))),
-            ...items.map((batch) => Card(
-                child: ListTile(
-                    leading: const CircleAvatar(
-                        child: Icon(Icons.inventory_2_outlined)),
-                    title: Text(
-                        '${batch.availableQuantityScaled / batch.quantityScale} ${batch.unit}'),
-                    subtitle: Text(
-                        'Purchased ${batch.purchaseDate.toLocal().toString().split(' ').first} · ${batch.expirationDate == null ? 'No expiry' : 'Expires ${batch.expirationDate!.toLocal().toString().split(' ').first}'}'),
-                    trailing:
-                        Text(batch.isDepleted ? 'Depleted' : 'Available')))),
-          ]),
-        ));
-  }
+Future<void> _addBatch(BuildContext context, WidgetRef ref) async {
+  final db = await ref.read(databaseProvider.future); final medicines = await db.select(db.medications).get();
+  if (medicines.isEmpty) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create a medicine first'))); return; }
+  String medicationId = medicines.first.id; final quantity = TextEditingController(); final unit = TextEditingController(text: 'tablets'); final source = TextEditingController(); DateTime? expiry;
+  final saved = await showDialog<bool>(context: context, builder: (_) => StatefulBuilder(builder: (context, setState) => AlertDialog(title: const Text('Add stock batch'), content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [DropdownButtonFormField<String>(value: medicationId, items: medicines.map((m) => DropdownMenuItem(value: m.id, child: Text(m.nameEn))).toList(), onChanged: (v) => setState(() => medicationId = v!), decoration: const InputDecoration(labelText: 'Medicine')), TextField(controller: quantity, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Available quantity')), TextField(controller: unit, decoration: const InputDecoration(labelText: 'Unit')), TextField(controller: source, decoration: const InputDecoration(labelText: 'From / source')), ListTile(title: Text(expiry == null ? 'Expiration date: optional' : 'Expires: ${expiry!.toLocal().toString().split(' ').first}'), trailing: const Icon(Icons.calendar_today), onTap: () async { final picked = await showDatePicker(context: context, firstDate: DateTime.now(), lastDate: DateTime(2100), initialDate: DateTime.now().add(const Duration(days: 30))); if (picked != null) setState(() => expiry = picked); })])), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save'))])));
+  final amount = int.tryParse(quantity.text); if (saved == true && amount != null && amount >= 0) { await db.into(db.inventoryBatches).insert(InventoryBatchesCompanion.insert(id: DateTime.now().microsecondsSinceEpoch.toString(), medicationId: medicationId, availableQuantityScaled: amount * 1000, unit: unit.text.trim().isEmpty ? 'unit' : unit.text.trim(), purchaseDate: DateTime.now(), expirationDate: drift.Value(expiry), source: drift.Value(source.text.trim().isEmpty ? null : source.text.trim()))); ref.invalidate(inventoryBatchesProvider); }
 }
-
+class InventoryScreen extends ConsumerWidget { const InventoryScreen({super.key}); @override Widget build(BuildContext context, WidgetRef ref) { final batches = ref.watch(inventoryBatchesProvider); return AppScaffold(title: 'Stock & batches', child: batches.when(loading: () => const Center(child: CircularProgressIndicator()), error: (e, _) => Center(child: Text('Unable to load stock: $e')), data: (items) => ListView(padding: const EdgeInsets.all(24), children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('Stock & batches', style: Theme.of(context).textTheme.headlineMedium), FilledButton.icon(onPressed: () => _addBatch(context, ref), icon: const Icon(Icons.add), label: const Text('Add stock'))]), const SizedBox(height: 18), if (items.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(24), child: Text('No stock batches recorded. Medicines can remain active without inventory.'))), ...items.map((batch) => Card(child: ListTile(leading: const CircleAvatar(child: Icon(Icons.inventory_2_outlined)), title: Text('${batch.availableQuantityScaled / batch.quantityScale} ${batch.unit}'), subtitle: Text('Purchased ${batch.purchaseDate.toLocal().toString().split(' ').first} · ${batch.expirationDate == null ? 'No expiry' : 'Expires ${batch.expirationDate!.toLocal().toString().split(' ').first}'}'), trailing: Text(batch.isDepleted ? 'Depleted' : 'Available'))))])); } }
