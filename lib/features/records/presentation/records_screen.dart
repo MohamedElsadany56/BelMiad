@@ -1,4 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/app_scaffold.dart';
-class RecordsScreen extends StatelessWidget { const RecordsScreen({super.key}); @override Widget build(BuildContext context) => AppScaffold(title: 'Records', child: ListView(padding: const EdgeInsets.all(24), children: [Text('Records', style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 8), const Text('This feature is being built on the offline SQLite foundation.'), const SizedBox(height: 24), Card(child: Padding(padding: const EdgeInsets.all(18), child: Row(children: [const Icon(Icons.add_circle_outline), const SizedBox(width: 12), Expanded(child: Text('Add your first item from this section.')), OutlinedButton(onPressed: () {}, child: const Text('Add'))])))])); }
+import '../../../core/providers/database_provider.dart';
+
+class RecordsScreen extends ConsumerWidget {
+  const RecordsScreen({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final records = ref.watch(databaseProvider).whenData((db) => db.select(db.healthRecords).get());
+    return AppScaffold(title: 'Health records', child: records.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Unable to load records: $e')),
+      data: (items) => ListView(padding: const EdgeInsets.all(24), children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('Health records', style: Theme.of(context).textTheme.headlineMedium), FilledButton.icon(onPressed: () {}, icon: const Icon(Icons.add), label: const Text('Add record'))]),
+        const SizedBox(height: 18),
+        if (items.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(24), child: Text('Appointments, vitals, illnesses, diet notes, and prescriptions will appear here.'))),
+        ...items.map((record) => Card(child: ListTile(leading: const Icon(Icons.favorite_outline), title: Text(record.title), subtitle: Text('${record.type} · ${record.occurredAt.toLocal().toString().split(' ').first}'))),
+      ]),
+    ));
+  }
 }
