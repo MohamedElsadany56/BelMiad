@@ -1,4 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/app_scaffold.dart';
-class InventoryScreen extends StatelessWidget { const InventoryScreen({super.key}); @override Widget build(BuildContext context) => AppScaffold(title: 'Inventory', child: ListView(padding: const EdgeInsets.all(24), children: [Text('Inventory', style: Theme.of(context).textTheme.headlineMedium), const SizedBox(height: 8), const Text('This feature is being built on the offline SQLite foundation.'), const SizedBox(height: 24), Card(child: Padding(padding: const EdgeInsets.all(18), child: Row(children: [const Icon(Icons.add_circle_outline), const SizedBox(width: 12), Expanded(child: Text('Add your first item from this section.')), OutlinedButton(onPressed: () {}, child: const Text('Add'))])))])); }
+import '../../../core/providers/database_provider.dart';
+
+final inventoryBatchesProvider = FutureProvider.autoDispose((ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  return db.select(db.inventoryBatches).get();
+});
+
+class InventoryScreen extends ConsumerWidget {
+  const InventoryScreen({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final batches = ref.watch(inventoryBatchesProvider);
+    return AppScaffold(title: 'Stock & batches', child: batches.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Unable to load stock: $e')),
+      data: (items) => ListView(padding: const EdgeInsets.all(24), children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('Stock & batches', style: Theme.of(context).textTheme.headlineMedium), FilledButton.icon(onPressed: () {}, icon: const Icon(Icons.add), label: const Text('Add stock'))]),
+        const SizedBox(height: 18),
+        if (items.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(24), child: Text('No stock batches recorded. Medicines can remain active without inventory.'))),
+        ...items.map((batch) => Card(child: ListTile(leading: const CircleAvatar(child: Icon(Icons.inventory_2_outlined)), title: Text('${batch.availableQuantityScaled / batch.quantityScale} ${batch.unit}'), subtitle: Text('Purchased ${batch.purchaseDate.toLocal().toString().split(' ').first} · ${batch.expirationDate == null ? 'No expiry' : 'Expires ${batch.expirationDate!.toLocal().toString().split(' ').first}'}'), trailing: Text(batch.isDepleted ? 'Depleted' : 'Available'))),
+      ]),
+    ));
+  }
 }
