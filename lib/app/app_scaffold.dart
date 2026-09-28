@@ -9,7 +9,7 @@ class AppScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final route = GoRouterState.of(context).uri.path;
-    final destinations = const [
+    final destinations = const <({String path, String label, IconData icon})>[
       ('/', 'Dashboard', Icons.dashboard_outlined),
       ('/medications', 'Medicines', Icons.medication_outlined),
       ('/inventory', 'Stock & batches', Icons.inventory_2_outlined),
@@ -33,12 +33,12 @@ class AppScaffold extends StatelessWidget {
               ),
               ...destinations.map(
                 (d) => ListTile(
-                  leading: Icon(d.$3),
-                  title: Text(d.$2),
-                  selected: route == d.$1,
+                  leading: Icon(d.pathlabelicon$3),
+                  title: Text(d.pathlabelicon$2),
+                  selected: route == d.pathlabelicon$1,
                   onTap: () {
                     Navigator.pop(context);
-                    context.go(d.$1);
+                    context.go(d.pathlabelicon$1);
                   },
                 ),
               ),
