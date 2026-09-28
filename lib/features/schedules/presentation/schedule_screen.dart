@@ -3,7 +3,67 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/app_scaffold.dart';
 import '../../../core/providers/database_provider.dart';
+import '../../../core/database/app_database.dart';
+import '../data/schedule_service.dart';
+import '../domain/recurrence_rule.dart';
 import '../../doses/data/dose_repository.dart';
+
+Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
+  final db = await ref.read(databaseProvider.future);
+  final meds = await db.select(db.medications).get();
+  if (meds.isEmpty) {
+    if (context.mounted)
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Create a medicine first')));
+    return;
+  }
+  String medId = meds.first.id;
+  final time = TextEditingController(text: '08:00');
+  final qty = TextEditingController(text: '1000');
+  final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+              title: const Text('Add schedule'),
+              content: Column(mainAxisSize: MainAxisSize.min, children: [
+                DropdownButtonFormField<String>(
+                    initialValue: medId,
+                    items: meds
+                        .map((m) => DropdownMenuItem(
+                            value: m.id, child: Text(m.nameEn)))
+                        .toList(),
+                    onChanged: (v) => medId = v!,
+                    decoration: const InputDecoration(labelText: 'Medicine')),
+                TextField(
+                    controller: time,
+                    decoration:
+                        const InputDecoration(labelText: 'Time (HH:mm)')),
+                TextField(
+                    controller: qty,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                        labelText: 'Quantity scaled (1000 = 1 unit)'))
+              ]),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel')),
+                FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Save'))
+              ]));
+  if (ok == true) {
+    await ScheduleService(db).createSchedule(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        medicationId: medId,
+        patientId: 'current-patient',
+        time: time.text,
+        quantityScaled: int.tryParse(qty.text) ?? 1000,
+        rule: const RecurrenceRule(type: RecurrenceType.daily));
+    await ScheduleService(db).generateDoses(
+        patientId: 'current-patient', from: DateTime.now(), days: 7);
+    ref.invalidate(todaysDosesProvider);
+  }
+}
 
 final todaysDosesProvider = FutureProvider.autoDispose((ref) async {
   final db = await ref.watch(databaseProvider.future);
@@ -31,7 +91,7 @@ class ScheduleScreen extends ConsumerWidget {
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 FilledButton.icon(
-                  onPressed: () {},
+                  onPressed: () => _addSchedule(context, ref),
                   icon: const Icon(Icons.add),
                   label: const Text('Add schedule'),
                 ),
@@ -103,4 +163,3 @@ class ScheduleScreen extends ConsumerWidget {
     );
   }
 }
-
