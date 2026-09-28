@@ -95,7 +95,7 @@ class HealthRecords extends Table {
   @override Set<Column> get primaryKey => {id};
 }
 
-class AuditEvents extends Table {
+class Prescriptions extends Table {\n  TextColumn get id => text()();\n  TextColumn get patientId => text().references(Patients, #id)();\n  TextColumn get doctorName => text().nullable()();\n  DateTimeColumn get issueDate => dateTime().nullable()();\n  TextColumn get filePath => text()();\n  DateTimeColumn get createdAt => dateTime()();\n  @override Set<Column> get primaryKey => {id};\n}\n\nclass NotificationPreferences extends Table {\n  TextColumn get id => text()();\n  TextColumn get patientId => text().references(Patients, #id)();\n  TextColumn get notificationType => text()();\n  BoolColumn get enabled => boolean().withDefault(const Constant(true))();\n  @override Set<Column> get primaryKey => {id};\n}\n\nclass AuditEvents extends Table {
   TextColumn get id => text()();
   TextColumn get patientId => text().nullable()();
   TextColumn get entityType => text()();
@@ -106,10 +106,10 @@ class AuditEvents extends Table {
   @override Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Patients, Medications, MedicationSchedules, InventoryBatches, DoseInstances, HealthRecords, AuditEvents])
+@DriftDatabase(tables: [Patients, Medications, MedicationSchedules, InventoryBatches, DoseInstances, HealthRecords, Prescriptions, NotificationPreferences, AuditEvents])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
-  @override int get schemaVersion => 1;
+  @override int get schemaVersion => 2;
 
   @override MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -137,3 +137,4 @@ Future<AppDatabase> openAppDatabase() async {
   final file = File(p.join(dir.path, 'belmiad.sqlite'));
   return AppDatabase(NativeDatabase.createInBackground(file));
 }
+
