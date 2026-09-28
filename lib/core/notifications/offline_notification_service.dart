@@ -41,3 +41,4 @@ class OfflineNotificationService {
 
   Future<void> cancel(int id) => plugin.cancel(id);
 }
+

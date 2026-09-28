@@ -75,3 +75,4 @@ class PatientsScreen extends ConsumerWidget {
         ));
   }
 }
+

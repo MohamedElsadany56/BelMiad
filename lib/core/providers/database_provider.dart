@@ -7,3 +7,4 @@ final databaseProvider = FutureProvider<AppDatabase>((ref) async {
   ref.onDispose(database.close);
   return database;
 });
+

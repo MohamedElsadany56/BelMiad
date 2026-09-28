@@ -54,3 +54,4 @@ class SettingsScreen extends ConsumerWidget {
         ),
       );
 }
+

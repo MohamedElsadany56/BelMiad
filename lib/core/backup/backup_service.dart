@@ -8,7 +8,7 @@ class BackupService {
   Map<String, dynamic> encode({
     required List<PatientsData> patients,
     required List<MedicationsData> medications,
-    required List<InventoryBatchesData> batches,
+    required List<InventoryBatche> batches,
     required List<DoseInstancesData> doses,
     required List<HealthRecordsData> records,
   }) =>
@@ -92,3 +92,4 @@ class BackupService {
   Future<void> writeFile(File file, Map<String, dynamic> backup) =>
       file.writeAsString(toJson(backup));
 }
+

@@ -10,3 +10,4 @@ final medicationsForPatientProvider = FutureProvider.autoDispose.family(
   (ref, String patientId) =>
       ref.watch(medicationRepositoryProvider).listForPatient(patientId),
 );
+

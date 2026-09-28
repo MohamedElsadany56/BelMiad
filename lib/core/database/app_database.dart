@@ -171,7 +171,7 @@ class AppDatabase extends _$AppDatabase {
               (m) => m.patientId.equals(patientId) & m.isActive.equals(true),
             ))
           .get();
-  Future<List<InventoryBatchesData>> batchesForMedication(
+  Future<List<InventoryBatche>> batchesForMedication(
           String medicationId) =>
       (select(
         inventoryBatches,
@@ -207,3 +207,4 @@ Future<AppDatabase> openAppDatabase() async {
   final file = File(p.join(dir.path, 'belmiad.sqlite'));
   return AppDatabase(NativeDatabase.createInBackground(file));
 }
+

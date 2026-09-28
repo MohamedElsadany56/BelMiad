@@ -38,3 +38,4 @@ class PdfReportService {
     return document.save();
   }
 }
+

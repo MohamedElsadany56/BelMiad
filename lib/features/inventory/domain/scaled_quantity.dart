@@ -19,3 +19,4 @@ class ScaledQuantity {
     if (scale != other.scale) throw ArgumentError('Quantity scales must match');
   }
 }
+

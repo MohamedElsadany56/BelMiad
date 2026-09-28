@@ -69,3 +69,4 @@ class _Stat extends StatelessWidget {
                         style: Theme.of(context).textTheme.headlineMedium)
                   ]))));
 }
+

@@ -22,3 +22,4 @@ class InventoryReport {
   List<InventoryReportRow> get lowStock =>
       rows.where((r) => r.stockState == 'LOW').toList();
 }
+

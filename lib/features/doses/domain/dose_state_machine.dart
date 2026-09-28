@@ -16,3 +16,4 @@ class DoseStateMachine {
     return to;
   }
 }
+

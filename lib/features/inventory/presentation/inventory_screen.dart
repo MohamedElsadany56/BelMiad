@@ -49,3 +49,4 @@ class InventoryScreen extends ConsumerWidget {
         ));
   }
 }
+

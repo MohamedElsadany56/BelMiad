@@ -56,3 +56,4 @@ class BelMiadApp extends ConsumerWidget {
     );
   }
 }
+

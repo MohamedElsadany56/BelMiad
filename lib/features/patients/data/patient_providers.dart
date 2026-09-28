@@ -9,3 +9,4 @@ final patientRepositoryProvider = Provider<PatientRepository>(
 final patientsProvider = FutureProvider.autoDispose(
   (ref) => ref.watch(patientRepositoryProvider).list(),
 );
+

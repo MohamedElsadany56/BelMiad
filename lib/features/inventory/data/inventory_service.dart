@@ -6,8 +6,7 @@ class InventoryService {
   InventoryService(this.database);
   final AppDatabase database;
 
-  Future<List<InventoryBatchesData>> getAvailableBatches(
-      String medicationId) async {
+  Future<List<InventoryBatche>> getAvailableBatches(String medicationId) async {
     final rows = await database.batchesForMedication(medicationId);
     final now = DateTime.now();
     rows.removeWhere(
@@ -27,7 +26,8 @@ class InventoryService {
 
   Future<int> totalAvailableQuantity(String medicationId) async {
     final batches = await getAvailableBatches(medicationId);
-    return batches.fold(0, (sum, batch) => sum + batch.availableQuantityScaled);
+    return batches.fold<int>(
+        0, (sum, batch) => sum + batch.availableQuantityScaled);
   }
 
   Future<void> adjustQuantity({

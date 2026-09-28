@@ -7,3 +7,4 @@ final inventoryServiceProvider = Provider<InventoryService>((ref) {
   final database = ref.watch(databaseProvider).requireValue;
   return InventoryService(database);
 });
+

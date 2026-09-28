@@ -8078,3 +8078,4 @@ class $AppDatabaseManager {
   $$AuditEventsTableTableManager get auditEvents =>
       $$AuditEventsTableTableManager(_db, _db.auditEvents);
 }
+

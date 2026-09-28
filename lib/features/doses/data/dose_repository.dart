@@ -57,3 +57,4 @@ class DoseRepository {
         .write(const DoseInstancesCompanion(status: Value('SKIPPED')));
   }
 }
+

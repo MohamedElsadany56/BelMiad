@@ -20,3 +20,4 @@ String normalizeDrugSearch(String value) => value
     .replaceAll('إ', 'ا')
     .replaceAll('آ', 'ا')
     .replaceAll('ى', 'ي');
+
