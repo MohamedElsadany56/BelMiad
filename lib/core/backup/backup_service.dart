@@ -6,11 +6,11 @@ import '../../core/database/app_database.dart';
 class BackupService {
   static const currentVersion = 1;
   Map<String, dynamic> encode({
-    required List<Patient> patients,
-    required List<Medication> medications,
-    required List<InventoryBatch> batches,
-    required List<DoseInstance> doses,
-    required List<HealthRecord> records,
+    required List<PatientsData> patients,
+    required List<MedicationsData> medications,
+    required List<InventoryBatchesData> batches,
+    required List<DoseInstancesData> doses,
+    required List<HealthRecordsData> records,
   }) =>
       {
         'backup_version': currentVersion,

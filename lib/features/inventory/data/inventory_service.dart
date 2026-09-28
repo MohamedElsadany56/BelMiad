@@ -6,7 +6,8 @@ class InventoryService {
   InventoryService(this.database);
   final AppDatabase database;
 
-  Future<List<InventoryBatch>> getAvailableBatches(String medicationId) async {
+  Future<List<InventoryBatchesData>> getAvailableBatches(
+      String medicationId) async {
     final rows = await database.batchesForMedication(medicationId);
     final now = DateTime.now();
     rows.removeWhere(

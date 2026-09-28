@@ -9,12 +9,12 @@ Future<void> _addPatient(BuildContext context, WidgetRef ref) async {
   final result = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-              title: const Text('Add patient'),
+              title: const Text('Add PatientsData'),
               content: Column(mainAxisSize: MainAxisSize.min, children: [
                 TextField(
                     controller: name,
                     decoration:
-                        const InputDecoration(labelText: 'Patient name')),
+                        const InputDecoration(labelText: 'PatientsData name')),
                 TextField(
                     controller: relation,
                     decoration: const InputDecoration(labelText: 'Relation'))
@@ -54,7 +54,7 @@ class PatientsScreen extends ConsumerWidget {
               FilledButton.icon(
                   onPressed: () => _addPatient(context, ref),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add patient'))
+                  label: const Text('Add PatientsData'))
             ]),
             const SizedBox(height: 18),
             if (items.isEmpty)
@@ -62,14 +62,14 @@ class PatientsScreen extends ConsumerWidget {
                   child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Text(
-                          'Create a patient profile to begin managing medicines and records.'))),
-            ...items.map((patient) => Card(
+                          'Create a PatientsData profile to begin managing medicines and records.'))),
+            ...items.map((PatientsData) => Card(
                 child: ListTile(
                     leading:
                         const CircleAvatar(child: Icon(Icons.person_outline)),
-                    title: Text(patient.name),
+                    title: Text(PatientsData.name),
                     subtitle: Text(
-                        '${patient.relation ?? 'Patient'} · ${patient.timezone}'),
+                        '${PatientsData.relation ?? 'PatientsData'} · ${PatientsData.timezone}'),
                     trailing: const Icon(Icons.chevron_right)))),
           ]),
         ));

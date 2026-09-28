@@ -23,12 +23,12 @@ class SettingsScreen extends ConsumerWidget {
                     onChanged: (value) async {
                       final db = await ref.read(databaseProvider.future);
                       await NotificationPreferencesRepository(db).setEnabled(
-                        patientId: 'current-patient',
-                        type: 'medication',
+                        patientId: 'current-PatientsData',
+                        type: 'MedicationsData',
                         enabled: value,
                       );
                     },
-                    title: const Text('Medication reminders'),
+                    title: const Text('MedicationsData reminders'),
                     subtitle: const Text(
                       'Receive offline reminders for scheduled doses',
                     ),
@@ -38,7 +38,7 @@ class SettingsScreen extends ConsumerWidget {
                     onChanged: (value) async {
                       final db = await ref.read(databaseProvider.future);
                       await NotificationPreferencesRepository(db).setEnabled(
-                        patientId: 'current-patient',
+                        patientId: 'current-PatientsData',
                         type: 'inventory',
                         enabled: value,
                       );

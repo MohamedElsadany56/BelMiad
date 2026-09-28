@@ -14,14 +14,14 @@ class PdfReportService {
       pw.MultiPage(
         build: (_) => [
           pw.Header(level: 0, child: pw.Text('BelMiad inventory report')),
-          pw.Text('Patient: $patientName'),
+          pw.Text('PatientsData: $patientName'),
           pw.SizedBox(height: 16),
           pw.Table.fromTextArray(
             headers: const ['Medicine', 'Quantity', 'Unit', 'Batches', 'State'],
             data: report.rows
                 .map(
                   (row) => [
-                    row.medication,
+                    row.MedicationsData,
                     row.quantity.toString(),
                     row.unit,
                     row.batchCount.toString(),

@@ -7,7 +7,7 @@ class DoseRepository {
   DoseRepository(this.database);
   final AppDatabase database;
 
-  Future<List<DoseInstance>> forDate(String patientId, DateTime date) =>
+  Future<List<DoseInstancesData>> forDate(String patientId, DateTime date) =>
       (database.select(database.doseInstances)
             ..where(
               (d) =>

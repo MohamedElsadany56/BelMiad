@@ -69,7 +69,7 @@ class MedicationsScreen extends ConsumerWidget {
   const MedicationsScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final patientId = 'current-patient';
+    final patientId = 'current-PatientsData';
     final medications = ref.watch(medicationsForPatientProvider(patientId));
     return AppScaffold(
       title: 'Medicines',

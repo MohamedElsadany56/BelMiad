@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/app_scaffold.dart';
 import '../../../core/providers/database_provider.dart';
 
+final healthRecordsProvider = FutureProvider.autoDispose((ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  return db.select(db.healthRecords).get();
+});
+
 class RecordsScreen extends ConsumerWidget {
   const RecordsScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final records = ref
-        .watch(databaseProvider)
-        .whenData((db) => db.select(db.healthRecords).get());
+    final records = ref.watch(healthRecordsProvider);
     return AppScaffold(
         title: 'Health records',
         child: records.when(

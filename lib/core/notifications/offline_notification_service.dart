@@ -22,13 +22,13 @@ class OfflineNotificationService {
     await plugin.zonedSchedule(
       id,
       '$medicineName for $patientName',
-      'Medication dose is due',
+      'MedicationsData dose is due',
       tz.TZDateTime.from(when, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'medication',
-          'Medication reminders',
-          channelDescription: 'Offline medication reminders',
+          'MedicationsData',
+          'MedicationsData reminders',
+          channelDescription: 'Offline MedicationsData reminders',
           importance: Importance.high,
         ),
         iOS: DarwinNotificationDetails(),

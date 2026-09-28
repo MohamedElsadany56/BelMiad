@@ -4,7 +4,7 @@ import 'package:belmiad/features/catalog/data/csv_parser.dart';
 
 void main() {
   test('CSV parser preserves quoted commas', () {
-    const rows = CsvToListConverter().convert(
+    final rows = const CsvToListConverter().convert(
       'commercial_name_en,commercial_name_ar,price_egp\n"Test, Plus","اختبار",12',
     );
     expect(rows[1][0], 'Test, Plus');
@@ -32,3 +32,4 @@ void main() {
     expect(rows.firstWhere((r) => r['id'] == 'a')['status'], 'SCHEDULED');
   });
 }
+

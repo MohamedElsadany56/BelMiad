@@ -16,7 +16,8 @@ class _DashboardBody extends StatelessWidget {
         Text('Today at a glance',
             style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 6),
-        const Text('Everything for your current patient, in one calm view.'),
+        const Text(
+            'Everything for your current PatientsData, in one calm view.'),
         const SizedBox(height: 24),
         Wrap(spacing: 12, runSpacing: 12, children: const [
           _Stat(label: 'Today’s doses', value: '3'),
