@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+
 import 'dart:io';
 
 part 'app_database.g.dart';
@@ -10,11 +11,13 @@ class Patients extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get relation => text().nullable()();
-  TextColumn get timezone => text().withDefault(const Constant('Africa/Cairo'))();
+  TextColumn get timezone =>
+      text().withDefault(const Constant('Africa/Cairo'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
-  @override Set<Column> get primaryKey => {id};
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 class Medications extends Table {
@@ -36,7 +39,8 @@ class Medications extends Table {
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
-  @override Set<Column> get primaryKey => {id};
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 class MedicationSchedules extends Table {
@@ -50,7 +54,8 @@ class MedicationSchedules extends Table {
   DateTimeColumn get validFrom => dateTime().nullable()();
   DateTimeColumn get validUntil => dateTime().nullable()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
-  @override Set<Column> get primaryKey => {id};
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 class InventoryBatches extends Table {
@@ -67,7 +72,8 @@ class InventoryBatches extends Table {
   DateTimeColumn get expirationDate => dateTime().nullable()();
   TextColumn get source => text().nullable()();
   BoolColumn get isDepleted => boolean().withDefault(const Constant(false))();
-  @override Set<Column> get primaryKey => {id};
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 class DoseInstances extends Table {
@@ -82,7 +88,8 @@ class DoseInstances extends Table {
   TextColumn get status => text().withDefault(const Constant('SCHEDULED'))();
   DateTimeColumn get takenAt => dateTime().nullable()();
   IntColumn get lateMinutes => integer().nullable()();
-  @override Set<Column> get primaryKey => {id};
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 class HealthRecords extends Table {
@@ -92,10 +99,31 @@ class HealthRecords extends Table {
   TextColumn get title => text()();
   TextColumn get notes => text().nullable()();
   DateTimeColumn get occurredAt => dateTime()();
-  @override Set<Column> get primaryKey => {id};
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
-class Prescriptions extends Table {\n  TextColumn get id => text()();\n  TextColumn get patientId => text().references(Patients, #id)();\n  TextColumn get doctorName => text().nullable()();\n  DateTimeColumn get issueDate => dateTime().nullable()();\n  TextColumn get filePath => text()();\n  DateTimeColumn get createdAt => dateTime()();\n  @override Set<Column> get primaryKey => {id};\n}\n\nclass NotificationPreferences extends Table {\n  TextColumn get id => text()();\n  TextColumn get patientId => text().references(Patients, #id)();\n  TextColumn get notificationType => text()();\n  BoolColumn get enabled => boolean().withDefault(const Constant(true))();\n  @override Set<Column> get primaryKey => {id};\n}\n\nclass AuditEvents extends Table {
+class Prescriptions extends Table {
+  TextColumn get id => text()();
+  TextColumn get patientId => text().references(Patients, #id)();
+  TextColumn get doctorName => text().nullable()();
+  DateTimeColumn get issueDate => dateTime().nullable()();
+  TextColumn get filePath => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class NotificationPreferences extends Table {
+  TextColumn get id => text()();
+  TextColumn get patientId => text().references(Patients, #id)();
+  TextColumn get notificationType => text()();
+  BoolColumn get enabled => boolean().withDefault(const Constant(true))();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class AuditEvents extends Table {
   TextColumn get id => text()();
   TextColumn get patientId => text().nullable()();
   TextColumn get entityType => text()();
@@ -103,31 +131,72 @@ class Prescriptions extends Table {\n  TextColumn get id => text()();\n  TextCol
   TextColumn get action => text()();
   DateTimeColumn get occurredAt => dateTime()();
   TextColumn get metadataJson => text().nullable()();
-  @override Set<Column> get primaryKey => {id};
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Patients, Medications, MedicationSchedules, InventoryBatches, DoseInstances, HealthRecords, Prescriptions, NotificationPreferences, AuditEvents])
+@DriftDatabase(
+  tables: [
+    Patients,
+    Medications,
+    MedicationSchedules,
+    InventoryBatches,
+    DoseInstances,
+    HealthRecords,
+    Prescriptions,
+    NotificationPreferences,
+    AuditEvents,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
-  @override int get schemaVersion => 2;
+  @override
+  int get schemaVersion => 2;
 
-  @override MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) => m.createAll(),
-    onUpgrade: (m, from, to) async {},
-  );
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(prescriptions);
+            await m.createTable(notificationPreferences);
+          }
+        },
+      );
 
   Future<List<Patient>> watchPatients() => select(patients).get();
-  Future<List<Medication>> medicationsForPatient(String patientId) => (select(medications)..where((m) => m.patientId.equals(patientId) & m.isActive.equals(true))).get();
-  Future<List<InventoryBatch>> batchesForMedication(String medicationId) => (select(inventoryBatches)..where((b) => b.medicationId.equals(medicationId))).get();
+  Future<List<Medication>> medicationsForPatient(String patientId) =>
+      (select(medications)
+            ..where(
+              (m) => m.patientId.equals(patientId) & m.isActive.equals(true),
+            ))
+          .get();
+  Future<List<InventoryBatch>> batchesForMedication(String medicationId) =>
+      (select(
+        inventoryBatches,
+      )..where((b) => b.medicationId.equals(medicationId)))
+          .get();
 
-  Future<void> consumeInventory({required String batchId, required int quantityScaled}) async {
+  Future<void> consumeInventory({
+    required String batchId,
+    required int quantityScaled,
+  }) async {
     await transaction(() async {
-      final batch = await (select(inventoryBatches)..where((b) => b.id.equals(batchId))).getSingle();
+      final batch = await (select(
+        inventoryBatches,
+      )..where((b) => b.id.equals(batchId)))
+          .getSingle();
       final next = batch.availableQuantityScaled - quantityScaled;
       if (next < 0) throw StateError('Inventory cannot become negative');
-      await (update(inventoryBatches)..where((b) => b.id.equals(batchId))).write(InventoryBatchesCompanion(
-        availableQuantityScaled: Value(next), isDepleted: Value(next == 0),
-      ));
+      await (update(
+        inventoryBatches,
+      )..where((b) => b.id.equals(batchId)))
+          .write(
+        InventoryBatchesCompanion(
+          availableQuantityScaled: Value(next),
+          isDepleted: Value(next == 0),
+        ),
+      );
     });
   }
 }
@@ -137,4 +206,3 @@ Future<AppDatabase> openAppDatabase() async {
   final file = File(p.join(dir.path, 'belmiad.sqlite'));
   return AppDatabase(NativeDatabase.createInBackground(file));
 }
-

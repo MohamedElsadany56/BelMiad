@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
@@ -10,12 +11,20 @@ class PrescriptionFileService {
     return dir;
   }
 
-  Future<String> save({required String prescriptionId, required File source}) async {
+  Future<String> save({
+    required String prescriptionId,
+    required File source,
+  }) async {
     final dir = await _directory();
-    final target = File(p.join(dir.path, '$prescriptionId${p.extension(source.path)}'));
+    final target = File(
+      p.join(dir.path, '$prescriptionId${p.extension(source.path)}'),
+    );
     await source.copy(target.path);
     return target.path;
   }
 
-  Future<void> delete(String path) async { final file = File(path); if (await file.exists()) await file.delete(); }
+  Future<void> delete(String path) async {
+    final file = File(path);
+    if (await file.exists()) await file.delete();
+  }
 }

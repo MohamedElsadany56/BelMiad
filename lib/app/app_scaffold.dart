@@ -19,8 +19,33 @@ class AppScaffold extends StatelessWidget {
       ('/settings', 'Settings', Icons.settings_outlined),
     ];
     return Scaffold(
-      appBar: AppBar(title: Text(title), actions: [TextButton(onPressed: () {}, child: const Text('عربي'))]),
-      drawer: Drawer(child: SafeArea(child: ListView(children: [const ListTile(title: Text('BelMiad'), subtitle: Text('بالميعاد')), ...destinations.map((d) => ListTile(leading: Icon(d.$3), title: Text(d.$2), selected: route == d.$1, onTap: () { Navigator.pop(context); context.go(d.$1); }))]))),
+      appBar: AppBar(
+        title: Text(title),
+        actions: [TextButton(onPressed: () {}, child: const Text('عربي'))],
+      ),
+      drawer: Drawer(
+        child: SafeArea(
+          child: ListView(
+            children: [
+              const ListTile(
+                title: Text('BelMiad'),
+                subtitle: Text('بالميعاد'),
+              ),
+              ...destinations.map(
+                (d) => ListTile(
+                  leading: Icon(d.$3),
+                  title: Text(d.$2),
+                  selected: route == d.$1,
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go(d.$1);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: child,
     );
   }

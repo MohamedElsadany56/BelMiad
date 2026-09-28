@@ -13,15 +13,39 @@ class InventoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final batches = ref.watch(inventoryBatchesProvider);
-    return AppScaffold(title: 'Stock & batches', child: batches.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Unable to load stock: $e')),
-      data: (items) => ListView(padding: const EdgeInsets.all(24), children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('Stock & batches', style: Theme.of(context).textTheme.headlineMedium), FilledButton.icon(onPressed: () {}, icon: const Icon(Icons.add), label: const Text('Add stock'))]),
-        const SizedBox(height: 18),
-        if (items.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(24), child: Text('No stock batches recorded. Medicines can remain active without inventory.'))),
-        ...items.map((batch) => Card(child: ListTile(leading: const CircleAvatar(child: Icon(Icons.inventory_2_outlined)), title: Text('${batch.availableQuantityScaled / batch.quantityScale} ${batch.unit}'), subtitle: Text('Purchased ${batch.purchaseDate.toLocal().toString().split(' ').first} · ${batch.expirationDate == null ? 'No expiry' : 'Expires ${batch.expirationDate!.toLocal().toString().split(' ').first}'}'), trailing: Text(batch.isDepleted ? 'Depleted' : 'Available'))),
-      ]),
-    ));
+    return AppScaffold(
+        title: 'Stock & batches',
+        child: batches.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Unable to load stock: $e')),
+          data: (items) =>
+              ListView(padding: const EdgeInsets.all(24), children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Text('Stock & batches',
+                  style: Theme.of(context).textTheme.headlineMedium),
+              FilledButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add stock'))
+            ]),
+            const SizedBox(height: 18),
+            if (items.isEmpty)
+              const Card(
+                  child: Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Text(
+                          'No stock batches recorded. Medicines can remain active without inventory.'))),
+            ...items.map((batch) => Card(
+                child: ListTile(
+                    leading: const CircleAvatar(
+                        child: Icon(Icons.inventory_2_outlined)),
+                    title: Text(
+                        '${batch.availableQuantityScaled / batch.quantityScale} ${batch.unit}'),
+                    subtitle: Text(
+                        'Purchased ${batch.purchaseDate.toLocal().toString().split(' ').first} · ${batch.expirationDate == null ? 'No expiry' : 'Expires ${batch.expirationDate!.toLocal().toString().split(' ').first}'}'),
+                    trailing:
+                        Text(batch.isDepleted ? 'Depleted' : 'Available')))),
+          ]),
+        ));
   }
 }

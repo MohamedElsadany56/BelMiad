@@ -19,20 +19,40 @@ class BelMiadApp extends ConsumerWidget {
       title: 'BelMiad — بالميعاد',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff12b8b0), brightness: Brightness.light),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xff12b8b0),
+          brightness: Brightness.light,
+        ),
         scaffoldBackgroundColor: const Color(0xfff7faf9),
         useMaterial3: true,
         fontFamily: 'Arial',
       ),
-      routerConfig: GoRouter(routes: [
-        GoRoute(path: '/', builder: (_, __) => const DashboardScreen()),
-        GoRoute(path: '/medications', builder: (_, __) => const MedicationsScreen()),
-        GoRoute(path: '/inventory', builder: (_, __) => const InventoryScreen()),
-        GoRoute(path: '/schedule', builder: (_, __) => const ScheduleScreen()),
-        GoRoute(path: '/patients', builder: (_, __) => const PatientsScreen()),
-        GoRoute(path: '/records', builder: (_, __) => const RecordsScreen()),
-        GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
-      ]),
+      routerConfig: GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (_, __) => const DashboardScreen()),
+          GoRoute(
+            path: '/medications',
+            builder: (_, __) => const MedicationsScreen(),
+          ),
+          GoRoute(
+            path: '/inventory',
+            builder: (_, __) => const InventoryScreen(),
+          ),
+          GoRoute(
+            path: '/schedule',
+            builder: (_, __) => const ScheduleScreen(),
+          ),
+          GoRoute(
+            path: '/patients',
+            builder: (_, __) => const PatientsScreen(),
+          ),
+          GoRoute(path: '/records', builder: (_, __) => const RecordsScreen()),
+          GoRoute(
+            path: '/settings',
+            builder: (_, __) => const SettingsScreen(),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+
 import '../../../core/database/app_database.dart';
 
 class PatientRepository {
@@ -11,16 +12,39 @@ class PatientRepository {
     return query.get();
   }
 
-  Future<Patient?> get(String id) => (database.select(database.patients)..where((p) => p.id.equals(id))).getSingleOrNull();
+  Future<Patient?> get(String id) => (database.select(
+        database.patients,
+      )..where((p) => p.id.equals(id)))
+          .getSingleOrNull();
 
-  Future<void> save({required String id, required String name, String? relation, String timezone = 'Africa/Cairo'}) async {
+  Future<void> save({
+    required String id,
+    required String name,
+    String? relation,
+    String timezone = 'Africa/Cairo',
+  }) async {
     final now = DateTime.now();
-    await database.into(database.patients).insertOnConflictUpdate(PatientsCompanion.insert(
-      id: id, name: name, relation: Value(relation), timezone: Value(timezone), createdAt: now, updatedAt: now,
-    ));
+    await database.into(database.patients).insertOnConflictUpdate(
+          PatientsCompanion.insert(
+            id: id,
+            name: name,
+            relation: Value(relation),
+            timezone: Value(timezone),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
   }
 
   Future<void> archive(String id) async {
-    await (database.update(database.patients)..where((p) => p.id.equals(id))).write(PatientsCompanion(isArchived: const Value(true), updatedAt: Value(DateTime.now())));
+    await (database.update(
+      database.patients,
+    )..where((p) => p.id.equals(id)))
+        .write(
+      PatientsCompanion(
+        isArchived: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 }
