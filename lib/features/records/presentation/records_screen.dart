@@ -18,6 +18,7 @@ Future<void> _editRecord(
   final title = TextEditingController(text: record?.title);
   final notes = TextEditingController(text: record?.notes);
   String type = record?.type ?? 'Vital';
+  DateTime occurredAt = record?.occurredAt ?? DateTime.now();
   final result = await showDialog<bool>(
       context: context,
       builder: (_) => StatefulBuilder(
@@ -43,7 +44,27 @@ Future<void> _editRecord(
                         decoration: const InputDecoration(labelText: 'Title')),
                     TextField(
                         controller: notes,
-                        decoration: const InputDecoration(labelText: 'Notes'))
+                      decoration: const InputDecoration(labelText: 'Notes')),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        'Occurred: ${occurredAt.toLocal().toString().split(' ').first}'),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                          initialDate: occurredAt);
+                        if (picked != null) {
+                        setState(() => occurredAt = DateTime(
+                          picked.year,
+                          picked.month,
+                          picked.day,
+                          occurredAt.hour,
+                          occurredAt.minute));
+                        }
+                      })
                   ]),
                   actions: [
                     TextButton(
@@ -69,7 +90,7 @@ Future<void> _editRecord(
         type: type,
         title: title.text.trim(),
         notes: drift.Value(notes.text.trim()),
-        occurredAt: record?.occurredAt ?? DateTime.now()));
+        occurredAt: occurredAt));
     ref.invalidate(healthRecordsProvider);
   }
 }
