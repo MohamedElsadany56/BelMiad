@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../../app/app_scaffold.dart';
 import '../../../core/providers/database_provider.dart';
-import '../../../core/database/app_database.dart';
+import '../../../core/notifications/offline_notification_service.dart';
 import '../data/schedule_service.dart';
 import '../domain/recurrence_rule.dart';
 import '../../doses/data/dose_repository.dart';
+import '../../notifications/data/notification_preferences_repository.dart';
 
 Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
   final db = await ref.read(databaseProvider.future);
@@ -64,6 +66,27 @@ Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
       from: DateTime.now(),
       days: 7,
     );
+    final notificationsEnabled = await NotificationPreferencesRepository(db)
+        .isEnabled(meds.first.patientId, 'medications');
+    if (notificationsEnabled) {
+      final notificationService =
+          OfflineNotificationService(FlutterLocalNotificationsPlugin());
+      await notificationService.initialize();
+      final generatedDoses = await (db.select(db.doseInstances)
+            ..where((dose) => dose.patientId.equals(meds.first.patientId)))
+          .get();
+      final medicine = meds.firstWhere((med) => med.id == medId);
+      for (final dose in generatedDoses.where(
+        (dose) => dose.scheduledAt.isAfter(DateTime.now()),
+      )) {
+        await notificationService.scheduleDose(
+          id: dose.id.hashCode & 0x7fffffff,
+          patientName: 'patient',
+          medicineName: medicine.nameEn,
+          when: dose.scheduledAt,
+        );
+      }
+    }
     ref.invalidate(todaysDosesProvider);
   }
 }

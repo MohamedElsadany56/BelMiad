@@ -4,13 +4,16 @@ import 'package:timezone/timezone.dart' as tz;
 class OfflineNotificationService {
   OfflineNotificationService(this.plugin);
   final FlutterLocalNotificationsPlugin plugin;
+  bool _initialized = false;
 
   Future<void> initialize() async {
+    if (_initialized) return;
     const settings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
     );
     await plugin.initialize(settings);
+    _initialized = true;
   }
 
   Future<void> scheduleDose({
@@ -22,13 +25,13 @@ class OfflineNotificationService {
     await plugin.zonedSchedule(
       id,
       '$medicineName for $patientName',
-      'MedicationsData dose is due',
+      'Medication dose is due',
       tz.TZDateTime.from(when, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'MedicationsData',
-          'MedicationsData reminders',
-          channelDescription: 'Offline MedicationsData reminders',
+          'medication_reminders',
+          'Medication reminders',
+          channelDescription: 'Offline medication reminders',
           importance: Importance.high,
         ),
         iOS: DarwinNotificationDetails(),
