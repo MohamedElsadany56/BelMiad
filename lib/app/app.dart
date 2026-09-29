@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'localization/app_localization.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/inventory/presentation/inventory_screen.dart';
 import '../features/medications/presentation/medications_screen.dart';
@@ -15,9 +16,12 @@ class BelMiadApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
     return MaterialApp.router(
       title: 'BelMiad — بالميعاد',
       debugShowCheckedModeBanner: false,
+      locale: locale,
+      supportedLocales: const [Locale('en'), Locale('ar')],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xff12b8b0),
