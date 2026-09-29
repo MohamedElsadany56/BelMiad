@@ -47,6 +47,13 @@ Future<void> _editBatch(
                     : (batch.availableQuantityScaled / batch.quantityScale).toString());
     final unit = TextEditingController(text: batch?.unit ?? 'tablets');
     final source = TextEditingController(text: batch?.source);
+    final packaging = TextEditingController(text: batch?.packagingType);
+    final packageCount = TextEditingController(
+        text: batch?.packageCount?.toString());
+    final unitsPerPackage = TextEditingController(
+        text: batch?.unitsPerPackage?.toString());
+    final purchasePrice = TextEditingController(
+        text: batch?.purchasePrice?.toString());
     DateTime? expiry = batch?.expirationDate;
   final saved = await showDialog<bool>(
       context: context,
@@ -76,6 +83,33 @@ Future<void> _editBatch(
                         controller: source,
                         decoration:
                             const InputDecoration(labelText: 'From / source')),
+                    TextField(
+                        controller: packaging,
+                        decoration: const InputDecoration(
+                            labelText: 'Packaging type (box, strip, bottle)')),
+                    Row(children: [
+                      Expanded(
+                        child: TextField(
+                            controller: packageCount,
+                            keyboardType: TextInputType.number,
+                            decoration:
+                                const InputDecoration(labelText: 'Packages')),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                            controller: unitsPerPackage,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                                labelText: 'Units/package')),
+                      ),
+                    ]),
+                    TextField(
+                        controller: purchasePrice,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        decoration: const InputDecoration(
+                            labelText: 'Purchase price (optional)')),
                     ListTile(
                         title: Text(expiry == null
                             ? 'Expiration date: optional'
@@ -105,6 +139,14 @@ Future<void> _editBatch(
             medicationId: drift.Value(medicationId),
             availableQuantityScaled: drift.Value(amount * 1000),
             unit: drift.Value(unit.text.trim().isEmpty ? 'unit' : unit.text.trim()),
+            packagingType: drift.Value(packaging.text.trim().isEmpty
+                ? null
+                : packaging.text.trim()),
+            packageCount: drift.Value(int.tryParse(packageCount.text.trim())),
+            unitsPerPackage:
+                drift.Value(int.tryParse(unitsPerPackage.text.trim())),
+            purchasePrice:
+                drift.Value(double.tryParse(purchasePrice.text.trim())),
             expirationDate: drift.Value(expiry),
             source: drift.Value(source.text.trim().isEmpty ? null : source.text.trim()),
         );
@@ -114,6 +156,15 @@ Future<void> _editBatch(
                     medicationId: medicationId,
                     availableQuantityScaled: amount * 1000,
                     unit: unit.text.trim().isEmpty ? 'unit' : unit.text.trim(),
+                    packagingType: drift.Value(packaging.text.trim().isEmpty
+                        ? null
+                        : packaging.text.trim()),
+                    packageCount:
+                        drift.Value(int.tryParse(packageCount.text.trim())),
+                    unitsPerPackage:
+                        drift.Value(int.tryParse(unitsPerPackage.text.trim())),
+                    purchasePrice:
+                        drift.Value(double.tryParse(purchasePrice.text.trim())),
                     purchaseDate: DateTime.now(),
                     expirationDate: drift.Value(expiry),
                     source: drift.Value(
