@@ -1981,6 +1981,16 @@ class $MedicationsTable extends Medications
   late final GeneratedColumn<double> catalogPriceEgp = GeneratedColumn<double>(
       'catalog_price_egp', aliasedName, true,
       type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _storageOnlyMeta =
+      const VerificationMeta('storageOnly');
+  @override
+  late final GeneratedColumn<bool> storageOnly = GeneratedColumn<bool>(
+      'storage_only', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("storage_only" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
   late final GeneratedColumn<String> status = GeneratedColumn<String>(
@@ -2023,6 +2033,7 @@ class $MedicationsTable extends Medications
         isPrn,
         maximumDailyQuantityScaled,
         catalogPriceEgp,
+        storageOnly,
         status,
         createdAt,
         updatedAt,
@@ -2129,6 +2140,12 @@ class $MedicationsTable extends Medications
           catalogPriceEgp.isAcceptableOrUnknown(
               data['catalog_price_egp']!, _catalogPriceEgpMeta));
     }
+    if (data.containsKey('storage_only')) {
+      context.handle(
+          _storageOnlyMeta,
+          storageOnly.isAcceptableOrUnknown(
+              data['storage_only']!, _storageOnlyMeta));
+    }
     if (data.containsKey('status')) {
       context.handle(_statusMeta,
           status.isAcceptableOrUnknown(data['status']!, _statusMeta));
@@ -2195,6 +2212,8 @@ class $MedicationsTable extends Medications
           data['${effectivePrefix}maximum_daily_quantity_scaled']),
       catalogPriceEgp: attachedDatabase.typeMapping.read(
           DriftSqlType.double, data['${effectivePrefix}catalog_price_egp']),
+      storageOnly: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}storage_only'])!,
       status: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
       createdAt: attachedDatabase.typeMapping
@@ -2231,6 +2250,9 @@ class Medication extends DataClass implements Insertable<Medication> {
   final int? maximumDailyQuantityScaled;
   final double? catalogPriceEgp;
 
+  /// Stock kept in storage without being part of the patient's treatment.
+  final bool storageOnly;
+
   /// `active` or `archived`.
   final String status;
   final DateTime createdAt;
@@ -2254,6 +2276,7 @@ class Medication extends DataClass implements Insertable<Medication> {
       required this.isPrn,
       this.maximumDailyQuantityScaled,
       this.catalogPriceEgp,
+      required this.storageOnly,
       required this.status,
       required this.createdAt,
       required this.updatedAt,
@@ -2303,6 +2326,7 @@ class Medication extends DataClass implements Insertable<Medication> {
     if (!nullToAbsent || catalogPriceEgp != null) {
       map['catalog_price_egp'] = Variable<double>(catalogPriceEgp);
     }
+    map['storage_only'] = Variable<bool>(storageOnly);
     map['status'] = Variable<String>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -2354,6 +2378,7 @@ class Medication extends DataClass implements Insertable<Medication> {
       catalogPriceEgp: catalogPriceEgp == null && nullToAbsent
           ? const Value.absent()
           : Value(catalogPriceEgp),
+      storageOnly: Value(storageOnly),
       status: Value(status),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -2385,6 +2410,7 @@ class Medication extends DataClass implements Insertable<Medication> {
       maximumDailyQuantityScaled:
           serializer.fromJson<int?>(json['maximumDailyQuantityScaled']),
       catalogPriceEgp: serializer.fromJson<double?>(json['catalogPriceEgp']),
+      storageOnly: serializer.fromJson<bool>(json['storageOnly']),
       status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -2413,6 +2439,7 @@ class Medication extends DataClass implements Insertable<Medication> {
       'maximumDailyQuantityScaled':
           serializer.toJson<int?>(maximumDailyQuantityScaled),
       'catalogPriceEgp': serializer.toJson<double?>(catalogPriceEgp),
+      'storageOnly': serializer.toJson<bool>(storageOnly),
       'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -2438,6 +2465,7 @@ class Medication extends DataClass implements Insertable<Medication> {
           bool? isPrn,
           Value<int?> maximumDailyQuantityScaled = const Value.absent(),
           Value<double?> catalogPriceEgp = const Value.absent(),
+          bool? storageOnly,
           String? status,
           DateTime? createdAt,
           DateTime? updatedAt,
@@ -2467,6 +2495,7 @@ class Medication extends DataClass implements Insertable<Medication> {
         catalogPriceEgp: catalogPriceEgp.present
             ? catalogPriceEgp.value
             : this.catalogPriceEgp,
+        storageOnly: storageOnly ?? this.storageOnly,
         status: status ?? this.status,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -2504,6 +2533,8 @@ class Medication extends DataClass implements Insertable<Medication> {
       catalogPriceEgp: data.catalogPriceEgp.present
           ? data.catalogPriceEgp.value
           : this.catalogPriceEgp,
+      storageOnly:
+          data.storageOnly.present ? data.storageOnly.value : this.storageOnly,
       status: data.status.present ? data.status.value : this.status,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -2531,6 +2562,7 @@ class Medication extends DataClass implements Insertable<Medication> {
           ..write('isPrn: $isPrn, ')
           ..write('maximumDailyQuantityScaled: $maximumDailyQuantityScaled, ')
           ..write('catalogPriceEgp: $catalogPriceEgp, ')
+          ..write('storageOnly: $storageOnly, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -2558,6 +2590,7 @@ class Medication extends DataClass implements Insertable<Medication> {
         isPrn,
         maximumDailyQuantityScaled,
         catalogPriceEgp,
+        storageOnly,
         status,
         createdAt,
         updatedAt,
@@ -2584,6 +2617,7 @@ class Medication extends DataClass implements Insertable<Medication> {
           other.isPrn == this.isPrn &&
           other.maximumDailyQuantityScaled == this.maximumDailyQuantityScaled &&
           other.catalogPriceEgp == this.catalogPriceEgp &&
+          other.storageOnly == this.storageOnly &&
           other.status == this.status &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -2608,6 +2642,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
   final Value<bool> isPrn;
   final Value<int?> maximumDailyQuantityScaled;
   final Value<double?> catalogPriceEgp;
+  final Value<bool> storageOnly;
   final Value<String> status;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -2631,6 +2666,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     this.isPrn = const Value.absent(),
     this.maximumDailyQuantityScaled = const Value.absent(),
     this.catalogPriceEgp = const Value.absent(),
+    this.storageOnly = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2655,6 +2691,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     this.isPrn = const Value.absent(),
     this.maximumDailyQuantityScaled = const Value.absent(),
     this.catalogPriceEgp = const Value.absent(),
+    this.storageOnly = const Value.absent(),
     required String status,
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -2685,6 +2722,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     Expression<bool>? isPrn,
     Expression<int>? maximumDailyQuantityScaled,
     Expression<double>? catalogPriceEgp,
+    Expression<bool>? storageOnly,
     Expression<String>? status,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -2710,6 +2748,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       if (maximumDailyQuantityScaled != null)
         'maximum_daily_quantity_scaled': maximumDailyQuantityScaled,
       if (catalogPriceEgp != null) 'catalog_price_egp': catalogPriceEgp,
+      if (storageOnly != null) 'storage_only': storageOnly,
       if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -2736,6 +2775,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       Value<bool>? isPrn,
       Value<int?>? maximumDailyQuantityScaled,
       Value<double?>? catalogPriceEgp,
+      Value<bool>? storageOnly,
       Value<String>? status,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -2760,6 +2800,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
       maximumDailyQuantityScaled:
           maximumDailyQuantityScaled ?? this.maximumDailyQuantityScaled,
       catalogPriceEgp: catalogPriceEgp ?? this.catalogPriceEgp,
+      storageOnly: storageOnly ?? this.storageOnly,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -2823,6 +2864,9 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
     if (catalogPriceEgp.present) {
       map['catalog_price_egp'] = Variable<double>(catalogPriceEgp.value);
     }
+    if (storageOnly.present) {
+      map['storage_only'] = Variable<bool>(storageOnly.value);
+    }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
     }
@@ -2861,6 +2905,7 @@ class MedicationsCompanion extends UpdateCompanion<Medication> {
           ..write('isPrn: $isPrn, ')
           ..write('maximumDailyQuantityScaled: $maximumDailyQuantityScaled, ')
           ..write('catalogPriceEgp: $catalogPriceEgp, ')
+          ..write('storageOnly: $storageOnly, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -2925,6 +2970,24 @@ class $MedicationInventoryBatchesTable extends MedicationInventoryBatches
   late final GeneratedColumn<int> packagesCount = GeneratedColumn<int>(
       'packages_count', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _subPackagingTypeMeta =
+      const VerificationMeta('subPackagingType');
+  @override
+  late final GeneratedColumn<String> subPackagingType = GeneratedColumn<String>(
+      'sub_packaging_type', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _subPackagesPerPackageMeta =
+      const VerificationMeta('subPackagesPerPackage');
+  @override
+  late final GeneratedColumn<int> subPackagesPerPackage = GeneratedColumn<int>(
+      'sub_packages_per_package', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _looseQuantityScaledMeta =
+      const VerificationMeta('looseQuantityScaled');
+  @override
+  late final GeneratedColumn<int> looseQuantityScaled = GeneratedColumn<int>(
+      'loose_quantity_scaled', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _initialQuantityScaledMeta =
       const VerificationMeta('initialQuantityScaled');
   @override
@@ -2988,6 +3051,9 @@ class $MedicationInventoryBatchesTable extends MedicationInventoryBatches
         packagingType,
         unitsPerPackage,
         packagesCount,
+        subPackagingType,
+        subPackagesPerPackage,
+        looseQuantityScaled,
         initialQuantityScaled,
         availableQuantityScaled,
         quantityScale,
@@ -3058,6 +3124,24 @@ class $MedicationInventoryBatchesTable extends MedicationInventoryBatches
           _packagesCountMeta,
           packagesCount.isAcceptableOrUnknown(
               data['packages_count']!, _packagesCountMeta));
+    }
+    if (data.containsKey('sub_packaging_type')) {
+      context.handle(
+          _subPackagingTypeMeta,
+          subPackagingType.isAcceptableOrUnknown(
+              data['sub_packaging_type']!, _subPackagingTypeMeta));
+    }
+    if (data.containsKey('sub_packages_per_package')) {
+      context.handle(
+          _subPackagesPerPackageMeta,
+          subPackagesPerPackage.isAcceptableOrUnknown(
+              data['sub_packages_per_package']!, _subPackagesPerPackageMeta));
+    }
+    if (data.containsKey('loose_quantity_scaled')) {
+      context.handle(
+          _looseQuantityScaledMeta,
+          looseQuantityScaled.isAcceptableOrUnknown(
+              data['loose_quantity_scaled']!, _looseQuantityScaledMeta));
     }
     if (data.containsKey('initial_quantity_scaled')) {
       context.handle(
@@ -3133,6 +3217,12 @@ class $MedicationInventoryBatchesTable extends MedicationInventoryBatches
           .read(DriftSqlType.int, data['${effectivePrefix}units_per_package']),
       packagesCount: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}packages_count']),
+      subPackagingType: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}sub_packaging_type']),
+      subPackagesPerPackage: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}sub_packages_per_package']),
+      looseQuantityScaled: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}loose_quantity_scaled']),
       initialQuantityScaled: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}initial_quantity_scaled'])!,
       availableQuantityScaled: attachedDatabase.typeMapping.read(
@@ -3166,8 +3256,17 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
   final double? purchasePrice;
   final String? expirationDate;
   final String? packagingType;
+
+  /// Units per innermost pack (per package, or per sub-package when set).
   final int? unitsPerPackage;
   final int? packagesCount;
+
+  /// Optional inner packaging, e.g. strips/blisters inside a box.
+  final String? subPackagingType;
+  final int? subPackagesPerPackage;
+
+  /// Extra loose units added to the packaged quantity.
+  final int? looseQuantityScaled;
   final int initialQuantityScaled;
   final int availableQuantityScaled;
   final int quantityScale;
@@ -3185,6 +3284,9 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       this.packagingType,
       this.unitsPerPackage,
       this.packagesCount,
+      this.subPackagingType,
+      this.subPackagesPerPackage,
+      this.looseQuantityScaled,
       required this.initialQuantityScaled,
       required this.availableQuantityScaled,
       required this.quantityScale,
@@ -3215,6 +3317,15 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
     }
     if (!nullToAbsent || packagesCount != null) {
       map['packages_count'] = Variable<int>(packagesCount);
+    }
+    if (!nullToAbsent || subPackagingType != null) {
+      map['sub_packaging_type'] = Variable<String>(subPackagingType);
+    }
+    if (!nullToAbsent || subPackagesPerPackage != null) {
+      map['sub_packages_per_package'] = Variable<int>(subPackagesPerPackage);
+    }
+    if (!nullToAbsent || looseQuantityScaled != null) {
+      map['loose_quantity_scaled'] = Variable<int>(looseQuantityScaled);
     }
     map['initial_quantity_scaled'] = Variable<int>(initialQuantityScaled);
     map['available_quantity_scaled'] = Variable<int>(availableQuantityScaled);
@@ -3253,6 +3364,15 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       packagesCount: packagesCount == null && nullToAbsent
           ? const Value.absent()
           : Value(packagesCount),
+      subPackagingType: subPackagingType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subPackagingType),
+      subPackagesPerPackage: subPackagesPerPackage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subPackagesPerPackage),
+      looseQuantityScaled: looseQuantityScaled == null && nullToAbsent
+          ? const Value.absent()
+          : Value(looseQuantityScaled),
       initialQuantityScaled: Value(initialQuantityScaled),
       availableQuantityScaled: Value(availableQuantityScaled),
       quantityScale: Value(quantityScale),
@@ -3279,6 +3399,11 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       packagingType: serializer.fromJson<String?>(json['packagingType']),
       unitsPerPackage: serializer.fromJson<int?>(json['unitsPerPackage']),
       packagesCount: serializer.fromJson<int?>(json['packagesCount']),
+      subPackagingType: serializer.fromJson<String?>(json['subPackagingType']),
+      subPackagesPerPackage:
+          serializer.fromJson<int?>(json['subPackagesPerPackage']),
+      looseQuantityScaled:
+          serializer.fromJson<int?>(json['looseQuantityScaled']),
       initialQuantityScaled:
           serializer.fromJson<int>(json['initialQuantityScaled']),
       availableQuantityScaled:
@@ -3303,6 +3428,9 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       'packagingType': serializer.toJson<String?>(packagingType),
       'unitsPerPackage': serializer.toJson<int?>(unitsPerPackage),
       'packagesCount': serializer.toJson<int?>(packagesCount),
+      'subPackagingType': serializer.toJson<String?>(subPackagingType),
+      'subPackagesPerPackage': serializer.toJson<int?>(subPackagesPerPackage),
+      'looseQuantityScaled': serializer.toJson<int?>(looseQuantityScaled),
       'initialQuantityScaled': serializer.toJson<int>(initialQuantityScaled),
       'availableQuantityScaled':
           serializer.toJson<int>(availableQuantityScaled),
@@ -3324,6 +3452,9 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
           Value<String?> packagingType = const Value.absent(),
           Value<int?> unitsPerPackage = const Value.absent(),
           Value<int?> packagesCount = const Value.absent(),
+          Value<String?> subPackagingType = const Value.absent(),
+          Value<int?> subPackagesPerPackage = const Value.absent(),
+          Value<int?> looseQuantityScaled = const Value.absent(),
           int? initialQuantityScaled,
           int? availableQuantityScaled,
           int? quantityScale,
@@ -3348,6 +3479,15 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
             : this.unitsPerPackage,
         packagesCount:
             packagesCount.present ? packagesCount.value : this.packagesCount,
+        subPackagingType: subPackagingType.present
+            ? subPackagingType.value
+            : this.subPackagingType,
+        subPackagesPerPackage: subPackagesPerPackage.present
+            ? subPackagesPerPackage.value
+            : this.subPackagesPerPackage,
+        looseQuantityScaled: looseQuantityScaled.present
+            ? looseQuantityScaled.value
+            : this.looseQuantityScaled,
         initialQuantityScaled:
             initialQuantityScaled ?? this.initialQuantityScaled,
         availableQuantityScaled:
@@ -3385,6 +3525,15 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       packagesCount: data.packagesCount.present
           ? data.packagesCount.value
           : this.packagesCount,
+      subPackagingType: data.subPackagingType.present
+          ? data.subPackagingType.value
+          : this.subPackagingType,
+      subPackagesPerPackage: data.subPackagesPerPackage.present
+          ? data.subPackagesPerPackage.value
+          : this.subPackagesPerPackage,
+      looseQuantityScaled: data.looseQuantityScaled.present
+          ? data.looseQuantityScaled.value
+          : this.looseQuantityScaled,
       initialQuantityScaled: data.initialQuantityScaled.present
           ? data.initialQuantityScaled.value
           : this.initialQuantityScaled,
@@ -3414,6 +3563,9 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
           ..write('packagingType: $packagingType, ')
           ..write('unitsPerPackage: $unitsPerPackage, ')
           ..write('packagesCount: $packagesCount, ')
+          ..write('subPackagingType: $subPackagingType, ')
+          ..write('subPackagesPerPackage: $subPackagesPerPackage, ')
+          ..write('looseQuantityScaled: $looseQuantityScaled, ')
           ..write('initialQuantityScaled: $initialQuantityScaled, ')
           ..write('availableQuantityScaled: $availableQuantityScaled, ')
           ..write('quantityScale: $quantityScale, ')
@@ -3436,6 +3588,9 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       packagingType,
       unitsPerPackage,
       packagesCount,
+      subPackagingType,
+      subPackagesPerPackage,
+      looseQuantityScaled,
       initialQuantityScaled,
       availableQuantityScaled,
       quantityScale,
@@ -3456,6 +3611,9 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
           other.packagingType == this.packagingType &&
           other.unitsPerPackage == this.unitsPerPackage &&
           other.packagesCount == this.packagesCount &&
+          other.subPackagingType == this.subPackagingType &&
+          other.subPackagesPerPackage == this.subPackagesPerPackage &&
+          other.looseQuantityScaled == this.looseQuantityScaled &&
           other.initialQuantityScaled == this.initialQuantityScaled &&
           other.availableQuantityScaled == this.availableQuantityScaled &&
           other.quantityScale == this.quantityScale &&
@@ -3476,6 +3634,9 @@ class MedicationInventoryBatchesCompanion
   final Value<String?> packagingType;
   final Value<int?> unitsPerPackage;
   final Value<int?> packagesCount;
+  final Value<String?> subPackagingType;
+  final Value<int?> subPackagesPerPackage;
+  final Value<int?> looseQuantityScaled;
   final Value<int> initialQuantityScaled;
   final Value<int> availableQuantityScaled;
   final Value<int> quantityScale;
@@ -3494,6 +3655,9 @@ class MedicationInventoryBatchesCompanion
     this.packagingType = const Value.absent(),
     this.unitsPerPackage = const Value.absent(),
     this.packagesCount = const Value.absent(),
+    this.subPackagingType = const Value.absent(),
+    this.subPackagesPerPackage = const Value.absent(),
+    this.looseQuantityScaled = const Value.absent(),
     this.initialQuantityScaled = const Value.absent(),
     this.availableQuantityScaled = const Value.absent(),
     this.quantityScale = const Value.absent(),
@@ -3513,6 +3677,9 @@ class MedicationInventoryBatchesCompanion
     this.packagingType = const Value.absent(),
     this.unitsPerPackage = const Value.absent(),
     this.packagesCount = const Value.absent(),
+    this.subPackagingType = const Value.absent(),
+    this.subPackagesPerPackage = const Value.absent(),
+    this.looseQuantityScaled = const Value.absent(),
     required int initialQuantityScaled,
     required int availableQuantityScaled,
     this.quantityScale = const Value.absent(),
@@ -3537,6 +3704,9 @@ class MedicationInventoryBatchesCompanion
     Expression<String>? packagingType,
     Expression<int>? unitsPerPackage,
     Expression<int>? packagesCount,
+    Expression<String>? subPackagingType,
+    Expression<int>? subPackagesPerPackage,
+    Expression<int>? looseQuantityScaled,
     Expression<int>? initialQuantityScaled,
     Expression<int>? availableQuantityScaled,
     Expression<int>? quantityScale,
@@ -3556,6 +3726,11 @@ class MedicationInventoryBatchesCompanion
       if (packagingType != null) 'packaging_type': packagingType,
       if (unitsPerPackage != null) 'units_per_package': unitsPerPackage,
       if (packagesCount != null) 'packages_count': packagesCount,
+      if (subPackagingType != null) 'sub_packaging_type': subPackagingType,
+      if (subPackagesPerPackage != null)
+        'sub_packages_per_package': subPackagesPerPackage,
+      if (looseQuantityScaled != null)
+        'loose_quantity_scaled': looseQuantityScaled,
       if (initialQuantityScaled != null)
         'initial_quantity_scaled': initialQuantityScaled,
       if (availableQuantityScaled != null)
@@ -3579,6 +3754,9 @@ class MedicationInventoryBatchesCompanion
       Value<String?>? packagingType,
       Value<int?>? unitsPerPackage,
       Value<int?>? packagesCount,
+      Value<String?>? subPackagingType,
+      Value<int?>? subPackagesPerPackage,
+      Value<int?>? looseQuantityScaled,
       Value<int>? initialQuantityScaled,
       Value<int>? availableQuantityScaled,
       Value<int>? quantityScale,
@@ -3597,6 +3775,10 @@ class MedicationInventoryBatchesCompanion
       packagingType: packagingType ?? this.packagingType,
       unitsPerPackage: unitsPerPackage ?? this.unitsPerPackage,
       packagesCount: packagesCount ?? this.packagesCount,
+      subPackagingType: subPackagingType ?? this.subPackagingType,
+      subPackagesPerPackage:
+          subPackagesPerPackage ?? this.subPackagesPerPackage,
+      looseQuantityScaled: looseQuantityScaled ?? this.looseQuantityScaled,
       initialQuantityScaled:
           initialQuantityScaled ?? this.initialQuantityScaled,
       availableQuantityScaled:
@@ -3637,6 +3819,16 @@ class MedicationInventoryBatchesCompanion
     }
     if (packagesCount.present) {
       map['packages_count'] = Variable<int>(packagesCount.value);
+    }
+    if (subPackagingType.present) {
+      map['sub_packaging_type'] = Variable<String>(subPackagingType.value);
+    }
+    if (subPackagesPerPackage.present) {
+      map['sub_packages_per_package'] =
+          Variable<int>(subPackagesPerPackage.value);
+    }
+    if (looseQuantityScaled.present) {
+      map['loose_quantity_scaled'] = Variable<int>(looseQuantityScaled.value);
     }
     if (initialQuantityScaled.present) {
       map['initial_quantity_scaled'] =
@@ -3681,6 +3873,9 @@ class MedicationInventoryBatchesCompanion
           ..write('packagingType: $packagingType, ')
           ..write('unitsPerPackage: $unitsPerPackage, ')
           ..write('packagesCount: $packagesCount, ')
+          ..write('subPackagingType: $subPackagingType, ')
+          ..write('subPackagesPerPackage: $subPackagesPerPackage, ')
+          ..write('looseQuantityScaled: $looseQuantityScaled, ')
           ..write('initialQuantityScaled: $initialQuantityScaled, ')
           ..write('availableQuantityScaled: $availableQuantityScaled, ')
           ..write('quantityScale: $quantityScale, ')
@@ -4330,6 +4525,20 @@ class $MealsTable extends Meals with TableInfo<$MealsTable, Meal> {
   late final GeneratedColumn<String> defaultTime = GeneratedColumn<String>(
       'default_time', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _timeModeMeta =
+      const VerificationMeta('timeMode');
+  @override
+  late final GeneratedColumn<String> timeMode = GeneratedColumn<String>(
+      'time_mode', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('daily'));
+  static const VerificationMeta _weekdayTimesMeta =
+      const VerificationMeta('weekdayTimes');
+  @override
+  late final GeneratedColumn<String> weekdayTimes = GeneratedColumn<String>(
+      'weekday_times', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _isActiveMeta =
       const VerificationMeta('isActive');
   @override
@@ -4366,6 +4575,8 @@ class $MealsTable extends Meals with TableInfo<$MealsTable, Meal> {
         nameAr,
         mealType,
         defaultTime,
+        timeMode,
+        weekdayTimes,
         isActive,
         createdAt,
         updatedAt,
@@ -4417,6 +4628,16 @@ class $MealsTable extends Meals with TableInfo<$MealsTable, Meal> {
           defaultTime.isAcceptableOrUnknown(
               data['default_time']!, _defaultTimeMeta));
     }
+    if (data.containsKey('time_mode')) {
+      context.handle(_timeModeMeta,
+          timeMode.isAcceptableOrUnknown(data['time_mode']!, _timeModeMeta));
+    }
+    if (data.containsKey('weekday_times')) {
+      context.handle(
+          _weekdayTimesMeta,
+          weekdayTimes.isAcceptableOrUnknown(
+              data['weekday_times']!, _weekdayTimesMeta));
+    }
     if (data.containsKey('is_active')) {
       context.handle(_isActiveMeta,
           isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
@@ -4458,6 +4679,10 @@ class $MealsTable extends Meals with TableInfo<$MealsTable, Meal> {
           .read(DriftSqlType.string, data['${effectivePrefix}meal_type'])!,
       defaultTime: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}default_time']),
+      timeMode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}time_mode'])!,
+      weekdayTimes: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}weekday_times']),
       isActive: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
       createdAt: attachedDatabase.typeMapping
@@ -4486,6 +4711,12 @@ class Meal extends DataClass implements Insertable<Meal> {
 
   /// Local wall-clock `HH:mm`. When null the meal type default is used.
   final String? defaultTime;
+
+  /// `daily` (same time every day) or `weekly` (per-weekday times).
+  final String timeMode;
+
+  /// JSON map of ISO weekday → `HH:mm`, used when [timeMode] is weekly.
+  final String? weekdayTimes;
   final bool isActive;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -4497,6 +4728,8 @@ class Meal extends DataClass implements Insertable<Meal> {
       required this.nameAr,
       required this.mealType,
       this.defaultTime,
+      required this.timeMode,
+      this.weekdayTimes,
       required this.isActive,
       required this.createdAt,
       required this.updatedAt,
@@ -4511,6 +4744,10 @@ class Meal extends DataClass implements Insertable<Meal> {
     map['meal_type'] = Variable<String>(mealType);
     if (!nullToAbsent || defaultTime != null) {
       map['default_time'] = Variable<String>(defaultTime);
+    }
+    map['time_mode'] = Variable<String>(timeMode);
+    if (!nullToAbsent || weekdayTimes != null) {
+      map['weekday_times'] = Variable<String>(weekdayTimes);
     }
     map['is_active'] = Variable<bool>(isActive);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -4531,6 +4768,10 @@ class Meal extends DataClass implements Insertable<Meal> {
       defaultTime: defaultTime == null && nullToAbsent
           ? const Value.absent()
           : Value(defaultTime),
+      timeMode: Value(timeMode),
+      weekdayTimes: weekdayTimes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weekdayTimes),
       isActive: Value(isActive),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -4550,6 +4791,8 @@ class Meal extends DataClass implements Insertable<Meal> {
       nameAr: serializer.fromJson<String>(json['nameAr']),
       mealType: serializer.fromJson<String>(json['mealType']),
       defaultTime: serializer.fromJson<String?>(json['defaultTime']),
+      timeMode: serializer.fromJson<String>(json['timeMode']),
+      weekdayTimes: serializer.fromJson<String?>(json['weekdayTimes']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -4566,6 +4809,8 @@ class Meal extends DataClass implements Insertable<Meal> {
       'nameAr': serializer.toJson<String>(nameAr),
       'mealType': serializer.toJson<String>(mealType),
       'defaultTime': serializer.toJson<String?>(defaultTime),
+      'timeMode': serializer.toJson<String>(timeMode),
+      'weekdayTimes': serializer.toJson<String?>(weekdayTimes),
       'isActive': serializer.toJson<bool>(isActive),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -4580,6 +4825,8 @@ class Meal extends DataClass implements Insertable<Meal> {
           String? nameAr,
           String? mealType,
           Value<String?> defaultTime = const Value.absent(),
+          String? timeMode,
+          Value<String?> weekdayTimes = const Value.absent(),
           bool? isActive,
           DateTime? createdAt,
           DateTime? updatedAt,
@@ -4591,6 +4838,9 @@ class Meal extends DataClass implements Insertable<Meal> {
         nameAr: nameAr ?? this.nameAr,
         mealType: mealType ?? this.mealType,
         defaultTime: defaultTime.present ? defaultTime.value : this.defaultTime,
+        timeMode: timeMode ?? this.timeMode,
+        weekdayTimes:
+            weekdayTimes.present ? weekdayTimes.value : this.weekdayTimes,
         isActive: isActive ?? this.isActive,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -4605,6 +4855,10 @@ class Meal extends DataClass implements Insertable<Meal> {
       mealType: data.mealType.present ? data.mealType.value : this.mealType,
       defaultTime:
           data.defaultTime.present ? data.defaultTime.value : this.defaultTime,
+      timeMode: data.timeMode.present ? data.timeMode.value : this.timeMode,
+      weekdayTimes: data.weekdayTimes.present
+          ? data.weekdayTimes.value
+          : this.weekdayTimes,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -4621,6 +4875,8 @@ class Meal extends DataClass implements Insertable<Meal> {
           ..write('nameAr: $nameAr, ')
           ..write('mealType: $mealType, ')
           ..write('defaultTime: $defaultTime, ')
+          ..write('timeMode: $timeMode, ')
+          ..write('weekdayTimes: $weekdayTimes, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -4630,8 +4886,19 @@ class Meal extends DataClass implements Insertable<Meal> {
   }
 
   @override
-  int get hashCode => Object.hash(mealId, patientId, nameEn, nameAr, mealType,
-      defaultTime, isActive, createdAt, updatedAt, deletedAt);
+  int get hashCode => Object.hash(
+      mealId,
+      patientId,
+      nameEn,
+      nameAr,
+      mealType,
+      defaultTime,
+      timeMode,
+      weekdayTimes,
+      isActive,
+      createdAt,
+      updatedAt,
+      deletedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4642,6 +4909,8 @@ class Meal extends DataClass implements Insertable<Meal> {
           other.nameAr == this.nameAr &&
           other.mealType == this.mealType &&
           other.defaultTime == this.defaultTime &&
+          other.timeMode == this.timeMode &&
+          other.weekdayTimes == this.weekdayTimes &&
           other.isActive == this.isActive &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -4655,6 +4924,8 @@ class MealsCompanion extends UpdateCompanion<Meal> {
   final Value<String> nameAr;
   final Value<String> mealType;
   final Value<String?> defaultTime;
+  final Value<String> timeMode;
+  final Value<String?> weekdayTimes;
   final Value<bool> isActive;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -4667,6 +4938,8 @@ class MealsCompanion extends UpdateCompanion<Meal> {
     this.nameAr = const Value.absent(),
     this.mealType = const Value.absent(),
     this.defaultTime = const Value.absent(),
+    this.timeMode = const Value.absent(),
+    this.weekdayTimes = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -4680,6 +4953,8 @@ class MealsCompanion extends UpdateCompanion<Meal> {
     required String nameAr,
     required String mealType,
     this.defaultTime = const Value.absent(),
+    this.timeMode = const Value.absent(),
+    this.weekdayTimes = const Value.absent(),
     this.isActive = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -4699,6 +4974,8 @@ class MealsCompanion extends UpdateCompanion<Meal> {
     Expression<String>? nameAr,
     Expression<String>? mealType,
     Expression<String>? defaultTime,
+    Expression<String>? timeMode,
+    Expression<String>? weekdayTimes,
     Expression<bool>? isActive,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -4712,6 +4989,8 @@ class MealsCompanion extends UpdateCompanion<Meal> {
       if (nameAr != null) 'name_ar': nameAr,
       if (mealType != null) 'meal_type': mealType,
       if (defaultTime != null) 'default_time': defaultTime,
+      if (timeMode != null) 'time_mode': timeMode,
+      if (weekdayTimes != null) 'weekday_times': weekdayTimes,
       if (isActive != null) 'is_active': isActive,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -4727,6 +5006,8 @@ class MealsCompanion extends UpdateCompanion<Meal> {
       Value<String>? nameAr,
       Value<String>? mealType,
       Value<String?>? defaultTime,
+      Value<String>? timeMode,
+      Value<String?>? weekdayTimes,
       Value<bool>? isActive,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -4739,6 +5020,8 @@ class MealsCompanion extends UpdateCompanion<Meal> {
       nameAr: nameAr ?? this.nameAr,
       mealType: mealType ?? this.mealType,
       defaultTime: defaultTime ?? this.defaultTime,
+      timeMode: timeMode ?? this.timeMode,
+      weekdayTimes: weekdayTimes ?? this.weekdayTimes,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -4768,6 +5051,12 @@ class MealsCompanion extends UpdateCompanion<Meal> {
     if (defaultTime.present) {
       map['default_time'] = Variable<String>(defaultTime.value);
     }
+    if (timeMode.present) {
+      map['time_mode'] = Variable<String>(timeMode.value);
+    }
+    if (weekdayTimes.present) {
+      map['weekday_times'] = Variable<String>(weekdayTimes.value);
+    }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
@@ -4795,6 +5084,8 @@ class MealsCompanion extends UpdateCompanion<Meal> {
           ..write('nameAr: $nameAr, ')
           ..write('mealType: $mealType, ')
           ..write('defaultTime: $defaultTime, ')
+          ..write('timeMode: $timeMode, ')
+          ..write('weekdayTimes: $weekdayTimes, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -4823,6 +5114,12 @@ class $MedicationSchedulesTable extends MedicationSchedules
   late final GeneratedColumn<String> medicationId = GeneratedColumn<String>(
       'medication_id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _groupIdMeta =
+      const VerificationMeta('groupId');
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+      'group_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _scheduleTypeMeta =
       const VerificationMeta('scheduleType');
   @override
@@ -4916,6 +5213,7 @@ class $MedicationSchedulesTable extends MedicationSchedules
   List<GeneratedColumn> get $columns => [
         scheduleId,
         medicationId,
+        groupId,
         scheduleType,
         fixedTime,
         mealId,
@@ -4956,6 +5254,10 @@ class $MedicationSchedulesTable extends MedicationSchedules
               data['medication_id']!, _medicationIdMeta));
     } else if (isInserting) {
       context.missing(_medicationIdMeta);
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(_groupIdMeta,
+          groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta));
     }
     if (data.containsKey('schedule_type')) {
       context.handle(
@@ -5050,6 +5352,8 @@ class $MedicationSchedulesTable extends MedicationSchedules
           .read(DriftSqlType.string, data['${effectivePrefix}schedule_id'])!,
       medicationId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}medication_id'])!,
+      groupId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}group_id']),
       scheduleType: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}schedule_type'])!,
       fixedTime: attachedDatabase.typeMapping
@@ -5092,6 +5396,10 @@ class MedicationSchedule extends DataClass
   final String scheduleId;
   final String medicationId;
 
+  /// Schedules created together as one dose plan (e.g. 3 times a day after
+  /// meals) share a group ID and are edited as a unit.
+  final String? groupId;
+
   /// `fixed_time` or `meal_relative`.
   final String scheduleType;
   final String? fixedTime;
@@ -5114,6 +5422,7 @@ class MedicationSchedule extends DataClass
   const MedicationSchedule(
       {required this.scheduleId,
       required this.medicationId,
+      this.groupId,
       required this.scheduleType,
       this.fixedTime,
       this.mealId,
@@ -5133,6 +5442,9 @@ class MedicationSchedule extends DataClass
     final map = <String, Expression>{};
     map['schedule_id'] = Variable<String>(scheduleId);
     map['medication_id'] = Variable<String>(medicationId);
+    if (!nullToAbsent || groupId != null) {
+      map['group_id'] = Variable<String>(groupId);
+    }
     map['schedule_type'] = Variable<String>(scheduleType);
     if (!nullToAbsent || fixedTime != null) {
       map['fixed_time'] = Variable<String>(fixedTime);
@@ -5168,6 +5480,9 @@ class MedicationSchedule extends DataClass
     return MedicationSchedulesCompanion(
       scheduleId: Value(scheduleId),
       medicationId: Value(medicationId),
+      groupId: groupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupId),
       scheduleType: Value(scheduleType),
       fixedTime: fixedTime == null && nullToAbsent
           ? const Value.absent()
@@ -5204,6 +5519,7 @@ class MedicationSchedule extends DataClass
     return MedicationSchedule(
       scheduleId: serializer.fromJson<String>(json['scheduleId']),
       medicationId: serializer.fromJson<String>(json['medicationId']),
+      groupId: serializer.fromJson<String?>(json['groupId']),
       scheduleType: serializer.fromJson<String>(json['scheduleType']),
       fixedTime: serializer.fromJson<String?>(json['fixedTime']),
       mealId: serializer.fromJson<String?>(json['mealId']),
@@ -5226,6 +5542,7 @@ class MedicationSchedule extends DataClass
     return <String, dynamic>{
       'scheduleId': serializer.toJson<String>(scheduleId),
       'medicationId': serializer.toJson<String>(medicationId),
+      'groupId': serializer.toJson<String?>(groupId),
       'scheduleType': serializer.toJson<String>(scheduleType),
       'fixedTime': serializer.toJson<String?>(fixedTime),
       'mealId': serializer.toJson<String?>(mealId),
@@ -5246,6 +5563,7 @@ class MedicationSchedule extends DataClass
   MedicationSchedule copyWith(
           {String? scheduleId,
           String? medicationId,
+          Value<String?> groupId = const Value.absent(),
           String? scheduleType,
           Value<String?> fixedTime = const Value.absent(),
           Value<String?> mealId = const Value.absent(),
@@ -5263,6 +5581,7 @@ class MedicationSchedule extends DataClass
       MedicationSchedule(
         scheduleId: scheduleId ?? this.scheduleId,
         medicationId: medicationId ?? this.medicationId,
+        groupId: groupId.present ? groupId.value : this.groupId,
         scheduleType: scheduleType ?? this.scheduleType,
         fixedTime: fixedTime.present ? fixedTime.value : this.fixedTime,
         mealId: mealId.present ? mealId.value : this.mealId,
@@ -5287,6 +5606,7 @@ class MedicationSchedule extends DataClass
       medicationId: data.medicationId.present
           ? data.medicationId.value
           : this.medicationId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
       scheduleType: data.scheduleType.present
           ? data.scheduleType.value
           : this.scheduleType,
@@ -5322,6 +5642,7 @@ class MedicationSchedule extends DataClass
     return (StringBuffer('MedicationSchedule(')
           ..write('scheduleId: $scheduleId, ')
           ..write('medicationId: $medicationId, ')
+          ..write('groupId: $groupId, ')
           ..write('scheduleType: $scheduleType, ')
           ..write('fixedTime: $fixedTime, ')
           ..write('mealId: $mealId, ')
@@ -5344,6 +5665,7 @@ class MedicationSchedule extends DataClass
   int get hashCode => Object.hash(
       scheduleId,
       medicationId,
+      groupId,
       scheduleType,
       fixedTime,
       mealId,
@@ -5364,6 +5686,7 @@ class MedicationSchedule extends DataClass
       (other is MedicationSchedule &&
           other.scheduleId == this.scheduleId &&
           other.medicationId == this.medicationId &&
+          other.groupId == this.groupId &&
           other.scheduleType == this.scheduleType &&
           other.fixedTime == this.fixedTime &&
           other.mealId == this.mealId &&
@@ -5383,6 +5706,7 @@ class MedicationSchedule extends DataClass
 class MedicationSchedulesCompanion extends UpdateCompanion<MedicationSchedule> {
   final Value<String> scheduleId;
   final Value<String> medicationId;
+  final Value<String?> groupId;
   final Value<String> scheduleType;
   final Value<String?> fixedTime;
   final Value<String?> mealId;
@@ -5401,6 +5725,7 @@ class MedicationSchedulesCompanion extends UpdateCompanion<MedicationSchedule> {
   const MedicationSchedulesCompanion({
     this.scheduleId = const Value.absent(),
     this.medicationId = const Value.absent(),
+    this.groupId = const Value.absent(),
     this.scheduleType = const Value.absent(),
     this.fixedTime = const Value.absent(),
     this.mealId = const Value.absent(),
@@ -5420,6 +5745,7 @@ class MedicationSchedulesCompanion extends UpdateCompanion<MedicationSchedule> {
   MedicationSchedulesCompanion.insert({
     required String scheduleId,
     required String medicationId,
+    this.groupId = const Value.absent(),
     required String scheduleType,
     this.fixedTime = const Value.absent(),
     this.mealId = const Value.absent(),
@@ -5445,6 +5771,7 @@ class MedicationSchedulesCompanion extends UpdateCompanion<MedicationSchedule> {
   static Insertable<MedicationSchedule> custom({
     Expression<String>? scheduleId,
     Expression<String>? medicationId,
+    Expression<String>? groupId,
     Expression<String>? scheduleType,
     Expression<String>? fixedTime,
     Expression<String>? mealId,
@@ -5464,6 +5791,7 @@ class MedicationSchedulesCompanion extends UpdateCompanion<MedicationSchedule> {
     return RawValuesInsertable({
       if (scheduleId != null) 'schedule_id': scheduleId,
       if (medicationId != null) 'medication_id': medicationId,
+      if (groupId != null) 'group_id': groupId,
       if (scheduleType != null) 'schedule_type': scheduleType,
       if (fixedTime != null) 'fixed_time': fixedTime,
       if (mealId != null) 'meal_id': mealId,
@@ -5486,6 +5814,7 @@ class MedicationSchedulesCompanion extends UpdateCompanion<MedicationSchedule> {
   MedicationSchedulesCompanion copyWith(
       {Value<String>? scheduleId,
       Value<String>? medicationId,
+      Value<String?>? groupId,
       Value<String>? scheduleType,
       Value<String?>? fixedTime,
       Value<String?>? mealId,
@@ -5504,6 +5833,7 @@ class MedicationSchedulesCompanion extends UpdateCompanion<MedicationSchedule> {
     return MedicationSchedulesCompanion(
       scheduleId: scheduleId ?? this.scheduleId,
       medicationId: medicationId ?? this.medicationId,
+      groupId: groupId ?? this.groupId,
       scheduleType: scheduleType ?? this.scheduleType,
       fixedTime: fixedTime ?? this.fixedTime,
       mealId: mealId ?? this.mealId,
@@ -5530,6 +5860,9 @@ class MedicationSchedulesCompanion extends UpdateCompanion<MedicationSchedule> {
     }
     if (medicationId.present) {
       map['medication_id'] = Variable<String>(medicationId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
     }
     if (scheduleType.present) {
       map['schedule_type'] = Variable<String>(scheduleType.value);
@@ -5584,6 +5917,7 @@ class MedicationSchedulesCompanion extends UpdateCompanion<MedicationSchedule> {
     return (StringBuffer('MedicationSchedulesCompanion(')
           ..write('scheduleId: $scheduleId, ')
           ..write('medicationId: $medicationId, ')
+          ..write('groupId: $groupId, ')
           ..write('scheduleType: $scheduleType, ')
           ..write('fixedTime: $fixedTime, ')
           ..write('mealId: $mealId, ')
@@ -7601,6 +7935,30 @@ class $VitalsMeasurementsTable extends VitalsMeasurements
   late final GeneratedColumn<String> unit = GeneratedColumn<String>(
       'unit', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _contextMeta =
+      const VerificationMeta('context');
+  @override
+  late final GeneratedColumn<String> context = GeneratedColumn<String>(
+      'context', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _relatedMealIdMeta =
+      const VerificationMeta('relatedMealId');
+  @override
+  late final GeneratedColumn<String> relatedMealId = GeneratedColumn<String>(
+      'related_meal_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _relatedMedicationIdMeta =
+      const VerificationMeta('relatedMedicationId');
+  @override
+  late final GeneratedColumn<String> relatedMedicationId =
+      GeneratedColumn<String>('related_medication_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _minutesAfterMeta =
+      const VerificationMeta('minutesAfter');
+  @override
+  late final GeneratedColumn<int> minutesAfter = GeneratedColumn<int>(
+      'minutes_after', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _measuredAtMeta =
       const VerificationMeta('measuredAt');
   @override
@@ -7638,6 +7996,10 @@ class $VitalsMeasurementsTable extends VitalsMeasurements
         value1,
         value2,
         unit,
+        context,
+        relatedMealId,
+        relatedMedicationId,
+        minutesAfter,
         measuredAt,
         notes,
         createdAt,
@@ -7688,6 +8050,28 @@ class $VitalsMeasurementsTable extends VitalsMeasurements
       context.handle(
           _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
     }
+    if (data.containsKey('context')) {
+      context.handle(_contextMeta,
+          this.context.isAcceptableOrUnknown(data['context']!, _contextMeta));
+    }
+    if (data.containsKey('related_meal_id')) {
+      context.handle(
+          _relatedMealIdMeta,
+          relatedMealId.isAcceptableOrUnknown(
+              data['related_meal_id']!, _relatedMealIdMeta));
+    }
+    if (data.containsKey('related_medication_id')) {
+      context.handle(
+          _relatedMedicationIdMeta,
+          relatedMedicationId.isAcceptableOrUnknown(
+              data['related_medication_id']!, _relatedMedicationIdMeta));
+    }
+    if (data.containsKey('minutes_after')) {
+      context.handle(
+          _minutesAfterMeta,
+          minutesAfter.isAcceptableOrUnknown(
+              data['minutes_after']!, _minutesAfterMeta));
+    }
     if (data.containsKey('measured_at')) {
       context.handle(
           _measuredAtMeta,
@@ -7737,6 +8121,14 @@ class $VitalsMeasurementsTable extends VitalsMeasurements
           .read(DriftSqlType.double, data['${effectivePrefix}value_2']),
       unit: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}unit']),
+      context: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}context']),
+      relatedMealId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}related_meal_id']),
+      relatedMedicationId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}related_medication_id']),
+      minutesAfter: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}minutes_after']),
       measuredAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}measured_at'])!,
       notes: attachedDatabase.typeMapping
@@ -7764,6 +8156,14 @@ class VitalMeasurement extends DataClass
   final double? value1;
   final double? value2;
   final String? unit;
+
+  /// fasting, before_meal, after_meal, after_medication or random.
+  final String? context;
+  final String? relatedMealId;
+  final String? relatedMedicationId;
+
+  /// Minutes after the related meal or medication.
+  final int? minutesAfter;
   final DateTime measuredAt;
   final String? notes;
   final DateTime createdAt;
@@ -7776,6 +8176,10 @@ class VitalMeasurement extends DataClass
       this.value1,
       this.value2,
       this.unit,
+      this.context,
+      this.relatedMealId,
+      this.relatedMedicationId,
+      this.minutesAfter,
       required this.measuredAt,
       this.notes,
       required this.createdAt,
@@ -7795,6 +8199,18 @@ class VitalMeasurement extends DataClass
     }
     if (!nullToAbsent || unit != null) {
       map['unit'] = Variable<String>(unit);
+    }
+    if (!nullToAbsent || context != null) {
+      map['context'] = Variable<String>(context);
+    }
+    if (!nullToAbsent || relatedMealId != null) {
+      map['related_meal_id'] = Variable<String>(relatedMealId);
+    }
+    if (!nullToAbsent || relatedMedicationId != null) {
+      map['related_medication_id'] = Variable<String>(relatedMedicationId);
+    }
+    if (!nullToAbsent || minutesAfter != null) {
+      map['minutes_after'] = Variable<int>(minutesAfter);
     }
     map['measured_at'] = Variable<DateTime>(measuredAt);
     if (!nullToAbsent || notes != null) {
@@ -7818,6 +8234,18 @@ class VitalMeasurement extends DataClass
       value2:
           value2 == null && nullToAbsent ? const Value.absent() : Value(value2),
       unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
+      context: context == null && nullToAbsent
+          ? const Value.absent()
+          : Value(context),
+      relatedMealId: relatedMealId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(relatedMealId),
+      relatedMedicationId: relatedMedicationId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(relatedMedicationId),
+      minutesAfter: minutesAfter == null && nullToAbsent
+          ? const Value.absent()
+          : Value(minutesAfter),
       measuredAt: Value(measuredAt),
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
@@ -7839,6 +8267,11 @@ class VitalMeasurement extends DataClass
       value1: serializer.fromJson<double?>(json['value1']),
       value2: serializer.fromJson<double?>(json['value2']),
       unit: serializer.fromJson<String?>(json['unit']),
+      context: serializer.fromJson<String?>(json['context']),
+      relatedMealId: serializer.fromJson<String?>(json['relatedMealId']),
+      relatedMedicationId:
+          serializer.fromJson<String?>(json['relatedMedicationId']),
+      minutesAfter: serializer.fromJson<int?>(json['minutesAfter']),
       measuredAt: serializer.fromJson<DateTime>(json['measuredAt']),
       notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -7856,6 +8289,10 @@ class VitalMeasurement extends DataClass
       'value1': serializer.toJson<double?>(value1),
       'value2': serializer.toJson<double?>(value2),
       'unit': serializer.toJson<String?>(unit),
+      'context': serializer.toJson<String?>(context),
+      'relatedMealId': serializer.toJson<String?>(relatedMealId),
+      'relatedMedicationId': serializer.toJson<String?>(relatedMedicationId),
+      'minutesAfter': serializer.toJson<int?>(minutesAfter),
       'measuredAt': serializer.toJson<DateTime>(measuredAt),
       'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -7871,6 +8308,10 @@ class VitalMeasurement extends DataClass
           Value<double?> value1 = const Value.absent(),
           Value<double?> value2 = const Value.absent(),
           Value<String?> unit = const Value.absent(),
+          Value<String?> context = const Value.absent(),
+          Value<String?> relatedMealId = const Value.absent(),
+          Value<String?> relatedMedicationId = const Value.absent(),
+          Value<int?> minutesAfter = const Value.absent(),
           DateTime? measuredAt,
           Value<String?> notes = const Value.absent(),
           DateTime? createdAt,
@@ -7883,6 +8324,14 @@ class VitalMeasurement extends DataClass
         value1: value1.present ? value1.value : this.value1,
         value2: value2.present ? value2.value : this.value2,
         unit: unit.present ? unit.value : this.unit,
+        context: context.present ? context.value : this.context,
+        relatedMealId:
+            relatedMealId.present ? relatedMealId.value : this.relatedMealId,
+        relatedMedicationId: relatedMedicationId.present
+            ? relatedMedicationId.value
+            : this.relatedMedicationId,
+        minutesAfter:
+            minutesAfter.present ? minutesAfter.value : this.minutesAfter,
         measuredAt: measuredAt ?? this.measuredAt,
         notes: notes.present ? notes.value : this.notes,
         createdAt: createdAt ?? this.createdAt,
@@ -7901,6 +8350,16 @@ class VitalMeasurement extends DataClass
       value1: data.value1.present ? data.value1.value : this.value1,
       value2: data.value2.present ? data.value2.value : this.value2,
       unit: data.unit.present ? data.unit.value : this.unit,
+      context: data.context.present ? data.context.value : this.context,
+      relatedMealId: data.relatedMealId.present
+          ? data.relatedMealId.value
+          : this.relatedMealId,
+      relatedMedicationId: data.relatedMedicationId.present
+          ? data.relatedMedicationId.value
+          : this.relatedMedicationId,
+      minutesAfter: data.minutesAfter.present
+          ? data.minutesAfter.value
+          : this.minutesAfter,
       measuredAt:
           data.measuredAt.present ? data.measuredAt.value : this.measuredAt,
       notes: data.notes.present ? data.notes.value : this.notes,
@@ -7919,6 +8378,10 @@ class VitalMeasurement extends DataClass
           ..write('value1: $value1, ')
           ..write('value2: $value2, ')
           ..write('unit: $unit, ')
+          ..write('context: $context, ')
+          ..write('relatedMealId: $relatedMealId, ')
+          ..write('relatedMedicationId: $relatedMedicationId, ')
+          ..write('minutesAfter: $minutesAfter, ')
           ..write('measuredAt: $measuredAt, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
@@ -7929,8 +8392,22 @@ class VitalMeasurement extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(measurementId, patientId, measurementType,
-      value1, value2, unit, measuredAt, notes, createdAt, updatedAt, deletedAt);
+  int get hashCode => Object.hash(
+      measurementId,
+      patientId,
+      measurementType,
+      value1,
+      value2,
+      unit,
+      context,
+      relatedMealId,
+      relatedMedicationId,
+      minutesAfter,
+      measuredAt,
+      notes,
+      createdAt,
+      updatedAt,
+      deletedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -7941,6 +8418,10 @@ class VitalMeasurement extends DataClass
           other.value1 == this.value1 &&
           other.value2 == this.value2 &&
           other.unit == this.unit &&
+          other.context == this.context &&
+          other.relatedMealId == this.relatedMealId &&
+          other.relatedMedicationId == this.relatedMedicationId &&
+          other.minutesAfter == this.minutesAfter &&
           other.measuredAt == this.measuredAt &&
           other.notes == this.notes &&
           other.createdAt == this.createdAt &&
@@ -7955,6 +8436,10 @@ class VitalsMeasurementsCompanion extends UpdateCompanion<VitalMeasurement> {
   final Value<double?> value1;
   final Value<double?> value2;
   final Value<String?> unit;
+  final Value<String?> context;
+  final Value<String?> relatedMealId;
+  final Value<String?> relatedMedicationId;
+  final Value<int?> minutesAfter;
   final Value<DateTime> measuredAt;
   final Value<String?> notes;
   final Value<DateTime> createdAt;
@@ -7968,6 +8453,10 @@ class VitalsMeasurementsCompanion extends UpdateCompanion<VitalMeasurement> {
     this.value1 = const Value.absent(),
     this.value2 = const Value.absent(),
     this.unit = const Value.absent(),
+    this.context = const Value.absent(),
+    this.relatedMealId = const Value.absent(),
+    this.relatedMedicationId = const Value.absent(),
+    this.minutesAfter = const Value.absent(),
     this.measuredAt = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -7982,6 +8471,10 @@ class VitalsMeasurementsCompanion extends UpdateCompanion<VitalMeasurement> {
     this.value1 = const Value.absent(),
     this.value2 = const Value.absent(),
     this.unit = const Value.absent(),
+    this.context = const Value.absent(),
+    this.relatedMealId = const Value.absent(),
+    this.relatedMedicationId = const Value.absent(),
+    this.minutesAfter = const Value.absent(),
     required DateTime measuredAt,
     this.notes = const Value.absent(),
     required DateTime createdAt,
@@ -8001,6 +8494,10 @@ class VitalsMeasurementsCompanion extends UpdateCompanion<VitalMeasurement> {
     Expression<double>? value1,
     Expression<double>? value2,
     Expression<String>? unit,
+    Expression<String>? context,
+    Expression<String>? relatedMealId,
+    Expression<String>? relatedMedicationId,
+    Expression<int>? minutesAfter,
     Expression<DateTime>? measuredAt,
     Expression<String>? notes,
     Expression<DateTime>? createdAt,
@@ -8015,6 +8512,11 @@ class VitalsMeasurementsCompanion extends UpdateCompanion<VitalMeasurement> {
       if (value1 != null) 'value_1': value1,
       if (value2 != null) 'value_2': value2,
       if (unit != null) 'unit': unit,
+      if (context != null) 'context': context,
+      if (relatedMealId != null) 'related_meal_id': relatedMealId,
+      if (relatedMedicationId != null)
+        'related_medication_id': relatedMedicationId,
+      if (minutesAfter != null) 'minutes_after': minutesAfter,
       if (measuredAt != null) 'measured_at': measuredAt,
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
@@ -8031,6 +8533,10 @@ class VitalsMeasurementsCompanion extends UpdateCompanion<VitalMeasurement> {
       Value<double?>? value1,
       Value<double?>? value2,
       Value<String?>? unit,
+      Value<String?>? context,
+      Value<String?>? relatedMealId,
+      Value<String?>? relatedMedicationId,
+      Value<int?>? minutesAfter,
       Value<DateTime>? measuredAt,
       Value<String?>? notes,
       Value<DateTime>? createdAt,
@@ -8044,6 +8550,10 @@ class VitalsMeasurementsCompanion extends UpdateCompanion<VitalMeasurement> {
       value1: value1 ?? this.value1,
       value2: value2 ?? this.value2,
       unit: unit ?? this.unit,
+      context: context ?? this.context,
+      relatedMealId: relatedMealId ?? this.relatedMealId,
+      relatedMedicationId: relatedMedicationId ?? this.relatedMedicationId,
+      minutesAfter: minutesAfter ?? this.minutesAfter,
       measuredAt: measuredAt ?? this.measuredAt,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
@@ -8073,6 +8583,19 @@ class VitalsMeasurementsCompanion extends UpdateCompanion<VitalMeasurement> {
     }
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
+    }
+    if (context.present) {
+      map['context'] = Variable<String>(context.value);
+    }
+    if (relatedMealId.present) {
+      map['related_meal_id'] = Variable<String>(relatedMealId.value);
+    }
+    if (relatedMedicationId.present) {
+      map['related_medication_id'] =
+          Variable<String>(relatedMedicationId.value);
+    }
+    if (minutesAfter.present) {
+      map['minutes_after'] = Variable<int>(minutesAfter.value);
     }
     if (measuredAt.present) {
       map['measured_at'] = Variable<DateTime>(measuredAt.value);
@@ -8104,6 +8627,10 @@ class VitalsMeasurementsCompanion extends UpdateCompanion<VitalMeasurement> {
           ..write('value1: $value1, ')
           ..write('value2: $value2, ')
           ..write('unit: $unit, ')
+          ..write('context: $context, ')
+          ..write('relatedMealId: $relatedMealId, ')
+          ..write('relatedMedicationId: $relatedMedicationId, ')
+          ..write('minutesAfter: $minutesAfter, ')
           ..write('measuredAt: $measuredAt, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
@@ -12493,6 +13020,7 @@ typedef $$MedicationsTableCreateCompanionBuilder = MedicationsCompanion
   Value<bool> isPrn,
   Value<int?> maximumDailyQuantityScaled,
   Value<double?> catalogPriceEgp,
+  Value<bool> storageOnly,
   required String status,
   required DateTime createdAt,
   required DateTime updatedAt,
@@ -12518,6 +13046,7 @@ typedef $$MedicationsTableUpdateCompanionBuilder = MedicationsCompanion
   Value<bool> isPrn,
   Value<int?> maximumDailyQuantityScaled,
   Value<double?> catalogPriceEgp,
+  Value<bool> storageOnly,
   Value<String> status,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -12589,6 +13118,9 @@ class $$MedicationsTableFilterComposer
   ColumnFilters<double> get catalogPriceEgp => $composableBuilder(
       column: $table.catalogPriceEgp,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get storageOnly => $composableBuilder(
+      column: $table.storageOnly, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get status => $composableBuilder(
       column: $table.status, builder: (column) => ColumnFilters(column));
@@ -12669,6 +13201,9 @@ class $$MedicationsTableOrderingComposer
       column: $table.catalogPriceEgp,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get storageOnly => $composableBuilder(
+      column: $table.storageOnly, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get status => $composableBuilder(
       column: $table.status, builder: (column) => ColumnOrderings(column));
 
@@ -12742,6 +13277,9 @@ class $$MedicationsTableAnnotationComposer
   GeneratedColumn<double> get catalogPriceEgp => $composableBuilder(
       column: $table.catalogPriceEgp, builder: (column) => column);
 
+  GeneratedColumn<bool> get storageOnly => $composableBuilder(
+      column: $table.storageOnly, builder: (column) => column);
+
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
@@ -12795,6 +13333,7 @@ class $$MedicationsTableTableManager extends RootTableManager<
             Value<bool> isPrn = const Value.absent(),
             Value<int?> maximumDailyQuantityScaled = const Value.absent(),
             Value<double?> catalogPriceEgp = const Value.absent(),
+            Value<bool> storageOnly = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -12819,6 +13358,7 @@ class $$MedicationsTableTableManager extends RootTableManager<
             isPrn: isPrn,
             maximumDailyQuantityScaled: maximumDailyQuantityScaled,
             catalogPriceEgp: catalogPriceEgp,
+            storageOnly: storageOnly,
             status: status,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -12843,6 +13383,7 @@ class $$MedicationsTableTableManager extends RootTableManager<
             Value<bool> isPrn = const Value.absent(),
             Value<int?> maximumDailyQuantityScaled = const Value.absent(),
             Value<double?> catalogPriceEgp = const Value.absent(),
+            Value<bool> storageOnly = const Value.absent(),
             required String status,
             required DateTime createdAt,
             required DateTime updatedAt,
@@ -12867,6 +13408,7 @@ class $$MedicationsTableTableManager extends RootTableManager<
             isPrn: isPrn,
             maximumDailyQuantityScaled: maximumDailyQuantityScaled,
             catalogPriceEgp: catalogPriceEgp,
+            storageOnly: storageOnly,
             status: status,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -12902,6 +13444,9 @@ typedef $$MedicationInventoryBatchesTableCreateCompanionBuilder
   Value<String?> packagingType,
   Value<int?> unitsPerPackage,
   Value<int?> packagesCount,
+  Value<String?> subPackagingType,
+  Value<int?> subPackagesPerPackage,
+  Value<int?> looseQuantityScaled,
   required int initialQuantityScaled,
   required int availableQuantityScaled,
   Value<int> quantityScale,
@@ -12922,6 +13467,9 @@ typedef $$MedicationInventoryBatchesTableUpdateCompanionBuilder
   Value<String?> packagingType,
   Value<int?> unitsPerPackage,
   Value<int?> packagesCount,
+  Value<String?> subPackagingType,
+  Value<int?> subPackagesPerPackage,
+  Value<int?> looseQuantityScaled,
   Value<int> initialQuantityScaled,
   Value<int> availableQuantityScaled,
   Value<int> quantityScale,
@@ -12968,6 +13516,18 @@ class $$MedicationInventoryBatchesTableFilterComposer
 
   ColumnFilters<int> get packagesCount => $composableBuilder(
       column: $table.packagesCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get subPackagingType => $composableBuilder(
+      column: $table.subPackagingType,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get subPackagesPerPackage => $composableBuilder(
+      column: $table.subPackagesPerPackage,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get looseQuantityScaled => $composableBuilder(
+      column: $table.looseQuantityScaled,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get initialQuantityScaled => $composableBuilder(
       column: $table.initialQuantityScaled,
@@ -13037,6 +13597,18 @@ class $$MedicationInventoryBatchesTableOrderingComposer
       column: $table.packagesCount,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get subPackagingType => $composableBuilder(
+      column: $table.subPackagingType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get subPackagesPerPackage => $composableBuilder(
+      column: $table.subPackagesPerPackage,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get looseQuantityScaled => $composableBuilder(
+      column: $table.looseQuantityScaled,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get initialQuantityScaled => $composableBuilder(
       column: $table.initialQuantityScaled,
       builder: (column) => ColumnOrderings(column));
@@ -13097,6 +13669,15 @@ class $$MedicationInventoryBatchesTableAnnotationComposer
 
   GeneratedColumn<int> get packagesCount => $composableBuilder(
       column: $table.packagesCount, builder: (column) => column);
+
+  GeneratedColumn<String> get subPackagingType => $composableBuilder(
+      column: $table.subPackagingType, builder: (column) => column);
+
+  GeneratedColumn<int> get subPackagesPerPackage => $composableBuilder(
+      column: $table.subPackagesPerPackage, builder: (column) => column);
+
+  GeneratedColumn<int> get looseQuantityScaled => $composableBuilder(
+      column: $table.looseQuantityScaled, builder: (column) => column);
 
   GeneratedColumn<int> get initialQuantityScaled => $composableBuilder(
       column: $table.initialQuantityScaled, builder: (column) => column);
@@ -13162,6 +13743,9 @@ class $$MedicationInventoryBatchesTableTableManager extends RootTableManager<
             Value<String?> packagingType = const Value.absent(),
             Value<int?> unitsPerPackage = const Value.absent(),
             Value<int?> packagesCount = const Value.absent(),
+            Value<String?> subPackagingType = const Value.absent(),
+            Value<int?> subPackagesPerPackage = const Value.absent(),
+            Value<int?> looseQuantityScaled = const Value.absent(),
             Value<int> initialQuantityScaled = const Value.absent(),
             Value<int> availableQuantityScaled = const Value.absent(),
             Value<int> quantityScale = const Value.absent(),
@@ -13181,6 +13765,9 @@ class $$MedicationInventoryBatchesTableTableManager extends RootTableManager<
             packagingType: packagingType,
             unitsPerPackage: unitsPerPackage,
             packagesCount: packagesCount,
+            subPackagingType: subPackagingType,
+            subPackagesPerPackage: subPackagesPerPackage,
+            looseQuantityScaled: looseQuantityScaled,
             initialQuantityScaled: initialQuantityScaled,
             availableQuantityScaled: availableQuantityScaled,
             quantityScale: quantityScale,
@@ -13200,6 +13787,9 @@ class $$MedicationInventoryBatchesTableTableManager extends RootTableManager<
             Value<String?> packagingType = const Value.absent(),
             Value<int?> unitsPerPackage = const Value.absent(),
             Value<int?> packagesCount = const Value.absent(),
+            Value<String?> subPackagingType = const Value.absent(),
+            Value<int?> subPackagesPerPackage = const Value.absent(),
+            Value<int?> looseQuantityScaled = const Value.absent(),
             required int initialQuantityScaled,
             required int availableQuantityScaled,
             Value<int> quantityScale = const Value.absent(),
@@ -13219,6 +13809,9 @@ class $$MedicationInventoryBatchesTableTableManager extends RootTableManager<
             packagingType: packagingType,
             unitsPerPackage: unitsPerPackage,
             packagesCount: packagesCount,
+            subPackagingType: subPackagingType,
+            subPackagesPerPackage: subPackagesPerPackage,
+            looseQuantityScaled: looseQuantityScaled,
             initialQuantityScaled: initialQuantityScaled,
             availableQuantityScaled: availableQuantityScaled,
             quantityScale: quantityScale,
@@ -13539,6 +14132,8 @@ typedef $$MealsTableCreateCompanionBuilder = MealsCompanion Function({
   required String nameAr,
   required String mealType,
   Value<String?> defaultTime,
+  Value<String> timeMode,
+  Value<String?> weekdayTimes,
   Value<bool> isActive,
   required DateTime createdAt,
   required DateTime updatedAt,
@@ -13552,6 +14147,8 @@ typedef $$MealsTableUpdateCompanionBuilder = MealsCompanion Function({
   Value<String> nameAr,
   Value<String> mealType,
   Value<String?> defaultTime,
+  Value<String> timeMode,
+  Value<String?> weekdayTimes,
   Value<bool> isActive,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -13584,6 +14181,12 @@ class $$MealsTableFilterComposer extends Composer<_$AppDatabase, $MealsTable> {
 
   ColumnFilters<String> get defaultTime => $composableBuilder(
       column: $table.defaultTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get timeMode => $composableBuilder(
+      column: $table.timeMode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get weekdayTimes => $composableBuilder(
+      column: $table.weekdayTimes, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isActive => $composableBuilder(
       column: $table.isActive, builder: (column) => ColumnFilters(column));
@@ -13625,6 +14228,13 @@ class $$MealsTableOrderingComposer
   ColumnOrderings<String> get defaultTime => $composableBuilder(
       column: $table.defaultTime, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get timeMode => $composableBuilder(
+      column: $table.timeMode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get weekdayTimes => $composableBuilder(
+      column: $table.weekdayTimes,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get isActive => $composableBuilder(
       column: $table.isActive, builder: (column) => ColumnOrderings(column));
 
@@ -13664,6 +14274,12 @@ class $$MealsTableAnnotationComposer
 
   GeneratedColumn<String> get defaultTime => $composableBuilder(
       column: $table.defaultTime, builder: (column) => column);
+
+  GeneratedColumn<String> get timeMode =>
+      $composableBuilder(column: $table.timeMode, builder: (column) => column);
+
+  GeneratedColumn<String> get weekdayTimes => $composableBuilder(
+      column: $table.weekdayTimes, builder: (column) => column);
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
@@ -13707,6 +14323,8 @@ class $$MealsTableTableManager extends RootTableManager<
             Value<String> nameAr = const Value.absent(),
             Value<String> mealType = const Value.absent(),
             Value<String?> defaultTime = const Value.absent(),
+            Value<String> timeMode = const Value.absent(),
+            Value<String?> weekdayTimes = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -13720,6 +14338,8 @@ class $$MealsTableTableManager extends RootTableManager<
             nameAr: nameAr,
             mealType: mealType,
             defaultTime: defaultTime,
+            timeMode: timeMode,
+            weekdayTimes: weekdayTimes,
             isActive: isActive,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -13733,6 +14353,8 @@ class $$MealsTableTableManager extends RootTableManager<
             required String nameAr,
             required String mealType,
             Value<String?> defaultTime = const Value.absent(),
+            Value<String> timeMode = const Value.absent(),
+            Value<String?> weekdayTimes = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
@@ -13746,6 +14368,8 @@ class $$MealsTableTableManager extends RootTableManager<
             nameAr: nameAr,
             mealType: mealType,
             defaultTime: defaultTime,
+            timeMode: timeMode,
+            weekdayTimes: weekdayTimes,
             isActive: isActive,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -13775,6 +14399,7 @@ typedef $$MedicationSchedulesTableCreateCompanionBuilder
     = MedicationSchedulesCompanion Function({
   required String scheduleId,
   required String medicationId,
+  Value<String?> groupId,
   required String scheduleType,
   Value<String?> fixedTime,
   Value<String?> mealId,
@@ -13795,6 +14420,7 @@ typedef $$MedicationSchedulesTableUpdateCompanionBuilder
     = MedicationSchedulesCompanion Function({
   Value<String> scheduleId,
   Value<String> medicationId,
+  Value<String?> groupId,
   Value<String> scheduleType,
   Value<String?> fixedTime,
   Value<String?> mealId,
@@ -13826,6 +14452,9 @@ class $$MedicationSchedulesTableFilterComposer
 
   ColumnFilters<String> get medicationId => $composableBuilder(
       column: $table.medicationId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get groupId => $composableBuilder(
+      column: $table.groupId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get scheduleType => $composableBuilder(
       column: $table.scheduleType, builder: (column) => ColumnFilters(column));
@@ -13888,6 +14517,9 @@ class $$MedicationSchedulesTableOrderingComposer
   ColumnOrderings<String> get medicationId => $composableBuilder(
       column: $table.medicationId,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get groupId => $composableBuilder(
+      column: $table.groupId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get scheduleType => $composableBuilder(
       column: $table.scheduleType,
@@ -13952,6 +14584,9 @@ class $$MedicationSchedulesTableAnnotationComposer
 
   GeneratedColumn<String> get medicationId => $composableBuilder(
       column: $table.medicationId, builder: (column) => column);
+
+  GeneratedColumn<String> get groupId =>
+      $composableBuilder(column: $table.groupId, builder: (column) => column);
 
   GeneratedColumn<String> get scheduleType => $composableBuilder(
       column: $table.scheduleType, builder: (column) => column);
@@ -14028,6 +14663,7 @@ class $$MedicationSchedulesTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> scheduleId = const Value.absent(),
             Value<String> medicationId = const Value.absent(),
+            Value<String?> groupId = const Value.absent(),
             Value<String> scheduleType = const Value.absent(),
             Value<String?> fixedTime = const Value.absent(),
             Value<String?> mealId = const Value.absent(),
@@ -14047,6 +14683,7 @@ class $$MedicationSchedulesTableTableManager extends RootTableManager<
               MedicationSchedulesCompanion(
             scheduleId: scheduleId,
             medicationId: medicationId,
+            groupId: groupId,
             scheduleType: scheduleType,
             fixedTime: fixedTime,
             mealId: mealId,
@@ -14066,6 +14703,7 @@ class $$MedicationSchedulesTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             required String scheduleId,
             required String medicationId,
+            Value<String?> groupId = const Value.absent(),
             required String scheduleType,
             Value<String?> fixedTime = const Value.absent(),
             Value<String?> mealId = const Value.absent(),
@@ -14085,6 +14723,7 @@ class $$MedicationSchedulesTableTableManager extends RootTableManager<
               MedicationSchedulesCompanion.insert(
             scheduleId: scheduleId,
             medicationId: medicationId,
+            groupId: groupId,
             scheduleType: scheduleType,
             fixedTime: fixedTime,
             mealId: mealId,
@@ -15025,6 +15664,10 @@ typedef $$VitalsMeasurementsTableCreateCompanionBuilder
   Value<double?> value1,
   Value<double?> value2,
   Value<String?> unit,
+  Value<String?> context,
+  Value<String?> relatedMealId,
+  Value<String?> relatedMedicationId,
+  Value<int?> minutesAfter,
   required DateTime measuredAt,
   Value<String?> notes,
   required DateTime createdAt,
@@ -15040,6 +15683,10 @@ typedef $$VitalsMeasurementsTableUpdateCompanionBuilder
   Value<double?> value1,
   Value<double?> value2,
   Value<String?> unit,
+  Value<String?> context,
+  Value<String?> relatedMealId,
+  Value<String?> relatedMedicationId,
+  Value<int?> minutesAfter,
   Value<DateTime> measuredAt,
   Value<String?> notes,
   Value<DateTime> createdAt,
@@ -15075,6 +15722,19 @@ class $$VitalsMeasurementsTableFilterComposer
 
   ColumnFilters<String> get unit => $composableBuilder(
       column: $table.unit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get context => $composableBuilder(
+      column: $table.context, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get relatedMealId => $composableBuilder(
+      column: $table.relatedMealId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get relatedMedicationId => $composableBuilder(
+      column: $table.relatedMedicationId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get minutesAfter => $composableBuilder(
+      column: $table.minutesAfter, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get measuredAt => $composableBuilder(
       column: $table.measuredAt, builder: (column) => ColumnFilters(column));
@@ -15121,6 +15781,21 @@ class $$VitalsMeasurementsTableOrderingComposer
   ColumnOrderings<String> get unit => $composableBuilder(
       column: $table.unit, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get context => $composableBuilder(
+      column: $table.context, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get relatedMealId => $composableBuilder(
+      column: $table.relatedMealId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get relatedMedicationId => $composableBuilder(
+      column: $table.relatedMedicationId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get minutesAfter => $composableBuilder(
+      column: $table.minutesAfter,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get measuredAt => $composableBuilder(
       column: $table.measuredAt, builder: (column) => ColumnOrderings(column));
 
@@ -15163,6 +15838,18 @@ class $$VitalsMeasurementsTableAnnotationComposer
 
   GeneratedColumn<String> get unit =>
       $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get context =>
+      $composableBuilder(column: $table.context, builder: (column) => column);
+
+  GeneratedColumn<String> get relatedMealId => $composableBuilder(
+      column: $table.relatedMealId, builder: (column) => column);
+
+  GeneratedColumn<String> get relatedMedicationId => $composableBuilder(
+      column: $table.relatedMedicationId, builder: (column) => column);
+
+  GeneratedColumn<int> get minutesAfter => $composableBuilder(
+      column: $table.minutesAfter, builder: (column) => column);
 
   GeneratedColumn<DateTime> get measuredAt => $composableBuilder(
       column: $table.measuredAt, builder: (column) => column);
@@ -15214,6 +15901,10 @@ class $$VitalsMeasurementsTableTableManager extends RootTableManager<
             Value<double?> value1 = const Value.absent(),
             Value<double?> value2 = const Value.absent(),
             Value<String?> unit = const Value.absent(),
+            Value<String?> context = const Value.absent(),
+            Value<String?> relatedMealId = const Value.absent(),
+            Value<String?> relatedMedicationId = const Value.absent(),
+            Value<int?> minutesAfter = const Value.absent(),
             Value<DateTime> measuredAt = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -15228,6 +15919,10 @@ class $$VitalsMeasurementsTableTableManager extends RootTableManager<
             value1: value1,
             value2: value2,
             unit: unit,
+            context: context,
+            relatedMealId: relatedMealId,
+            relatedMedicationId: relatedMedicationId,
+            minutesAfter: minutesAfter,
             measuredAt: measuredAt,
             notes: notes,
             createdAt: createdAt,
@@ -15242,6 +15937,10 @@ class $$VitalsMeasurementsTableTableManager extends RootTableManager<
             Value<double?> value1 = const Value.absent(),
             Value<double?> value2 = const Value.absent(),
             Value<String?> unit = const Value.absent(),
+            Value<String?> context = const Value.absent(),
+            Value<String?> relatedMealId = const Value.absent(),
+            Value<String?> relatedMedicationId = const Value.absent(),
+            Value<int?> minutesAfter = const Value.absent(),
             required DateTime measuredAt,
             Value<String?> notes = const Value.absent(),
             required DateTime createdAt,
@@ -15256,6 +15955,10 @@ class $$VitalsMeasurementsTableTableManager extends RootTableManager<
             value1: value1,
             value2: value2,
             unit: unit,
+            context: context,
+            relatedMealId: relatedMealId,
+            relatedMedicationId: relatedMedicationId,
+            minutesAfter: minutesAfter,
             measuredAt: measuredAt,
             notes: notes,
             createdAt: createdAt,

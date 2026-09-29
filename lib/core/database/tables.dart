@@ -88,6 +88,9 @@ class Medications extends Table {
   IntColumn get maximumDailyQuantityScaled => integer().nullable()();
   RealColumn get catalogPriceEgp => real().nullable()();
 
+  /// Stock kept in storage without being part of the patient's treatment.
+  BoolColumn get storageOnly => boolean().withDefault(const Constant(false))();
+
   /// `active` or `archived`.
   TextColumn get status => text()();
   DateTimeColumn get createdAt => dateTime()();
@@ -106,8 +109,17 @@ class MedicationInventoryBatches extends Table {
   RealColumn get purchasePrice => real().nullable()();
   TextColumn get expirationDate => text().nullable()();
   TextColumn get packagingType => text().nullable()();
+
+  /// Units per innermost pack (per package, or per sub-package when set).
   IntColumn get unitsPerPackage => integer().nullable()();
   IntColumn get packagesCount => integer().nullable()();
+
+  /// Optional inner packaging, e.g. strips/blisters inside a box.
+  TextColumn get subPackagingType => text().nullable()();
+  IntColumn get subPackagesPerPackage => integer().nullable()();
+
+  /// Extra loose units added to the packaged quantity.
+  IntColumn get looseQuantityScaled => integer().nullable()();
   IntColumn get initialQuantityScaled => integer()();
   IntColumn get availableQuantityScaled => integer()();
   IntColumn get quantityScale => integer().withDefault(const Constant(1000))();
@@ -149,6 +161,12 @@ class Meals extends Table {
 
   /// Local wall-clock `HH:mm`. When null the meal type default is used.
   TextColumn get defaultTime => text().nullable()();
+
+  /// `daily` (same time every day) or `weekly` (per-weekday times).
+  TextColumn get timeMode => text().withDefault(const Constant('daily'))();
+
+  /// JSON map of ISO weekday → `HH:mm`, used when [timeMode] is weekly.
+  TextColumn get weekdayTimes => text().nullable()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -161,6 +179,10 @@ class Meals extends Table {
 class MedicationSchedules extends Table {
   TextColumn get scheduleId => text()();
   TextColumn get medicationId => text()();
+
+  /// Schedules created together as one dose plan (e.g. 3 times a day after
+  /// meals) share a group ID and are edited as a unit.
+  TextColumn get groupId => text().nullable()();
 
   /// `fixed_time` or `meal_relative`.
   TextColumn get scheduleType => text()();
@@ -263,6 +285,14 @@ class VitalsMeasurements extends Table {
   RealColumn get value1 => real().named('value_1').nullable()();
   RealColumn get value2 => real().named('value_2').nullable()();
   TextColumn get unit => text().nullable()();
+
+  /// fasting, before_meal, after_meal, after_medication or random.
+  TextColumn get context => text().nullable()();
+  TextColumn get relatedMealId => text().nullable()();
+  TextColumn get relatedMedicationId => text().nullable()();
+
+  /// Minutes after the related meal or medication.
+  IntColumn get minutesAfter => integer().nullable()();
   DateTimeColumn get measuredAt => dateTime()();
   TextColumn get notes => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
