@@ -51,7 +51,7 @@ Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
                     controller: qty,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                        labelText: 'Quantity scaled (1000 = 1 unit)'),
+                      labelText: 'Quantity scaled (1000 = 1 unit)')),
                 DropdownButtonFormField<RecurrenceType>(
                     initialValue: recurrence,
                     items: RecurrenceType.values
