@@ -10,6 +10,22 @@ final inventoryBatchesProvider = FutureProvider.autoDispose((ref) async {
   return db.select(db.inventoryBatches).get();
 });
 
+final inventoryAlertsProvider = FutureProvider.autoDispose((ref) async {
+    final batches = await ref.watch(inventoryBatchesProvider.future);
+    final now = DateTime.now();
+    final expiring = batches.where((batch) {
+        final expiry = batch.expirationDate;
+        return !batch.isDepleted &&
+                expiry != null &&
+                expiry.isAfter(now) &&
+                expiry.isBefore(now.add(const Duration(days: 30)));
+    }).length;
+    final lowStock = batches.where((batch) {
+        return !batch.isDepleted && batch.availableQuantityScaled <= batch.quantityScale;
+    }).length;
+    return (lowStock: lowStock, expiring: expiring);
+});
+
 Future<void> _editBatch(
     BuildContext context,
     WidgetRef ref,
@@ -115,6 +131,7 @@ class InventoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final batches = ref.watch(inventoryBatchesProvider);
+    final alerts = ref.watch(inventoryAlertsProvider);
     return AppScaffold(
         title: 'Stock & batches',
         child: batches.when(
@@ -131,6 +148,34 @@ class InventoryScreen extends ConsumerWidget {
                   label: const Text('Add stock'))
             ]),
             const SizedBox(height: 18),
+                        alerts.when(
+                            loading: () => const LinearProgressIndicator(),
+                            error: (_, __) => const SizedBox.shrink(),
+                            data: (summary) => Row(
+                                children: [
+                                    Expanded(
+                                        child: Card(
+                                            child: ListTile(
+                                                leading: const Icon(Icons.trending_down),
+                                                title: Text('${summary.lowStock} low-stock batches'),
+                                                subtitle: const Text('At or below one unit'),
+                                            ),
+                                        ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                        child: Card(
+                                            child: ListTile(
+                                                leading: const Icon(Icons.event_busy),
+                                                title: Text('${summary.expiring} expiring soon'),
+                                                subtitle: const Text('Within the next 30 days'),
+                                            ),
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ),
+                        const SizedBox(height: 8),
             if (items.isEmpty)
               const Card(
                   child: Padding(
