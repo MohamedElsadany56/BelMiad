@@ -1158,19 +1158,19 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{on} days on, {off} days off'**
-  String scheduleCycle(Object off, Object on);
+  String scheduleCycle(Object on, Object off);
 
   /// No description provided for @scheduleBeforeMeal.
   ///
   /// In en, this message translates to:
   /// **'{minutes} min before {meal}'**
-  String scheduleBeforeMeal(Object meal, Object minutes);
+  String scheduleBeforeMeal(Object minutes, Object meal);
 
   /// No description provided for @scheduleAfterMeal.
   ///
   /// In en, this message translates to:
   /// **'{minutes} min after {meal}'**
-  String scheduleAfterMeal(Object meal, Object minutes);
+  String scheduleAfterMeal(Object minutes, Object meal);
 
   /// No description provided for @scheduleWithMeal.
   ///
@@ -1296,7 +1296,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Required {required}, but only {available} is available in usable stock.'**
-  String insufficientStockBody(Object available, Object required);
+  String insufficientStockBody(Object required, Object available);
 
   /// No description provided for @customAmount.
   ///
@@ -1326,7 +1326,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Maximum {maximum} per day. Already taken today: {taken}. This dose: {attempt}.'**
-  String maxExceededBody(Object attempt, Object maximum, Object taken);
+  String maxExceededBody(Object maximum, Object taken, Object attempt);
 
   /// No description provided for @recordAnyway.
   ///
@@ -1812,7 +1812,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{previous} → {next}'**
-  String quantityChange(Object next, Object previous);
+  String quantityChange(Object previous, Object next);
 
   /// No description provided for @consumedForDose.
   ///
@@ -3205,6 +3205,420 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Files are not supported on this platform'**
   String get error_filesUnsupported;
+
+  /// No description provided for @dosePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Dose plan'**
+  String get dosePlan;
+
+  /// No description provided for @doseTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Times of day'**
+  String get doseTimes;
+
+  /// No description provided for @addTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Add time'**
+  String get addTime;
+
+  /// No description provided for @removeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove time'**
+  String get removeTime;
+
+  /// No description provided for @quickSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick setup'**
+  String get quickSetup;
+
+  /// No description provided for @presetOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Once a day'**
+  String get presetOnce;
+
+  /// No description provided for @presetTwice.
+  ///
+  /// In en, this message translates to:
+  /// **'Twice a day'**
+  String get presetTwice;
+
+  /// No description provided for @presetThree.
+  ///
+  /// In en, this message translates to:
+  /// **'3 times a day'**
+  String get presetThree;
+
+  /// No description provided for @presetFour.
+  ///
+  /// In en, this message translates to:
+  /// **'4 times a day'**
+  String get presetFour;
+
+  /// No description provided for @presetAfterMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'After each main meal'**
+  String get presetAfterMeals;
+
+  /// No description provided for @presetBeforeMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Before each main meal'**
+  String get presetBeforeMeals;
+
+  /// No description provided for @presetEvery8h.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 8 hours'**
+  String get presetEvery8h;
+
+  /// No description provided for @presetEvery12h.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 12 hours'**
+  String get presetEvery12h;
+
+  /// No description provided for @doseTimeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Time {number}'**
+  String doseTimeNumber(Object number);
+
+  /// No description provided for @timesPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Once a day} =2{Twice a day} other{{count} times a day}}'**
+  String timesPerDay(int count);
+
+  /// No description provided for @sharedSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to all times'**
+  String get sharedSettings;
+
+  /// No description provided for @variesByDay.
+  ///
+  /// In en, this message translates to:
+  /// **'varies by day'**
+  String get variesByDay;
+
+  /// No description provided for @error_timesRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one time'**
+  String get error_timesRequired;
+
+  /// No description provided for @containsInnerPacks.
+  ///
+  /// In en, this message translates to:
+  /// **'Contains strips or blisters'**
+  String get containsInnerPacks;
+
+  /// No description provided for @innerPackType.
+  ///
+  /// In en, this message translates to:
+  /// **'Inner pack'**
+  String get innerPackType;
+
+  /// No description provided for @innerPacksPer.
+  ///
+  /// In en, this message translates to:
+  /// **'{inner} per {outer}'**
+  String innerPacksPer(Object inner, Object outer);
+
+  /// No description provided for @unitsPer.
+  ///
+  /// In en, this message translates to:
+  /// **'{unit} per {pack}'**
+  String unitsPer(Object unit, Object pack);
+
+  /// No description provided for @looseUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra loose units'**
+  String get looseUnits;
+
+  /// No description provided for @packagingBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'{breakdown} = {total}'**
+  String packagingBreakdown(Object breakdown, Object total);
+
+  /// No description provided for @packaging_strip.
+  ///
+  /// In en, this message translates to:
+  /// **'Strip'**
+  String get packaging_strip;
+
+  /// No description provided for @storageOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage only'**
+  String get storageOnly;
+
+  /// No description provided for @storageOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this medicine in storage without adding it to the patient\'s treatment. No schedules or reminders are created.'**
+  String get storageOnlyHint;
+
+  /// No description provided for @newStorageMedicine.
+  ///
+  /// In en, this message translates to:
+  /// **'New medicine just for storage'**
+  String get newStorageMedicine;
+
+  /// No description provided for @startTaking.
+  ///
+  /// In en, this message translates to:
+  /// **'Start taking this medicine'**
+  String get startTaking;
+
+  /// No description provided for @moveToStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to storage only'**
+  String get moveToStorage;
+
+  /// No description provided for @storageBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get storageBadge;
+
+  /// No description provided for @filterActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get filterActive;
+
+  /// No description provided for @filterArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get filterArchived;
+
+  /// No description provided for @filterStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get filterStorage;
+
+  /// No description provided for @timeInZone.
+  ///
+  /// In en, this message translates to:
+  /// **'{timezone} time'**
+  String timeInZone(Object timezone);
+
+  /// No description provided for @mealTimeMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal time'**
+  String get mealTimeMode;
+
+  /// No description provided for @sameEveryDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Same every day'**
+  String get sameEveryDay;
+
+  /// No description provided for @differentByDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Different by weekday'**
+  String get differentByDay;
+
+  /// No description provided for @mealWeeklyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a time for each day. Days left empty use the default time.'**
+  String get mealWeeklyNote;
+
+  /// No description provided for @measurementContext.
+  ///
+  /// In en, this message translates to:
+  /// **'When was it measured?'**
+  String get measurementContext;
+
+  /// No description provided for @context_random.
+  ///
+  /// In en, this message translates to:
+  /// **'Any time'**
+  String get context_random;
+
+  /// No description provided for @context_fasting.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting'**
+  String get context_fasting;
+
+  /// No description provided for @context_before_meal.
+  ///
+  /// In en, this message translates to:
+  /// **'Before a meal'**
+  String get context_before_meal;
+
+  /// No description provided for @context_after_meal.
+  ///
+  /// In en, this message translates to:
+  /// **'After a meal'**
+  String get context_after_meal;
+
+  /// No description provided for @context_after_medication.
+  ///
+  /// In en, this message translates to:
+  /// **'After taking medicine'**
+  String get context_after_medication;
+
+  /// No description provided for @relatedMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Which meal'**
+  String get relatedMeal;
+
+  /// No description provided for @relatedMedication.
+  ///
+  /// In en, this message translates to:
+  /// **'Which medicine'**
+  String get relatedMedication;
+
+  /// No description provided for @minutesAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes after'**
+  String get minutesAfter;
+
+  /// No description provided for @contextAfterMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'After {meal} · {minutes} min'**
+  String contextAfterMeal(Object meal, Object minutes);
+
+  /// No description provided for @contextAfterMedication.
+  ///
+  /// In en, this message translates to:
+  /// **'After {medicine} · {minutes} min'**
+  String contextAfterMedication(Object medicine, Object minutes);
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get takePhoto;
+
+  /// No description provided for @addPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another page'**
+  String get addPage;
+
+  /// No description provided for @pagesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 page} other{{count} pages}}'**
+  String pagesCount(int count);
+
+  /// No description provided for @saveAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as'**
+  String get saveAs;
+
+  /// No description provided for @formatPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get formatPhoto;
+
+  /// No description provided for @formatPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get formatPdf;
+
+  /// No description provided for @multiPagePdfNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Several pages are saved as one PDF.'**
+  String get multiPagePdfNote;
+
+  /// No description provided for @cameraPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is off. Allow it to photograph prescriptions.'**
+  String get cameraPermissionDenied;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get openSettings;
+
+  /// No description provided for @groupBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Group by'**
+  String get groupBy;
+
+  /// No description provided for @groupDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Doctor'**
+  String get groupDoctor;
+
+  /// No description provided for @groupDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get groupDate;
+
+  /// No description provided for @groupFileType.
+  ///
+  /// In en, this message translates to:
+  /// **'File type'**
+  String get groupFileType;
+
+  /// No description provided for @unknownDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown doctor'**
+  String get unknownDoctor;
+
+  /// No description provided for @noDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No date'**
+  String get noDate;
+
+  /// No description provided for @fileType_image.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get fileType_image;
+
+  /// No description provided for @fileType_pdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF documents'**
+  String get fileType_pdf;
+
+  /// No description provided for @fileType_other.
+  ///
+  /// In en, this message translates to:
+  /// **'Other files'**
+  String get fileType_other;
+
+  /// No description provided for @error_cameraDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access was denied'**
+  String get error_cameraDenied;
 }
 
 class _AppLocalizationsDelegate

@@ -13,6 +13,46 @@ import '../data/schedule_repository.dart';
 import '../domain/recurrence_rule.dart';
 import 'schedule_describer.dart';
 
+/// One editable time within the dose plan.
+class _Slot {
+  _Slot({
+    this.scheduleId,
+    this.type = ScheduleTypes.fixedTime,
+    this.time = '08:00',
+    this.mealId,
+    this.relation = TimingRelation.after,
+    int offset = 30,
+    String quantity = '1',
+  })  : offset = TextEditingController(text: '$offset'),
+        quantity = TextEditingController(text: quantity);
+
+  final String? scheduleId;
+  String type;
+  String time;
+  String? mealId;
+  TimingRelation relation;
+  final TextEditingController offset;
+  final TextEditingController quantity;
+
+  void dispose() {
+    offset.dispose();
+    quantity.dispose();
+  }
+}
+
+enum _Preset {
+  once,
+  twice,
+  three,
+  four,
+  every8h,
+  every12h,
+  afterMeals,
+  beforeMeals
+}
+
+/// Dose plan editor: several times of day for one medicine (e.g. 3 times a
+/// day after meals) are configured once and saved together.
 class ScheduleFormScreen extends ConsumerStatefulWidget {
   const ScheduleFormScreen({
     required this.medicationId,
@@ -21,6 +61,8 @@ class ScheduleFormScreen extends ConsumerStatefulWidget {
   });
 
   final String medicationId;
+
+  /// A schedule or dose-plan group ID when editing.
   final String? scheduleId;
 
   @override
@@ -29,18 +71,14 @@ class ScheduleFormScreen extends ConsumerStatefulWidget {
 
 class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
   final _form = GlobalKey<FormState>();
-  final _quantity = TextEditingController(text: '1');
-  final _offset = TextEditingController(text: '30');
   final _interval = TextEditingController(text: '2');
   final _onDays = TextEditingController(text: '21');
   final _offDays = TextEditingController(text: '7');
   final _weekdayQuantities = {
     for (var d = 1; d <= 7; d++) d: TextEditingController(),
   };
-  String _type = ScheduleTypes.fixedTime;
-  String _time = '08:00';
-  String? _mealId;
-  TimingRelation _relation = TimingRelation.before;
+  final List<_Slot> _slots = [_Slot()];
+  String? _groupId;
   RecurrenceType _recurrence = RecurrenceType.daily;
   final Set<int> _weekdays = {};
   String? _anchor;
@@ -61,15 +99,29 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
   Future<void> _load() async {
     final id = widget.scheduleId;
     if (id != null) {
-      final s = await ref.read(scheduleRepositoryProvider).get(id);
-      if (s != null) {
-        final rule = RecurrenceRule.decode(s.recurrenceRule);
-        _type = s.scheduleType;
-        _time = s.fixedTime ?? '08:00';
-        _mealId = s.mealId;
-        _relation = timingRelationFromCode(s.timingRelation);
-        _offset.text = '${s.offsetMinutes ?? 30}';
-        _quantity.text = formatScaled(s.doseQuantityScaled);
+      final rows = await ref.read(scheduleRepositoryProvider).getGroup(id);
+      rows.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      if (rows.isNotEmpty) {
+        final first = rows.first;
+        _groupId = first.groupId ?? first.scheduleId;
+        for (final slot in _slots) {
+          slot.dispose();
+        }
+        _slots
+          ..clear()
+          ..addAll([
+            for (final s in rows)
+              _Slot(
+                scheduleId: s.scheduleId,
+                type: s.scheduleType,
+                time: s.fixedTime ?? '08:00',
+                mealId: s.mealId,
+                relation: timingRelationFromCode(s.timingRelation),
+                offset: s.offsetMinutes ?? 30,
+                quantity: formatScaled(s.doseQuantityScaled),
+              ),
+          ]);
+        final rule = RecurrenceRule.decode(first.recurrenceRule);
         _recurrence = rule.type;
         _weekdays.addAll(rule.weekdays);
         _interval.text = '${rule.interval < 2 ? 2 : rule.interval}';
@@ -81,8 +133,8 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
           _weekdayQuantities[int.parse(entry.key)]!.text =
               formatScaled(entry.value);
         }
-        _validFrom = s.validFrom;
-        _validUntil = s.validUntil;
+        _validFrom = first.validFrom;
+        _validUntil = first.validUntil;
       }
     }
     if (mounted) setState(() => _loading = false);
@@ -91,8 +143,6 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
   @override
   void dispose() {
     for (final c in [
-      _quantity,
-      _offset,
       _interval,
       _onDays,
       _offDays,
@@ -100,7 +150,69 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
     ]) {
       c.dispose();
     }
+    for (final slot in _slots) {
+      slot.dispose();
+    }
     super.dispose();
+  }
+
+  void _applyPreset(_Preset preset, List<Meal> meals) {
+    final quantity = _slots.isEmpty ? '1' : _slots.first.quantity.text;
+    List<_Slot> times(List<String> clock) => [
+          for (final t in clock) _Slot(time: t, quantity: quantity),
+        ];
+    List<_Slot> mealSlots(TimingRelation relation) {
+      const main = ['breakfast', 'lunch', 'dinner'];
+      final chosen = [
+        for (final type in main)
+          ...meals.where((m) => m.mealType == type).take(1),
+      ];
+      return [
+        for (final meal in chosen.isEmpty ? meals.take(3) : chosen)
+          _Slot(
+            type: ScheduleTypes.mealRelative,
+            mealId: meal.mealId,
+            relation: relation,
+            offset: relation == TimingRelation.withMeal ? 0 : 30,
+            quantity: quantity,
+          ),
+      ];
+    }
+
+    final next = switch (preset) {
+      _Preset.once => times(['08:00']),
+      _Preset.twice => times(['08:00', '20:00']),
+      _Preset.three => times(['08:00', '14:00', '20:00']),
+      _Preset.four => times(['08:00', '12:00', '16:00', '20:00']),
+      _Preset.every8h => times(['06:00', '14:00', '22:00']),
+      _Preset.every12h => times(['09:00', '21:00']),
+      _Preset.afterMeals => mealSlots(TimingRelation.after),
+      _Preset.beforeMeals => mealSlots(TimingRelation.before),
+    };
+    if (next.isEmpty) return;
+    setState(() {
+      // Keep existing schedule IDs so history stays attached when editing.
+      for (var i = 0; i < next.length && i < _slots.length; i++) {
+        final old = _slots[i];
+        final fresh = next[i];
+        next[i] = _Slot(
+          scheduleId: old.scheduleId,
+          type: fresh.type,
+          time: fresh.time,
+          mealId: fresh.mealId,
+          relation: fresh.relation,
+          offset: int.tryParse(fresh.offset.text) ?? 30,
+          quantity: fresh.quantity.text,
+        );
+        fresh.dispose();
+      }
+      for (final slot in _slots) {
+        slot.dispose();
+      }
+      _slots
+        ..clear()
+        ..addAll(next);
+    });
   }
 
   RecurrenceRule _rule() {
@@ -134,31 +246,37 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
 
   Future<void> _save(Medication medication) async {
     if (!_form.currentState!.validate()) return;
-    final input = ScheduleInput(
-      scheduleType: _type,
-      fixedTime: _type == ScheduleTypes.fixedTime ? _time : null,
-      mealId: _type == ScheduleTypes.mealRelative ? _mealId : null,
-      timingRelation: _type == ScheduleTypes.mealRelative
-          ? timingRelationCode(_relation)
-          : null,
-      offsetMinutes: _type == ScheduleTypes.mealRelative &&
-              _relation != TimingRelation.withMeal
-          ? int.tryParse(_offset.text) ?? 0
-          : null,
-      doseQuantityScaled: ScaledQuantity.tryParse(_quantity.text)?.scaled ?? 0,
-      rule: _rule(),
-      validFrom: _validFrom,
-      validUntil: _validUntil,
-    );
+    final slots = [
+      for (final slot in _slots)
+        ScheduleSlot(
+          scheduleId: slot.scheduleId,
+          scheduleType: slot.type,
+          fixedTime: slot.type == ScheduleTypes.fixedTime ? slot.time : null,
+          mealId: slot.type == ScheduleTypes.mealRelative ? slot.mealId : null,
+          timingRelation: slot.type == ScheduleTypes.mealRelative
+              ? timingRelationCode(slot.relation)
+              : null,
+          offsetMinutes: slot.type == ScheduleTypes.mealRelative &&
+                  slot.relation != TimingRelation.withMeal
+              ? int.tryParse(slot.offset.text) ?? 0
+              : null,
+          doseQuantityScaled:
+              ScaledQuantity.tryParse(slot.quantity.text)?.scaled ?? 0,
+        ),
+    ];
     setState(() => _busy = true);
-    final repo = ref.read(scheduleRepositoryProvider);
-    final ok = await runGuarded(context, () async {
-      if (_editing) {
-        await repo.update(widget.scheduleId!, input);
-      } else {
-        await repo.create(widget.medicationId, input);
-      }
-    }, success: context.l10n.savedMessage);
+    final ok = await runGuarded(
+      context,
+      () => ref.read(scheduleRepositoryProvider).saveGroup(
+            medicationId: widget.medicationId,
+            groupId: _groupId,
+            slots: slots,
+            rule: _rule(),
+            validFrom: _validFrom,
+            validUntil: _validUntil,
+          ),
+      success: context.l10n.savedMessage,
+    );
     if (!mounted) return;
     setState(() => _busy = false);
     if (ok) {
@@ -181,7 +299,7 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
     if (!confirmed || !mounted) return;
     final ok = await runGuarded(
       context,
-      () => ref.read(scheduleRepositoryProvider).delete(widget.scheduleId!),
+      () => ref.read(scheduleRepositoryProvider).deleteGroup(_groupId!),
     );
     if (ok && mounted) {
       ref
@@ -202,12 +320,12 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
     final meals =
         ref.watch(patientMealsProvider(medication.patientId)).valueOrNull ??
             const <Meal>[];
-    final unit = unitLabel(medication.doseUnit, l10n);
+    final unit = unitLabelFor(medication.doseUnit, null, l10n);
     return Scaffold(
       appBar: AppBar(
-        title: Text(_editing ? l10n.editSchedule : l10n.addSchedule),
+        title: Text(_editing ? l10n.editSchedule : l10n.dosePlan),
         actions: [
-          if (_editing)
+          if (_editing && _groupId != null)
             IconButton(
               tooltip: l10n.delete,
               icon: const Icon(Icons.delete_outline),
@@ -225,88 +343,54 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
         child: FormBody(
           children: [
             if (medication.isPrn) Text(l10n.prnPlannedNote),
-            Text(l10n.scheduleType,
+            Text(l10n.quickSetup,
                 style: Theme.of(context).textTheme.titleSmall),
-            SegmentedButton<String>(
-              segments: [
-                ButtonSegment(
-                  value: ScheduleTypes.fixedTime,
-                  icon: const Icon(Icons.alarm),
-                  label: Text(l10n.fixedTime),
-                ),
-                ButtonSegment(
-                  value: ScheduleTypes.mealRelative,
-                  icon: const Icon(Icons.restaurant),
-                  label: Text(l10n.mealRelative),
-                ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final (preset, label) in [
+                  (_Preset.once, l10n.presetOnce),
+                  (_Preset.twice, l10n.presetTwice),
+                  (_Preset.three, l10n.presetThree),
+                  (_Preset.four, l10n.presetFour),
+                  (_Preset.afterMeals, l10n.presetAfterMeals),
+                  (_Preset.beforeMeals, l10n.presetBeforeMeals),
+                  (_Preset.every8h, l10n.presetEvery8h),
+                  (_Preset.every12h, l10n.presetEvery12h),
+                ])
+                  ActionChip(
+                    label: Text(label),
+                    onPressed: () => _applyPreset(preset, meals),
+                  ),
               ],
-              selected: {_type},
-              onSelectionChanged: (v) => setState(() => _type = v.first),
             ),
-            if (_type == ScheduleTypes.fixedTime)
-              TimeField(
-                label: l10n.time,
-                value: _time,
-                onChanged: (v) => setState(() => _time = v),
-              )
-            else ...[
-              DropdownButtonFormField<String>(
-                initialValue:
-                    meals.any((m) => m.mealId == _mealId) ? _mealId : null,
-                decoration: InputDecoration(labelText: l10n.meal),
-                validator: (v) => v == null ? l10n.error_mealRequired : null,
-                items: [
-                  for (final meal in meals)
-                    DropdownMenuItem(
-                      value: meal.mealId,
-                      child: Text(
-                        '${mealName(meal, l10n)} · ${formatHHmm(context, effectiveMealTime(meal.mealType, meal.defaultTime).toHHmm())}',
-                      ),
-                    ),
-                ],
-                onChanged: (v) => setState(() => _mealId = v),
+            SectionHeader(
+              '${l10n.doseTimes} · ${l10n.timesPerDay(_slots.length)}',
+            ),
+            for (var i = 0; i < _slots.length; i++)
+              _SlotCard(
+                key: ObjectKey(_slots[i]),
+                index: i,
+                slot: _slots[i],
+                meals: meals,
+                unit: unit,
+                canRemove: _slots.length > 1,
+                onChanged: () => setState(() {}),
+                onRemove: () => setState(() => _slots.removeAt(i).dispose()),
               ),
-              SegmentedButton<TimingRelation>(
-                segments: [
-                  ButtonSegment(
-                    value: TimingRelation.before,
-                    label: Text(l10n.beforeMeal),
+            OutlinedButton.icon(
+              onPressed: () => setState(
+                () => _slots.add(
+                  _Slot(
+                    quantity: _slots.isEmpty ? '1' : _slots.last.quantity.text,
                   ),
-                  ButtonSegment(
-                    value: TimingRelation.withMeal,
-                    label: Text(l10n.withMeal),
-                  ),
-                  ButtonSegment(
-                    value: TimingRelation.after,
-                    label: Text(l10n.afterMeal),
-                  ),
-                ],
-                selected: {_relation},
-                onSelectionChanged: (v) => setState(() => _relation = v.first),
-              ),
-              if (_relation != TimingRelation.withMeal)
-                TextFormField(
-                  controller: _offset,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: l10n.offsetMinutes,
-                    suffixText: l10n.offsetMinutes,
-                  ),
-                  validator: (v) => int.tryParse(v ?? '') == null
-                      ? l10n.error_invalidTime
-                      : null,
                 ),
-            ],
-            TextFormField(
-              controller: _quantity,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: l10n.quantity,
-                suffixText: unit,
               ),
-              validator: (v) => validateQuantity(v, l10n),
+              icon: const Icon(Icons.add_alarm),
+              label: Text(l10n.addTime),
             ),
+            SectionHeader(l10n.sharedSettings),
             DropdownButtonFormField<RecurrenceType>(
               initialValue: _recurrence,
               decoration: InputDecoration(labelText: l10n.recurrence),
@@ -408,10 +492,14 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
                         ),
                         decoration: InputDecoration(
                           labelText: weekdayShortName(d, context.localeName),
-                          hintText: _quantity.text,
+                          hintText: _slots.first.quantity.text,
                         ),
-                        validator: (v) => validateQuantity(v, l10n,
-                            required: false, allowZero: true),
+                        validator: (v) => validateQuantity(
+                          v,
+                          l10n,
+                          required: false,
+                          allowZero: true,
+                        ),
                       ),
                     ),
                 ],
@@ -434,6 +522,160 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
                   ),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SlotCard extends StatelessWidget {
+  const _SlotCard({
+    required this.index,
+    required this.slot,
+    required this.meals,
+    required this.unit,
+    required this.canRemove,
+    required this.onChanged,
+    required this.onRemove,
+    super.key,
+  });
+
+  final int index;
+  final _Slot slot;
+  final List<Meal> meals;
+  final String unit;
+  final bool canRemove;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final mealIds = meals.map((m) => m.mealId).toSet();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.doseTimeNumber(index + 1),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                if (canRemove)
+                  IconButton(
+                    tooltip: l10n.removeTime,
+                    icon: const Icon(Icons.close),
+                    onPressed: onRemove,
+                  ),
+              ],
+            ),
+            SegmentedButton<String>(
+              segments: [
+                ButtonSegment(
+                  value: ScheduleTypes.fixedTime,
+                  icon: const Icon(Icons.alarm),
+                  label: Text(l10n.fixedTime),
+                ),
+                ButtonSegment(
+                  value: ScheduleTypes.mealRelative,
+                  icon: const Icon(Icons.restaurant),
+                  label: Text(l10n.mealRelative),
+                ),
+              ],
+              selected: {slot.type},
+              onSelectionChanged: (v) {
+                slot.type = v.first;
+                if (slot.type == ScheduleTypes.mealRelative &&
+                    slot.mealId == null &&
+                    meals.isNotEmpty) {
+                  slot.mealId = meals.first.mealId;
+                }
+                onChanged();
+              },
+            ),
+            const SizedBox(height: 12),
+            if (slot.type == ScheduleTypes.fixedTime)
+              TimeField(
+                label: l10n.time,
+                value: slot.time,
+                onChanged: (v) {
+                  slot.time = v;
+                  onChanged();
+                },
+              )
+            else ...[
+              DropdownButtonFormField<String>(
+                initialValue:
+                    mealIds.contains(slot.mealId) ? slot.mealId : null,
+                decoration: InputDecoration(labelText: l10n.meal),
+                validator: (v) => v == null ? l10n.error_mealRequired : null,
+                items: [
+                  for (final meal in meals)
+                    DropdownMenuItem(
+                      value: meal.mealId,
+                      child: Text(
+                        meal.timeMode == MealTimeModes.weekly
+                            ? '${mealName(meal, l10n)} · ${l10n.variesByDay}'
+                            : '${mealName(meal, l10n)} · ${formatHHmm(context, effectiveMealTime(meal.mealType, meal.defaultTime).toHHmm())}',
+                      ),
+                    ),
+                ],
+                onChanged: (v) {
+                  slot.mealId = v;
+                  onChanged();
+                },
+              ),
+              const SizedBox(height: 12),
+              SegmentedButton<TimingRelation>(
+                segments: [
+                  ButtonSegment(
+                    value: TimingRelation.before,
+                    label: Text(l10n.beforeMeal),
+                  ),
+                  ButtonSegment(
+                    value: TimingRelation.withMeal,
+                    label: Text(l10n.withMeal),
+                  ),
+                  ButtonSegment(
+                    value: TimingRelation.after,
+                    label: Text(l10n.afterMeal),
+                  ),
+                ],
+                selected: {slot.relation},
+                onSelectionChanged: (v) {
+                  slot.relation = v.first;
+                  onChanged();
+                },
+              ),
+              if (slot.relation != TimingRelation.withMeal) ...[
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: slot.offset,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: l10n.offsetMinutes),
+                  validator: (v) => int.tryParse(v ?? '') == null
+                      ? l10n.error_invalidTime
+                      : null,
+                ),
+              ],
+            ],
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: slot.quantity,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: l10n.quantity,
+                suffixText: unit,
+              ),
+              validator: (v) => validateQuantity(v, l10n),
             ),
           ],
         ),

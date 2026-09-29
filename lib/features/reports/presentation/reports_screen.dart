@@ -232,7 +232,22 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         ListTile(
           dense: true,
           title: Text(vitalTypeLabel(v.measurementType, l10n)),
-          subtitle: Text(formatDateTime(context, local(v.measuredAt))),
+          subtitle: Text([
+            formatDateTime(context, local(v.measuredAt)),
+            if (vitalContextText(
+                  v,
+                  l10n,
+                  mealNames: report.mealNames,
+                  medicationNames: report.medicationNames,
+                ) !=
+                null)
+              vitalContextText(
+                v,
+                l10n,
+                mealNames: report.mealNames,
+                medicationNames: report.medicationNames,
+              )!,
+          ].join('\n')),
           trailing: Text(vitalValueText(v)),
         ),
       SectionHeader(l10n.appointmentsSection),

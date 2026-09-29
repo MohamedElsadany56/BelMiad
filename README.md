@@ -13,18 +13,29 @@ encryption (by design, see the specification).
 - **Medicines** — offline Egyptian drug catalog (25,065 entries, English and
   Arabic FTS5 search) or custom medicines, separate English/Arabic
   instructions, PRN, maximum daily quantity, archive/restore, trash.
-- **Schedules** — fixed times or relative to meals (before/with/after with
-  offsets), daily, selected weekdays every N weeks, every N days, custom
-  on/off cycles, per-weekday quantities, start/end dates, patient timezone.
+- **Dose plans** — set several times of day once (quick presets such as
+  "3 times a day after meals" or "every 8 hours"), each at a fixed time or
+  relative to a meal, with its own quantity; daily, selected weekdays every
+  N weeks, every N days, custom on/off cycles, per-weekday quantities,
+  start/end dates, patient timezone.
+- **Meals** — the same time every day or a different time per weekday
+  (e.g. breakfast 08:00 on Saturday, 09:00 on Friday); meal-relative doses
+  move automatically.
 - **Doses** — SCHEDULED/TAKEN/MISSED/SKIPPED with calculated late minutes,
   a grace window before doses become missed, undo, partial and zero
   quantities, PRN logging and the daily-maximum warning.
-- **Inventory** — batch ledger (package or quantity entry, purchase date and
-  price, expiration), FEFO or manual multi-batch consumption stored per dose,
+- **Inventory** — batch ledger with nested packaging (boxes of strips of
+  tablets, bottles in ml, tubes, ampoules, loose units), storage-only
+  medicines that are stocked without being part of the treatment, purchase
+  date and price, expiration, FEFO or manual multi-batch consumption stored per dose,
   exact-batch undo, audited adjustments, forecast-based low stock (next 3
   days), remaining days simulated from real schedules, expiration states.
-- **Health records** — appointments, vitals, illnesses, dietary rules and
-  prescription images/PDFs in app-private storage.
+- **Health records** — appointments, vitals (blood pressure and sugar can be
+  marked fasting, before/after a meal or after a medicine), illnesses,
+  dietary rules, and prescriptions captured with the camera (after asking
+  for permission) or picked from files, saved as a photo or a multi-page
+  PDF in app-private storage and grouped by doctor, date or file type.
+- **Today** — live clock in the patient's timezone and the day's doses.
 - **Notifications** — offline dose reminders, missed doses, low/empty stock,
   expiring/expired batches and appointment reminders, per-patient
   preferences, deduplicated across launches, plus an in-app centre.

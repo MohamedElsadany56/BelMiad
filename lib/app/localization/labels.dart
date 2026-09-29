@@ -68,6 +68,7 @@ String quantityWithUnit(int? scaled, String unit, AppLocalizations l10n) =>
 
 String packagingLabel(String? code, AppLocalizations l10n) => switch (code) {
       'box' => l10n.packaging_box,
+      'strip' => l10n.packaging_strip,
       'blister' => l10n.packaging_blister,
       'bottle' => l10n.packaging_bottle,
       'tube' => l10n.packaging_tube,
@@ -137,6 +138,39 @@ String vitalValueText(VitalMeasurement v) {
       ? _number(v.value1)
       : '${_number(v.value1)}/${_number(v.value2)}';
   return v.unit == null || v.unit!.isEmpty ? main : '$main ${v.unit}';
+}
+
+String vitalContextLabel(String? code, AppLocalizations l10n) => switch (code) {
+      VitalContexts.fasting => l10n.context_fasting,
+      VitalContexts.beforeMeal => l10n.context_before_meal,
+      VitalContexts.afterMeal => l10n.context_after_meal,
+      VitalContexts.afterMedication => l10n.context_after_medication,
+      _ => l10n.context_random,
+    };
+
+/// Full context description, e.g. "After Lunch · 120 min".
+String? vitalContextText(
+  VitalMeasurement v,
+  AppLocalizations l10n, {
+  Map<String, String> mealNames = const {},
+  Map<String, String> medicationNames = const {},
+}) {
+  final context = v.context;
+  if (context == null || context == VitalContexts.random) return null;
+  final minutes = v.minutesAfter;
+  if (context == VitalContexts.afterMeal && minutes != null) {
+    return l10n.contextAfterMeal(
+      mealNames[v.relatedMealId] ?? l10n.meal,
+      minutes,
+    );
+  }
+  if (context == VitalContexts.afterMedication && minutes != null) {
+    return l10n.contextAfterMedication(
+      medicationNames[v.relatedMedicationId] ?? l10n.medication,
+      minutes,
+    );
+  }
+  return vitalContextLabel(context, l10n);
 }
 
 String dietRuleLabel(String code, AppLocalizations l10n) => switch (code) {
@@ -244,6 +278,8 @@ String errorMessage(Object error, AppLocalizations l10n) {
       'maximumDailyExceeded' => l10n.error_maximumDailyExceeded,
       'unsupportedTrashEntity' => l10n.error_unsupportedTrashEntity,
       'invalidBackup' => l10n.error_invalidBackup,
+      'timesRequired' => l10n.error_timesRequired,
+      'cameraDenied' => l10n.error_cameraDenied,
       'newerBackup' => l10n.error_newerBackup,
       'backupPatientMissing' => l10n.error_backupPatientMissing,
       'filesUnsupported' => l10n.error_filesUnsupported,

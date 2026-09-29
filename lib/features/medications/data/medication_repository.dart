@@ -29,6 +29,7 @@ class MedicationInput {
     this.endDate,
     this.isPrn = false,
     this.maximumDailyQuantityScaled,
+    this.storageOnly = false,
   });
 
   final String nameEn;
@@ -46,6 +47,9 @@ class MedicationInput {
   final String? endDate;
   final bool isPrn;
   final int? maximumDailyQuantityScaled;
+
+  /// Kept in storage only: no schedules, doses or forecast.
+  final bool storageOnly;
 }
 
 class MedicationRepository {
@@ -115,6 +119,7 @@ class MedicationRepository {
               maximumDailyQuantityScaled:
                   Value(input.maximumDailyQuantityScaled),
               catalogPriceEgp: Value(input.catalogPriceEgp),
+              storageOnly: Value(input.storageOnly),
               status: MedicationStatus.active,
               createdAt: now,
               updatedAt: now,
@@ -154,6 +159,7 @@ class MedicationRepository {
         isPrn: Value(input.isPrn),
         maximumDailyQuantityScaled: Value(input.maximumDailyQuantityScaled),
         catalogPriceEgp: Value(input.catalogPriceEgp),
+        storageOnly: Value(input.storageOnly),
         updatedAt: Value(_clock()),
       ));
       await _audit.record(
@@ -183,6 +189,28 @@ class MedicationRepository {
         entityType: EntityTypes.medication,
         entityId: medicationId,
         action: archived ? AuditActions.archived : AuditActions.unarchived,
+      );
+    });
+  }
+
+  /// Moves a storage-only medicine into (or out of) the patient's
+  /// treatment, keeping all of its stock history.
+  Future<void> setStorageOnly(String medicationId, bool storageOnly) async {
+    await _db.transaction(() async {
+      final current = await get(medicationId);
+      if (current == null) throw NotFoundException('medication');
+      await (_db.update(_db.medications)
+            ..where((m) => m.medicationId.equals(medicationId)))
+          .write(MedicationsCompanion(
+        storageOnly: Value(storageOnly),
+        updatedAt: Value(_clock()),
+      ));
+      await _audit.record(
+        patientId: current.patientId,
+        entityType: EntityTypes.medication,
+        entityId: medicationId,
+        action: AuditActions.updated,
+        metadata: {'name': current.nameEn, 'storage_only': storageOnly},
       );
     });
   }

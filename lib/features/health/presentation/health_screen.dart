@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/localization/labels.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../app/widgets/common.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/time/local_date.dart';
+import '../../medications/data/medication_repository.dart';
+import '../../medications/presentation/medication_detail_screen.dart';
+import '../../medications/presentation/medications_screen.dart';
+import '../application/prescription_documents.dart';
 import 'health_forms.dart';
 
 final appointmentsProvider = StreamProvider.family<List<Appointment>, String>(
@@ -189,14 +195,39 @@ class _VitalsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final time = ref.watch(patientTimeProvider);
+    final l10n = context.l10n;
+    final mealNames = {
+      for (final m in ref.watch(patientMealsProvider(patientId)).valueOrNull ??
+          const <Meal>[])
+        m.mealId: mealName(m, l10n),
+    };
+    final medicationNames = {
+      for (final m
+          in ref.watch(patientMedicationsProvider(patientId)).valueOrNull ??
+              const <Medication>[])
+        m.medicationId: medicationDisplayName(m, arabic: context.isArabic),
+    };
     return _RecordList<VitalMeasurement>(
       value: ref.watch(vitalsProvider(patientId)),
       tile: (v) => Card(
         child: ListTile(
           leading: const Icon(Icons.monitor_heart_outlined),
-          title: Text(vitalTypeLabel(v.measurementType, context.l10n)),
+          title: Text(vitalTypeLabel(v.measurementType, l10n)),
           subtitle: Text([
             formatDateTime(context, time.toLocal(v.measuredAt)),
+            if (vitalContextText(
+                  v,
+                  l10n,
+                  mealNames: mealNames,
+                  medicationNames: medicationNames,
+                ) !=
+                null)
+              vitalContextText(
+                v,
+                l10n,
+                mealNames: mealNames,
+                medicationNames: medicationNames,
+              )!,
             if (v.notes != null) v.notes!,
           ].join('\n')),
           trailing: Text(
@@ -266,6 +297,12 @@ class _DietTab extends ConsumerWidget {
   }
 }
 
+enum _RxGrouping { doctor, date, fileType }
+
+final _rxGroupingProvider =
+    StateProvider<_RxGrouping>((ref) => _RxGrouping.date);
+
+/// Prescriptions categorised by doctor, by date (month) or by file type.
 class _PrescriptionsTab extends ConsumerWidget {
   const _PrescriptionsTab({required this.patientId});
 
@@ -274,24 +311,105 @@ class _PrescriptionsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return _RecordList<Prescription>(
+    final grouping = ref.watch(_rxGroupingProvider);
+    return AsyncBody(
       value: ref.watch(prescriptionsProvider(patientId)),
-      header: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(l10n.prescriptionsPrivateNote,
-            style: Theme.of(context).textTheme.bodySmall),
-      ),
-      tile: (p) => Card(
-        child: ListTile(
-          leading: const Icon(Icons.description_outlined),
-          title: Text(p.doctorName ?? l10n.prescriptions),
-          subtitle: Text([
-            if (p.issueDate != null) formatIsoDate(context, p.issueDate),
-            if (p.notes != null) p.notes!,
-          ].join('\n')),
-          onTap: () => showPrescriptionViewer(context, p),
-        ),
-      ),
+      builder: (items) {
+        String keyOf(Prescription p) => switch (grouping) {
+              _RxGrouping.doctor => (p.doctorName?.trim().isEmpty ?? true)
+                  ? l10n.unknownDoctor
+                  : p.doctorName!.trim(),
+              _RxGrouping.date => p.issueDate == null
+                  ? l10n.noDate
+                  : DateFormat.yMMMM(context.localeName).format(
+                      LocalDate.parse(p.issueDate!).toDateTime(),
+                    ),
+              _RxGrouping.fileType => switch (
+                    prescriptionFileKind(p.filePath)) {
+                  PrescriptionFileKind.image => l10n.fileType_image,
+                  PrescriptionFileKind.pdf => l10n.fileType_pdf,
+                  PrescriptionFileKind.other => l10n.fileType_other,
+                },
+            };
+        final sorted = [...items]..sort(
+            (a, b) => (b.issueDate ?? '').compareTo(a.issueDate ?? ''),
+          );
+        final groups = <String, List<Prescription>>{};
+        for (final p in sorted) {
+          groups.putIfAbsent(keyOf(p), () => []).add(p);
+        }
+        final keys = groups.keys.toList();
+        if (grouping == _RxGrouping.doctor) keys.sort();
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          children: [
+            Text(
+              l10n.prescriptionsPrivateNote,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(l10n.groupBy),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SegmentedButton<_RxGrouping>(
+                    segments: [
+                      ButtonSegment(
+                        value: _RxGrouping.doctor,
+                        label: Text(l10n.groupDoctor),
+                      ),
+                      ButtonSegment(
+                        value: _RxGrouping.date,
+                        label: Text(l10n.groupDate),
+                      ),
+                      ButtonSegment(
+                        value: _RxGrouping.fileType,
+                        label: Text(l10n.groupFileType),
+                      ),
+                    ],
+                    selected: {grouping},
+                    onSelectionChanged: (v) =>
+                        ref.read(_rxGroupingProvider.notifier).state = v.first,
+                  ),
+                ),
+              ],
+            ),
+            if (items.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 48),
+                child: EmptyState(
+                  icon: Icons.folder_open_outlined,
+                  message: l10n.noRecords,
+                ),
+              ),
+            for (final key in keys) ...[
+              SectionHeader(
+                key,
+                trailing: StatusBadge('${groups[key]!.length}'),
+              ),
+              for (final p in groups[key]!)
+                Card(
+                  child: ListTile(
+                    leading: Icon(
+                      prescriptionFileKind(p.filePath) ==
+                              PrescriptionFileKind.pdf
+                          ? Icons.picture_as_pdf_outlined
+                          : Icons.image_outlined,
+                    ),
+                    title: Text(p.doctorName ?? l10n.prescriptions),
+                    subtitle: Text([
+                      if (p.issueDate != null)
+                        formatIsoDate(context, p.issueDate),
+                      if (p.notes != null) p.notes!,
+                    ].join('\n')),
+                    onTap: () => showPrescriptionViewer(context, p),
+                  ),
+                ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

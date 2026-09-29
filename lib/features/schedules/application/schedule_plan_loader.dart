@@ -25,7 +25,8 @@ class SchedulePlanLoader {
         (m) =>
             m.patientId.equals(patientId) &
             m.deletedAt.isNull() &
-            m.status.equals(MedicationStatus.active),
+            m.status.equals(MedicationStatus.active) &
+            m.storageOnly.equals(false),
       );
     if (medicationId != null) {
       medsQuery.where((m) => m.medicationId.equals(medicationId));
@@ -61,15 +62,34 @@ class SchedulePlanLoader {
     Meal? meal,
   ) {
     final int minutes;
+    var weekdayMinutes = const <int, int>{};
     if (schedule.scheduleType == ScheduleTypes.mealRelative) {
+      final relation = timingRelationFromCode(schedule.timingRelation);
+      final offset = schedule.offsetMinutes ?? 0;
       final mealTime = meal == null
           ? defaultMealTime(MealType.custom)
           : effectiveMealTime(meal.mealType, meal.defaultTime);
       minutes = mealRelativeMinutes(
         mealTime: mealTime,
-        relation: timingRelationFromCode(schedule.timingRelation),
-        offsetMinutes: schedule.offsetMinutes ?? 0,
+        relation: relation,
+        offsetMinutes: offset,
       );
+      if (meal != null && meal.timeMode == MealTimeModes.weekly) {
+        weekdayMinutes = {
+          for (var weekday = 1; weekday <= 7; weekday++)
+            weekday: mealRelativeMinutes(
+              mealTime: mealTimeOnWeekday(
+                mealType: meal.mealType,
+                defaultTime: meal.defaultTime,
+                timeMode: meal.timeMode,
+                weekdayTimes: meal.weekdayTimes,
+                weekday: weekday,
+              ),
+              relation: relation,
+              offsetMinutes: offset,
+            ),
+        };
+      }
     } else {
       minutes =
           (LocalTime.tryParse(schedule.fixedTime) ?? const LocalTime(8, 0))
@@ -80,6 +100,7 @@ class SchedulePlanLoader {
       scheduleId: schedule.scheduleId,
       medicationId: schedule.medicationId,
       minutesOfDay: minutes,
+      weekdayMinutes: weekdayMinutes,
       doseQuantityScaled: schedule.doseQuantityScaled,
       rule: RecurrenceRule.decode(schedule.recurrenceRule),
       anchor: LocalDate.tryParse(schedule.validFrom) ?? created,

@@ -35,7 +35,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,7 +44,37 @@ class AppDatabase extends _$AppDatabase {
           await _createIndexes();
         },
         onUpgrade: (m, from, to) async {
-          // Future schema versions add explicit, data-preserving steps here.
+          if (from < 2) {
+            await m.addColumn(medications, medications.storageOnly);
+            await m.addColumn(
+              medicationInventoryBatches,
+              medicationInventoryBatches.subPackagingType,
+            );
+            await m.addColumn(
+              medicationInventoryBatches,
+              medicationInventoryBatches.subPackagesPerPackage,
+            );
+            await m.addColumn(
+              medicationInventoryBatches,
+              medicationInventoryBatches.looseQuantityScaled,
+            );
+            await m.addColumn(meals, meals.timeMode);
+            await m.addColumn(meals, meals.weekdayTimes);
+            await m.addColumn(medicationSchedules, medicationSchedules.groupId);
+            await m.addColumn(vitalsMeasurements, vitalsMeasurements.context);
+            await m.addColumn(
+              vitalsMeasurements,
+              vitalsMeasurements.relatedMealId,
+            );
+            await m.addColumn(
+              vitalsMeasurements,
+              vitalsMeasurements.relatedMedicationId,
+            );
+            await m.addColumn(
+              vitalsMeasurements,
+              vitalsMeasurements.minutesAfter,
+            );
+          }
         },
         beforeOpen: (details) async {
           if (!details.wasCreated) await _createIndexes();

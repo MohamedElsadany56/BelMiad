@@ -567,17 +567,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String scheduleCycle(Object off, Object on) {
+  String scheduleCycle(Object on, Object off) {
     return '$on days on, $off days off';
   }
 
   @override
-  String scheduleBeforeMeal(Object meal, Object minutes) {
+  String scheduleBeforeMeal(Object minutes, Object meal) {
     return '$minutes min before $meal';
   }
 
   @override
-  String scheduleAfterMeal(Object meal, Object minutes) {
+  String scheduleAfterMeal(Object minutes, Object meal) {
     return '$minutes min after $meal';
   }
 
@@ -655,7 +655,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get insufficientStockTitle => 'Not enough stock';
 
   @override
-  String insufficientStockBody(Object available, Object required) {
+  String insufficientStockBody(Object required, Object available) {
     return 'Required $required, but only $available is available in usable stock.';
   }
 
@@ -673,7 +673,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get maxExceededTitle => 'Daily maximum would be exceeded';
 
   @override
-  String maxExceededBody(Object attempt, Object maximum, Object taken) {
+  String maxExceededBody(Object maximum, Object taken, Object attempt) {
     return 'Maximum $maximum per day. Already taken today: $taken. This dose: $attempt.';
   }
 
@@ -942,7 +942,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packaging_other => 'Other';
 
   @override
-  String quantityChange(Object next, Object previous) {
+  String quantityChange(Object previous, Object next) {
     return '$previous → $next';
   }
 
@@ -1714,4 +1714,245 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get error_filesUnsupported =>
       'Files are not supported on this platform';
+
+  @override
+  String get dosePlan => 'Dose plan';
+
+  @override
+  String get doseTimes => 'Times of day';
+
+  @override
+  String get addTime => 'Add time';
+
+  @override
+  String get removeTime => 'Remove time';
+
+  @override
+  String get quickSetup => 'Quick setup';
+
+  @override
+  String get presetOnce => 'Once a day';
+
+  @override
+  String get presetTwice => 'Twice a day';
+
+  @override
+  String get presetThree => '3 times a day';
+
+  @override
+  String get presetFour => '4 times a day';
+
+  @override
+  String get presetAfterMeals => 'After each main meal';
+
+  @override
+  String get presetBeforeMeals => 'Before each main meal';
+
+  @override
+  String get presetEvery8h => 'Every 8 hours';
+
+  @override
+  String get presetEvery12h => 'Every 12 hours';
+
+  @override
+  String doseTimeNumber(Object number) {
+    return 'Time $number';
+  }
+
+  @override
+  String timesPerDay(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times a day',
+      two: 'Twice a day',
+      one: 'Once a day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sharedSettings => 'Applies to all times';
+
+  @override
+  String get variesByDay => 'varies by day';
+
+  @override
+  String get error_timesRequired => 'Add at least one time';
+
+  @override
+  String get containsInnerPacks => 'Contains strips or blisters';
+
+  @override
+  String get innerPackType => 'Inner pack';
+
+  @override
+  String innerPacksPer(Object inner, Object outer) {
+    return '$inner per $outer';
+  }
+
+  @override
+  String unitsPer(Object unit, Object pack) {
+    return '$unit per $pack';
+  }
+
+  @override
+  String get looseUnits => 'Extra loose units';
+
+  @override
+  String packagingBreakdown(Object breakdown, Object total) {
+    return '$breakdown = $total';
+  }
+
+  @override
+  String get packaging_strip => 'Strip';
+
+  @override
+  String get storageOnly => 'Storage only';
+
+  @override
+  String get storageOnlyHint =>
+      'Keep this medicine in storage without adding it to the patient\'s treatment. No schedules or reminders are created.';
+
+  @override
+  String get newStorageMedicine => 'New medicine just for storage';
+
+  @override
+  String get startTaking => 'Start taking this medicine';
+
+  @override
+  String get moveToStorage => 'Move to storage only';
+
+  @override
+  String get storageBadge => 'Storage';
+
+  @override
+  String get filterActive => 'Active';
+
+  @override
+  String get filterArchived => 'Archived';
+
+  @override
+  String get filterStorage => 'Storage';
+
+  @override
+  String timeInZone(Object timezone) {
+    return '$timezone time';
+  }
+
+  @override
+  String get mealTimeMode => 'Meal time';
+
+  @override
+  String get sameEveryDay => 'Same every day';
+
+  @override
+  String get differentByDay => 'Different by weekday';
+
+  @override
+  String get mealWeeklyNote =>
+      'Set a time for each day. Days left empty use the default time.';
+
+  @override
+  String get measurementContext => 'When was it measured?';
+
+  @override
+  String get context_random => 'Any time';
+
+  @override
+  String get context_fasting => 'Fasting';
+
+  @override
+  String get context_before_meal => 'Before a meal';
+
+  @override
+  String get context_after_meal => 'After a meal';
+
+  @override
+  String get context_after_medication => 'After taking medicine';
+
+  @override
+  String get relatedMeal => 'Which meal';
+
+  @override
+  String get relatedMedication => 'Which medicine';
+
+  @override
+  String get minutesAfter => 'Minutes after';
+
+  @override
+  String contextAfterMeal(Object meal, Object minutes) {
+    return 'After $meal · $minutes min';
+  }
+
+  @override
+  String contextAfterMedication(Object medicine, Object minutes) {
+    return 'After $medicine · $minutes min';
+  }
+
+  @override
+  String get takePhoto => 'Take photo';
+
+  @override
+  String get addPage => 'Add another page';
+
+  @override
+  String pagesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pages',
+      one: '1 page',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get saveAs => 'Save as';
+
+  @override
+  String get formatPhoto => 'Photo';
+
+  @override
+  String get formatPdf => 'PDF';
+
+  @override
+  String get multiPagePdfNote => 'Several pages are saved as one PDF.';
+
+  @override
+  String get cameraPermissionDenied =>
+      'Camera access is off. Allow it to photograph prescriptions.';
+
+  @override
+  String get openSettings => 'Open settings';
+
+  @override
+  String get groupBy => 'Group by';
+
+  @override
+  String get groupDoctor => 'Doctor';
+
+  @override
+  String get groupDate => 'Date';
+
+  @override
+  String get groupFileType => 'File type';
+
+  @override
+  String get unknownDoctor => 'Unknown doctor';
+
+  @override
+  String get noDate => 'No date';
+
+  @override
+  String get fileType_image => 'Photos';
+
+  @override
+  String get fileType_pdf => 'PDF documents';
+
+  @override
+  String get fileType_other => 'Other files';
+
+  @override
+  String get error_cameraDenied => 'Camera access was denied';
 }

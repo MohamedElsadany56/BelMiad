@@ -12,6 +12,8 @@ import '../../doses/data/dose_repository.dart';
 import '../../doses/domain/dose_status.dart';
 import '../../doses/presentation/take_dose_sheet.dart';
 import '../../inventory/presentation/medication_stock_tab.dart';
+import '../../schedules/data/schedule_repository.dart';
+import '../../schedules/domain/recurrence_rule.dart';
 import '../../schedules/presentation/schedule_describer.dart';
 import '../data/medication_repository.dart';
 
@@ -115,6 +117,16 @@ class _MenuButton extends ConsumerWidget {
       onSelected: (value) async {
         final sync = ref.read(syncCoordinatorProvider);
         switch (value) {
+          case 'storage':
+            final ok = await runGuarded(
+              context,
+              () => ref.read(medicationRepositoryProvider).setStorageOnly(
+                    medication.medicationId,
+                    !medication.storageOnly,
+                  ),
+              success: l10n.savedMessage,
+            );
+            if (ok) sync.request(regeneratePatientId: medication.patientId);
           case 'archive':
             final ok = await runGuarded(
               context,
@@ -150,6 +162,12 @@ class _MenuButton extends ConsumerWidget {
         }
       },
       itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'storage',
+          child: Text(
+            medication.storageOnly ? l10n.startTaking : l10n.moveToStorage,
+          ),
+        ),
         PopupMenuItem(
           value: 'archive',
           child: Text(archived ? l10n.unarchive : l10n.archive),
@@ -196,6 +214,7 @@ class _Overview extends ConsumerWidget {
                     : BadgeTone.success,
               ),
               if (m.isPrn) StatusBadge(l10n.prnBadge, tone: BadgeTone.brand),
+              if (m.storageOnly) StatusBadge(l10n.storageBadge),
             ],
           ),
         ),
@@ -232,7 +251,7 @@ class _Overview extends ConsumerWidget {
             l10n.fromCatalog,
             '${l10n.catalogPrice(m.catalogPriceEgp!.toStringAsFixed(2))}\n${l10n.referencePriceNote}',
           ),
-        if (m.isPrn && m.status == MedicationStatus.active)
+        if (m.isPrn && !m.storageOnly && m.status == MedicationStatus.active)
           Padding(
             padding: const EdgeInsets.all(8),
             child: FilledButton.icon(
@@ -255,57 +274,178 @@ class _Schedules extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    if (medication.storageOnly) {
+      return _StorageOnlyNotice(medication: medication);
+    }
     final meals =
         ref.watch(patientMealsProvider(medication.patientId)).valueOrNull ??
             const [];
     final mealsById = {for (final m in meals) m.mealId: m};
     return AsyncBody(
       value: ref.watch(medicationSchedulesProvider(medication.medicationId)),
-      builder: (schedules) => ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-        children: [
-          if (medication.isPrn)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(l10n.prnPlannedNote),
-            ),
-          if (schedules.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(l10n.noSchedules, textAlign: TextAlign.center),
-            ),
-          for (final s in schedules)
-            Card(
-              child: ListTile(
-                leading: Icon(
-                  s.scheduleType == 'meal_relative'
-                      ? Icons.restaurant_outlined
-                      : Icons.alarm,
-                ),
-                title: Text(describeTiming(s, mealsById[s.mealId], l10n)),
-                subtitle: Text(
-                  describeSchedule(s, medication, mealsById[s.mealId], l10n)
-                      .split(' · ')
-                      .skip(1)
-                      .join(' · '),
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(
-                  '/medications/${medication.medicationId}/schedules/${s.scheduleId}',
-                ),
+      builder: (schedules) {
+        // Times saved together form one dose plan.
+        final groups = <String, List<MedicationSchedule>>{};
+        for (final s in schedules) {
+          groups.putIfAbsent(s.groupId ?? s.scheduleId, () => []).add(s);
+        }
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          children: [
+            if (medication.isPrn)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(l10n.prnPlannedNote),
               ),
-            ),
-          const SizedBox(height: 8),
-          if (medication.status == MedicationStatus.active)
-            OutlinedButton.icon(
-              onPressed: () => context.push(
-                '/medications/${medication.medicationId}/schedules/new',
+            if (groups.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(l10n.noSchedules, textAlign: TextAlign.center),
               ),
-              icon: const Icon(Icons.add_alarm),
-              label: Text(l10n.addSchedule),
-            ),
-        ],
+            for (final entry in groups.entries)
+              _PlanCard(
+                medication: medication,
+                groupId: entry.key,
+                schedules: entry.value,
+                mealsById: mealsById,
+              ),
+            const SizedBox(height: 8),
+            if (medication.status == MedicationStatus.active)
+              OutlinedButton.icon(
+                onPressed: () => context.push(
+                  '/medications/${medication.medicationId}/schedules/new',
+                ),
+                icon: const Icon(Icons.add_alarm),
+                label: Text(l10n.dosePlan),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({
+    required this.medication,
+    required this.groupId,
+    required this.schedules,
+    required this.mealsById,
+  });
+
+  final Medication medication;
+  final String groupId;
+  final List<MedicationSchedule> schedules;
+  final Map<String, Meal> mealsById;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final sorted = [...schedules]
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final first = sorted.first;
+    final recurrence = describeRecurrence(
+      RecurrenceRule.decode(first.recurrenceRule),
+      l10n,
+    );
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push(
+          '/medications/${medication.medicationId}/schedules/$groupId',
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.event_repeat),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${l10n.timesPerDay(sorted.length)} · $recurrence',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+              const SizedBox(height: 6),
+              for (final s in sorted)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 32, top: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        s.scheduleType == ScheduleTypes.mealRelative
+                            ? Icons.restaurant_outlined
+                            : Icons.alarm,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          describeTiming(s, mealsById[s.mealId], l10n),
+                        ),
+                      ),
+                      Text(
+                        quantityWithUnit(
+                          s.doseQuantityScaled,
+                          medication.doseUnit,
+                          l10n,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+}
+
+class _StorageOnlyNotice extends ConsumerWidget {
+  const _StorageOnlyNotice({required this.medication});
+
+  final Medication medication;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.inventory_2_outlined),
+            title: Text(l10n.storageOnly),
+            subtitle: Text(l10n.storageOnlyHint),
+          ),
+        ),
+        const SizedBox(height: 8),
+        FilledButton.icon(
+          onPressed: () async {
+            final ok = await runGuarded(
+              context,
+              () => ref
+                  .read(medicationRepositoryProvider)
+                  .setStorageOnly(medication.medicationId, false),
+              success: l10n.savedMessage,
+            );
+            if (ok) {
+              ref
+                  .read(syncCoordinatorProvider)
+                  .request(regeneratePatientId: medication.patientId);
+            }
+          },
+          icon: const Icon(Icons.play_arrow),
+          label: Text(l10n.startTaking),
+        ),
+      ],
     );
   }
 }

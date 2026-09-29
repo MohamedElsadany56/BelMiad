@@ -213,7 +213,22 @@ class PdfReportService {
               [
                 for (final v in report.vitals)
                   [
-                    vitalTypeLabel(v.measurementType, l10n),
+                    [
+                      vitalTypeLabel(v.measurementType, l10n),
+                      if (vitalContextText(
+                            v,
+                            l10n,
+                            mealNames: report.mealNames,
+                            medicationNames: report.medicationNames,
+                          ) !=
+                          null)
+                        vitalContextText(
+                          v,
+                          l10n,
+                          mealNames: report.mealNames,
+                          medicationNames: report.medicationNames,
+                        )!,
+                    ].join('\n'),
                     vitalValueText(v),
                     local(v.measuredAt),
                   ],

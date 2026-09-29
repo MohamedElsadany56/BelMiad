@@ -15,6 +15,7 @@ import '../../doses/domain/dose_status.dart';
 import '../../doses/presentation/take_dose_sheet.dart';
 import '../../health/data/health_repositories.dart';
 import '../../medications/data/medication_repository.dart';
+import 'live_clock.dart';
 
 final _selectedDateProvider = StateProvider<LocalDate?>((ref) => null);
 
@@ -44,7 +45,7 @@ final _prnMedicationsProvider =
   return ref
       .watch(medicationRepositoryProvider)
       .watchForPatient(patientId, includeArchived: false)
-      .map((list) => list.where((m) => m.isPrn).toList());
+      .map((list) => list.where((m) => m.isPrn && !m.storageOnly).toList());
 });
 
 final unreadNotificationsProvider =
@@ -155,6 +156,7 @@ class _TodayBody extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.only(bottom: 96),
         children: [
+          const LiveClock(),
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
             child: Row(

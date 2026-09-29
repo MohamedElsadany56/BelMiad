@@ -173,7 +173,11 @@ class BackupService {
       'vitals_measurements',
       'measurement_id',
       'patient_id = ?',
-      references: ['patient_id'],
+      references: [
+        'patient_id',
+        'related_meal_id',
+        'related_medication_id',
+      ],
     ),
     _TableSpec(
       'dietary_rules.json',

@@ -6,6 +6,7 @@ import '../../../core/time/clock.dart';
 import '../../../core/time/local_date.dart';
 import '../../../core/utilities/ids.dart';
 import '../../audit/data/audit_log.dart';
+import '../domain/meal_timing.dart';
 
 class MealRepository {
   MealRepository(this._db, this._audit, {Clock clock = systemClock})
@@ -31,6 +32,8 @@ class MealRepository {
     required String nameAr,
     required String mealType,
     String? time,
+    String timeMode = MealTimeModes.daily,
+    String? weekdayTimes,
   }) async {
     _validate(nameEn, nameAr, time);
     final now = _clock();
@@ -43,6 +46,8 @@ class MealRepository {
             nameAr: nameAr.trim(),
             mealType: mealType,
             defaultTime: Value(time),
+            timeMode: Value(timeMode),
+            weekdayTimes: Value(weekdayTimes),
             createdAt: now,
             updatedAt: now,
           ),
@@ -65,6 +70,8 @@ class MealRepository {
     required String nameAr,
     required String mealType,
     String? time,
+    String timeMode = MealTimeModes.daily,
+    String? weekdayTimes,
     bool isActive = true,
   }) async {
     _validate(nameEn, nameAr, time);
@@ -78,6 +85,8 @@ class MealRepository {
       nameAr: Value(nameAr.trim()),
       mealType: Value(mealType),
       defaultTime: Value(time),
+      timeMode: Value(timeMode),
+      weekdayTimes: Value(weekdayTimes),
       isActive: Value(isActive),
       updatedAt: Value(_clock()),
     ));
@@ -86,9 +95,17 @@ class MealRepository {
       entityType: EntityTypes.meal,
       entityId: mealId,
       action: AuditActions.updated,
-      metadata: {'name': nameEn.trim(), 'time': time},
+      metadata: {
+        'name': nameEn.trim(),
+        'time': time,
+        'time_mode': timeMode,
+        'weekday_times': weekdayTimes,
+      },
     );
-    return current.defaultTime != time || current.mealType != mealType;
+    return current.defaultTime != time ||
+        current.mealType != mealType ||
+        current.timeMode != timeMode ||
+        current.weekdayTimes != weekdayTimes;
   }
 
   Future<bool> isInUse(String mealId) async {

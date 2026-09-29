@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>BelMiad uses the camera to photograph prescriptions. Photos stay on this device.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>BelMiad lets you attach prescription photos from your library. Files stay on this device.</string>
 </dict>
 </plist>

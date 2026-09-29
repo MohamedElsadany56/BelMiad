@@ -29,6 +29,8 @@ dependencies:
   archive: ^4.0.0
   uuid: ^4.5.1
   crypto: ^3.0.6
+  image_picker: ^1.2.3
+  permission_handler: ^13.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

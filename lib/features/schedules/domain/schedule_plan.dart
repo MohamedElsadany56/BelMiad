@@ -13,6 +13,7 @@ class SchedulePlan {
     required this.doseQuantityScaled,
     required this.rule,
     required this.anchor,
+    this.weekdayMinutes = const {},
     this.validFrom,
     this.validUntil,
     this.medicationStart,
@@ -25,6 +26,10 @@ class SchedulePlan {
   /// Local wall-clock minutes; may be negative or ≥ 1440 for meal offsets
   /// that cross midnight.
   final int minutesOfDay;
+
+  /// Per-weekday overrides (ISO weekday → minutes), used when the related
+  /// meal has different times on different days.
+  final Map<int, int> weekdayMinutes;
   final int doseQuantityScaled;
   final RecurrenceRule rule;
   final LocalDate anchor;
@@ -32,6 +37,8 @@ class SchedulePlan {
   final LocalDate? validUntil;
   final LocalDate? medicationStart;
   final LocalDate? medicationEnd;
+
+  int minutesOn(LocalDate date) => weekdayMinutes[date.weekday] ?? minutesOfDay;
 
   bool isActiveOn(LocalDate date) {
     if (validFrom != null && date.isBefore(validFrom!)) return false;
@@ -78,7 +85,7 @@ List<PlannedDose> expandPlans(
         PlannedDose(
           plan: plan,
           localDate: date,
-          scheduledAt: time.toUtc(date, plan.minutesOfDay),
+          scheduledAt: time.toUtc(date, plan.minutesOn(date)),
           quantityScaled: quantity,
         ),
       );

@@ -7,6 +7,13 @@ import '../../../app/widgets/common.dart';
 import '../../../app/widgets/file_actions.dart';
 import '../../../core/database/app_database.dart';
 import '../../audit/data/audit_log.dart';
+import '../../medications/data/medication_repository.dart';
+import '../../medications/presentation/medication_detail_screen.dart';
+import '../../medications/presentation/medications_screen.dart';
+import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
+
+import '../../../core/permissions/camera_permission.dart';
+import '../application/prescription_documents.dart';
 import '../data/health_repositories.dart';
 
 void openHealthForm(BuildContext context, int tab, String patientId) {
@@ -250,6 +257,12 @@ Future<void> showVitalForm(
   );
   final notes = TextEditingController(text: existing?.notes);
   var when = existing?.measuredAt.toLocal() ?? DateTime.now();
+  var context_ = existing?.context ?? VitalContexts.random;
+  String? mealId = existing?.relatedMealId;
+  String? medicationId = existing?.relatedMedicationId;
+  final minutesAfter = TextEditingController(
+    text: '${existing?.minutesAfter ?? 120}',
+  );
   double? parse(String text) => double.tryParse(text.replaceAll(',', '.'));
   return _sheet(
     context,
@@ -311,6 +324,78 @@ Future<void> showVitalForm(
           controller: unit,
           decoration: InputDecoration(labelText: l10n.unit),
         ),
+        if (VitalContexts.appliesTo(type)) ...[
+          DropdownButtonFormField<String>(
+            initialValue: context_,
+            decoration: InputDecoration(labelText: l10n.measurementContext),
+            items: [
+              for (final c in VitalContexts.all)
+                DropdownMenuItem(
+                    value: c, child: Text(vitalContextLabel(c, l10n))),
+            ],
+            onChanged: (v) => setState(() => context_ = v ?? context_),
+          ),
+          if (context_ == VitalContexts.afterMeal)
+            Consumer(
+              builder: (context, ref, _) {
+                final meals =
+                    ref.watch(patientMealsProvider(patientId)).valueOrNull ??
+                        const <Meal>[];
+                return DropdownButtonFormField<String>(
+                  initialValue:
+                      meals.any((m) => m.mealId == mealId) ? mealId : null,
+                  decoration: InputDecoration(labelText: l10n.relatedMeal),
+                  items: [
+                    for (final m in meals)
+                      DropdownMenuItem(
+                          value: m.mealId, child: Text(mealName(m, l10n))),
+                  ],
+                  onChanged: (v) => mealId = v,
+                );
+              },
+            ),
+          if (context_ == VitalContexts.afterMedication)
+            Consumer(
+              builder: (context, ref, _) {
+                final medications = (ref
+                            .watch(patientMedicationsProvider(patientId))
+                            .valueOrNull ??
+                        const <Medication>[])
+                    .where((m) => !m.storageOnly)
+                    .toList();
+                return DropdownButtonFormField<String>(
+                  initialValue:
+                      medications.any((m) => m.medicationId == medicationId)
+                          ? medicationId
+                          : null,
+                  isExpanded: true,
+                  decoration:
+                      InputDecoration(labelText: l10n.relatedMedication),
+                  items: [
+                    for (final m in medications)
+                      DropdownMenuItem(
+                        value: m.medicationId,
+                        child: Text(
+                          medicationDisplayName(m, arabic: context.isArabic),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                  onChanged: (v) => medicationId = v,
+                );
+              },
+            ),
+          if (context_ == VitalContexts.afterMeal ||
+              context_ == VitalContexts.afterMedication)
+            TextFormField(
+              controller: minutesAfter,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: l10n.minutesAfter),
+              validator: (v) => (int.tryParse(v ?? '') ?? -1) < 0
+                  ? l10n.error_invalidTime
+                  : null,
+            ),
+        ],
         Builder(
           builder: (context) => InkWell(
             onTap: () async {
@@ -340,6 +425,10 @@ Future<void> showVitalForm(
             unit: unit.text,
             measuredAt: when,
             notes: notes.text,
+            context: context_,
+            relatedMealId: mealId,
+            relatedMedicationId: medicationId,
+            minutesAfter: int.tryParse(minutesAfter.text),
           ),
     ),
   );
@@ -464,25 +553,170 @@ Future<void> showPrescriptionForm(BuildContext context, String patientId) {
   final doctor = TextEditingController();
   final notes = TextEditingController();
   String? issueDate;
-  PickedFile? file;
+  // Captured or picked image pages, or a single picked document.
+  final pages = <PickedFile>[];
+  PickedFile? document;
+  var asPdf = false;
+
+  Future<void> capture(BuildContext context, StateSetter setState) async {
+    final access = await requestCameraAccess();
+    if (!context.mounted) return;
+    if (access != CameraAccess.granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.cameraPermissionDenied),
+          action: access == CameraAccess.permanentlyDenied
+              ? SnackBarAction(
+                  label: l10n.openSettings,
+                  onPressed: openCameraSettings,
+                )
+              : null,
+        ),
+      );
+      return;
+    }
+    try {
+      final photo = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        maxWidth: 2400,
+        imageQuality: 85,
+      );
+      if (photo == null) return;
+      final bytes = await photo.readAsBytes();
+      setState(() {
+        document = null;
+        pages.add(PickedFile('page_${pages.length + 1}.jpg', bytes));
+        if (pages.length > 1) asPdf = true;
+      });
+    } catch (error) {
+      if (context.mounted) showError(context, error);
+    }
+  }
+
   return _sheet(
     context,
     _EditorSheet(
       title: l10n.addPrescription,
       fields: (setState) => [
-        OutlinedButton.icon(
-          onPressed: () async {
-            final picked = await pickFile(
-              extensions: const ['jpg', 'jpeg', 'png', 'heic', 'webp', 'pdf'],
-            );
-            if (picked != null) setState(() => file = picked);
-          },
-          icon: const Icon(Icons.attach_file),
-          label: Text(
-              file == null ? l10n.pickFile : l10n.fileSelected(file!.name)),
+        Builder(
+          builder: (context) => Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => capture(context, setState),
+                  icon: const Icon(Icons.photo_camera_outlined),
+                  label: Text(pages.isEmpty ? l10n.takePhoto : l10n.addPage),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final picked = await pickFile(
+                      extensions: const [
+                        'jpg',
+                        'jpeg',
+                        'png',
+                        'heic',
+                        'webp',
+                        'pdf',
+                      ],
+                    );
+                    if (picked == null) return;
+                    setState(() {
+                      if (prescriptionFileKind(picked.name) ==
+                          PrescriptionFileKind.image) {
+                        document = null;
+                        pages.add(picked);
+                        if (pages.length > 1) asPdf = true;
+                      } else {
+                        pages.clear();
+                        document = picked;
+                      }
+                    });
+                  },
+                  icon: const Icon(Icons.attach_file),
+                  label: Text(l10n.pickFile),
+                ),
+              ),
+            ],
+          ),
         ),
-        FormField<PickedFile>(
-          validator: (_) => file == null ? l10n.requiredField : null,
+        if (document != null)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.picture_as_pdf_outlined),
+            title: Text(l10n.fileSelected(document!.name)),
+          ),
+        if (pages.isNotEmpty) ...[
+          SizedBox(
+            height: 96,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: pages.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) => Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.memory(
+                      pages[index].bytes,
+                      width: 72,
+                      height: 96,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox(
+                        width: 72,
+                        height: 96,
+                        child: Icon(Icons.image_outlined),
+                      ),
+                    ),
+                  ),
+                  PositionedDirectional(
+                    top: 0,
+                    end: 0,
+                    child: InkWell(
+                      onTap: () => setState(() {
+                        pages.removeAt(index);
+                        if (pages.isEmpty) asPdf = false;
+                      }),
+                      child: const CircleAvatar(
+                        radius: 11,
+                        child: Icon(Icons.close, size: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Text(l10n.pagesCount(pages.length)),
+          Text(l10n.saveAs, style: Theme.of(context).textTheme.titleSmall),
+          SegmentedButton<bool>(
+            segments: [
+              ButtonSegment(
+                value: false,
+                enabled: pages.length == 1,
+                icon: const Icon(Icons.image_outlined),
+                label: Text(l10n.formatPhoto),
+              ),
+              ButtonSegment(
+                value: true,
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                label: Text(l10n.formatPdf),
+              ),
+            ],
+            selected: {pages.length > 1 || asPdf},
+            onSelectionChanged: (v) => setState(() => asPdf = v.first),
+          ),
+          if (pages.length > 1)
+            Text(
+              l10n.multiPagePdfNote,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+        ],
+        FormField<void>(
+          validator: (_) =>
+              pages.isEmpty && document == null ? l10n.requiredField : null,
           builder: (state) => state.hasError
               ? Text(
                   state.errorText!,
@@ -503,17 +737,32 @@ Future<void> showPrescriptionForm(BuildContext context, String patientId) {
           controller: notes,
           decoration: InputDecoration(labelText: l10n.notes),
         ),
-        Text(l10n.prescriptionsPrivateNote,
-            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          l10n.prescriptionsPrivateNote,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
-      onSave: (ref) => ref.read(prescriptionRepositoryProvider).create(
-            patientId: patientId,
-            fileName: file!.name,
-            bytes: file!.bytes,
-            doctorName: doctor.text,
-            issueDate: issueDate,
-            notes: notes.text,
-          ),
+      onSave: (ref) async {
+        final PickedFile file;
+        if (document != null) {
+          file = document!;
+        } else if (pages.length > 1 || asPdf) {
+          file = PickedFile(
+            'prescription.pdf',
+            await imagesToPdf([for (final p in pages) p.bytes]),
+          );
+        } else {
+          file = pages.single;
+        }
+        await ref.read(prescriptionRepositoryProvider).create(
+              patientId: patientId,
+              fileName: file.name,
+              bytes: file.bytes,
+              doctorName: doctor.text,
+              issueDate: issueDate,
+              notes: notes.text,
+            );
+      },
     ),
   );
 }

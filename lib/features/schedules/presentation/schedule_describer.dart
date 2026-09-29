@@ -54,6 +54,9 @@ String describeTiming(
     TimingRelation.withMeal => l10n.scheduleWithMeal(name),
   };
   if (meal == null) return text;
+  if (meal.timeMode == MealTimeModes.weekly) {
+    return '$text (${l10n.variesByDay})';
+  }
   final effective = LocalTime.fromMinutes(
     mealRelativeMinutes(
       mealTime: effectiveMealTime(meal.mealType, meal.defaultTime),

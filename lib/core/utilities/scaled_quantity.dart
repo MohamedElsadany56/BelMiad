@@ -56,12 +56,19 @@ class ScaledQuantity implements Comparable<ScaledQuantity> {
   static ScaledQuantity min(ScaledQuantity a, ScaledQuantity b) =>
       a <= b ? a : b;
 
-  /// Package conversion: `2 boxes × 20 tablets = 40 tablets`.
+  /// Package conversion: `2 boxes × 20 tablets = 40 tablets`, or with inner
+  /// packs `2 boxes × 3 strips × 10 tablets = 60 tablets`, plus optional
+  /// loose units.
   static ScaledQuantity fromPackages({
     required int packages,
     required int unitsPerPackage,
+    int? subPackagesPerPackage,
+    ScaledQuantity loose = const ScaledQuantity.zero(),
   }) =>
-      ScaledQuantity.units(packages * unitsPerPackage);
+      ScaledQuantity.units(
+        packages * (subPackagesPerPackage ?? 1) * unitsPerPackage,
+      ) +
+      loose;
 
   /// Human readable representation without trailing zeros (`1.5`, `0.25`).
   String format() {
