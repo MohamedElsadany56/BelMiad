@@ -4,6 +4,9 @@ import 'package:drift/drift.dart' as drift;
 import '../../../app/app_scaffold.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/notifications/offline_notification_service.dart';
+import '../../notifications/data/notification_preferences_repository.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../data/inventory_service.dart';
 
 final inventoryBatchesProvider = FutureProvider.autoDispose((ref) async {
@@ -179,6 +182,36 @@ Future<void> _editBatch(
         } else {
             await (db.update(db.inventoryBatches)..where((b) => b.id.equals(batch.id)))
                     .write(values);
+        }
+        final medicine = medicines.firstWhere((item) => item.id == medicationId);
+        final alertsEnabled = await NotificationPreferencesRepository(db)
+                .isEnabled(medicine.patientId, 'inventory');
+        if (alertsEnabled) {
+            final notifications =
+                    OfflineNotificationService(FlutterLocalNotificationsPlugin());
+            await notifications.initialize();
+            final savedBatchId = batch?.id ?? DateTime.now().microsecondsSinceEpoch.toString();
+            if (amount * 1000 <= 1000) {
+                await notifications.scheduleInventoryAlert(
+                    id: savedBatchId.hashCode & 0x7fffffff,
+                    title: 'Low stock: ${medicine.nameEn}',
+                    body: 'This stock batch is at or below one unit.',
+                    when: DateTime.now().add(const Duration(minutes: 1)),
+                );
+            }
+            if (expiry != null &&
+                    expiry!.isBefore(DateTime.now().add(const Duration(days: 30)))) {
+                var alertWhen = expiry!.subtract(const Duration(days: 7));
+                if (alertWhen.isBefore(DateTime.now())) {
+                    alertWhen = DateTime.now().add(const Duration(minutes: 1));
+                }
+                await notifications.scheduleInventoryAlert(
+                    id: (savedBatchId.hashCode + 2000000000) & 0x7fffffff,
+                    title: 'Expiring soon: ${medicine.nameEn}',
+                    body: 'A stock batch will expire soon.',
+                    when: alertWhen,
+                );
+            }
         }
     ref.invalidate(inventoryBatchesProvider);
   }

@@ -124,6 +124,11 @@ Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
           medicineName: medicine.nameEn,
           when: dose.scheduledAt,
         );
+        await notificationService.scheduleMissedDose(
+          id: (dose.id.hashCode + 1000000000) & 0x7fffffff,
+          medicineName: medicine.nameEn,
+          when: dose.scheduledAt.add(const Duration(minutes: 30)),
+        );
       }
     }
     ref.invalidate(todaysDosesProvider);
