@@ -1,7 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));
+final localeProvider = StateNotifierProvider<LocaleController, Locale>(
+  (ref) => LocaleController(),
+);
+
+class LocaleController extends StateNotifier<Locale> {
+  LocaleController() : super(const Locale('en')) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final preferences = await SharedPreferences.getInstance();
+    final languageCode = preferences.getString('language_code');
+    if (languageCode == 'ar' || languageCode == 'en') {
+      state = Locale(languageCode);
+    }
+  }
+
+  Future<void> toggle() async {
+    final next = state.languageCode == 'ar' ? 'en' : 'ar';
+    state = Locale(next);
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString('language_code', next);
+  }
+}
 
 class AppStrings {
   const AppStrings(this.locale);

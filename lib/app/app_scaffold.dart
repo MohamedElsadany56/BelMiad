@@ -31,10 +31,7 @@ class AppScaffold extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () {
-              ref.read(localeProvider.notifier).state =
-                  locale.languageCode == 'ar'
-                      ? const Locale('en')
-                      : const Locale('ar');
+              ref.read(localeProvider.notifier).toggle();
             },
             child: Text(
               locale.languageCode == 'ar'
