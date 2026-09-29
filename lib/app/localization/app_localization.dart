@@ -52,6 +52,13 @@ class AppStrings {
     'backup': 'Backup',
     'arabic': 'عربي',
     'english': 'English',
+    'backupAndRestore': 'Backup and restore',
+    'exportBackup': 'Export backup',
+    'importMergeBackup': 'Import and merge backup',
+    'medicationReminders': 'Medication reminders',
+    'stockExpiryAlerts': 'Stock and expiry alerts',
+    'healthRecordsTitle': 'Health records',
+    'addRecord': 'Add record',
   };
 
   static const _arabic = <String, String>{
@@ -67,5 +74,12 @@ class AppStrings {
     'backup': 'النسخ الاحتياطي',
     'arabic': 'عربي',
     'english': 'English',
+    'backupAndRestore': 'النسخ الاحتياطي والاستعادة',
+    'exportBackup': 'تصدير نسخة احتياطية',
+    'importMergeBackup': 'استيراد ودمج نسخة احتياطية',
+    'medicationReminders': 'تذكيرات الأدوية',
+    'stockExpiryAlerts': 'تنبيهات المخزون والانتهاء',
+    'healthRecordsTitle': 'السجل الصحي',
+    'addRecord': 'إضافة سجل',
   };
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/app_scaffold.dart';
+import '../../../app/localization/app_localization.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../../core/notifications/offline_notification_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -28,6 +29,7 @@ class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = AppStrings(ref.watch(localeProvider));
     final patients = ref.watch(patientsProvider);
     return AppScaffold(
       title: 'Settings',
@@ -49,7 +51,7 @@ class SettingsScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              Text('Settings', style: Theme.of(context).textTheme.headlineMedium),
+              Text(strings.text('settings'), style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 18),
               Card(
                 child: Column(
@@ -72,7 +74,7 @@ class SettingsScreen extends ConsumerWidget {
                         }
                         ref.invalidate(medicationNotificationsProvider(patientId));
                       },
-                      title: const Text('Medication reminders'),
+                      title: Text(strings.text('medicationReminders')),
                       subtitle: const Text(
                         'Receive offline reminders for scheduled doses',
                       ),
@@ -88,7 +90,7 @@ class SettingsScreen extends ConsumerWidget {
                         );
                         ref.invalidate(inventoryNotificationsProvider(patientId));
                       },
-                      title: const Text('Stock and expiry alerts'),
+                      title: Text(strings.text('stockExpiryAlerts')),
                       subtitle: const Text('Warn when stock is low or expiring soon'),
                     ),
                   ],

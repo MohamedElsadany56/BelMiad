@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../../app/app_scaffold.dart';
+import '../../../app/localization/app_localization.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../../core/database/app_database.dart';
 import '../../patients/data/patient_providers.dart';
@@ -252,6 +253,7 @@ class RecordsScreen extends ConsumerWidget {
   const RecordsScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = AppStrings(ref.watch(localeProvider));
     final records = ref.watch(healthRecordsProvider);
     return AppScaffold(
         title: 'Health records',
@@ -261,12 +263,12 @@ class RecordsScreen extends ConsumerWidget {
           data: (items) =>
               ListView(padding: const EdgeInsets.all(24), children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('Health records',
+              Text(strings.text('healthRecordsTitle'),
                   style: Theme.of(context).textTheme.headlineMedium),
               FilledButton.icon(
                   onPressed: () => _editRecord(context, ref, null),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add record'))
+                  label: Text(strings.text('addRecord')))
             ]),
             const SizedBox(height: 18),
             if (items.isEmpty)
