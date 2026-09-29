@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../app/app_scaffold.dart';
+import '../../../app/localization/app_localization.dart';
 import '../../../core/backup/backup_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/providers/database_provider.dart';
@@ -196,25 +197,26 @@ class BackupScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = AppStrings(ref.watch(localeProvider));
     return AppScaffold(
       title: 'Backup',
       child: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text('Backup and restore', style: Theme.of(context).textTheme.headlineMedium),
+          Text(strings.text('backupAndRestore'), style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 8),
           const Text('Export a portable offline backup or merge one from another device.'),
           const SizedBox(height: 18),
           FilledButton.icon(
             onPressed: () => _showExport(context, ref),
             icon: const Icon(Icons.upload_file),
-            label: const Text('Export backup'),
+            label: Text(strings.text('exportBackup')),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () => _showImport(context, ref),
             icon: const Icon(Icons.download),
-            label: const Text('Import and merge backup'),
+            label: Text(strings.text('importMergeBackup')),
           ),
         ],
       ),

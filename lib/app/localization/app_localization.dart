@@ -59,6 +59,7 @@ class AppStrings {
     'stockExpiryAlerts': 'Stock and expiry alerts',
     'healthRecordsTitle': 'Health records',
     'addRecord': 'Add record',
+    'inventoryReport': 'Inventory report',
   };
 
   static const _arabic = <String, String>{
@@ -81,5 +82,6 @@ class AppStrings {
     'stockExpiryAlerts': 'تنبيهات المخزون والانتهاء',
     'healthRecordsTitle': 'السجل الصحي',
     'addRecord': 'إضافة سجل',
+    'inventoryReport': 'تقرير المخزون',
   };
 }

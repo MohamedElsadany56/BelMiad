@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../app/app_scaffold.dart';
+import '../../../app/localization/app_localization.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../patients/data/patient_providers.dart';
 import '../data/pdf_report_service.dart';
@@ -67,6 +68,7 @@ class ReportsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = AppStrings(ref.watch(localeProvider));
     final report = ref.watch(inventoryReportProvider);
     return AppScaffold(
       title: 'Reports',
@@ -76,7 +78,7 @@ class ReportsScreen extends ConsumerWidget {
         data: (inventory) => ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            Text('Inventory report', style: Theme.of(context).textTheme.headlineMedium),
+            Text(strings.text('inventoryReport'), style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 8),
             Text('${inventory.rows.length} medicines · ${inventory.totalUnits} total units'),
             const SizedBox(height: 18),
