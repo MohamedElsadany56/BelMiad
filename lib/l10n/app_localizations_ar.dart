@@ -566,17 +566,17 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String scheduleCycle(Object off, Object on) {
+  String scheduleCycle(Object on, Object off) {
     return '$on يوم تناول ثم $off يوم توقف';
   }
 
   @override
-  String scheduleBeforeMeal(Object meal, Object minutes) {
+  String scheduleBeforeMeal(Object minutes, Object meal) {
     return 'قبل $meal بـ $minutes دقيقة';
   }
 
   @override
-  String scheduleAfterMeal(Object meal, Object minutes) {
+  String scheduleAfterMeal(Object minutes, Object meal) {
     return 'بعد $meal بـ $minutes دقيقة';
   }
 
@@ -656,7 +656,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get insufficientStockTitle => 'المخزون غير كافٍ';
 
   @override
-  String insufficientStockBody(Object available, Object required) {
+  String insufficientStockBody(Object required, Object available) {
     return 'المطلوب $required والمتاح الصالح للاستخدام $available فقط.';
   }
 
@@ -674,7 +674,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get maxExceededTitle => 'سيتم تجاوز الحد الأقصى اليومي';
 
   @override
-  String maxExceededBody(Object attempt, Object maximum, Object taken) {
+  String maxExceededBody(Object maximum, Object taken, Object attempt) {
     return 'الحد الأقصى $maximum يومياً. تم تناول $taken اليوم. هذه الجرعة: $attempt.';
   }
 
@@ -945,7 +945,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get packaging_other => 'أخرى';
 
   @override
-  String quantityChange(Object next, Object previous) {
+  String quantityChange(Object previous, Object next) {
     return '$previous ← $next';
   }
 
@@ -1715,4 +1715,248 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get error_filesUnsupported => 'الملفات غير مدعومة على هذه المنصة';
+
+  @override
+  String get dosePlan => 'خطة الجرعات';
+
+  @override
+  String get doseTimes => 'أوقات اليوم';
+
+  @override
+  String get addTime => 'إضافة وقت';
+
+  @override
+  String get removeTime => 'حذف الوقت';
+
+  @override
+  String get quickSetup => 'إعداد سريع';
+
+  @override
+  String get presetOnce => 'مرة يومياً';
+
+  @override
+  String get presetTwice => 'مرتين يومياً';
+
+  @override
+  String get presetThree => '3 مرات يومياً';
+
+  @override
+  String get presetFour => '4 مرات يومياً';
+
+  @override
+  String get presetAfterMeals => 'بعد كل وجبة رئيسية';
+
+  @override
+  String get presetBeforeMeals => 'قبل كل وجبة رئيسية';
+
+  @override
+  String get presetEvery8h => 'كل 8 ساعات';
+
+  @override
+  String get presetEvery12h => 'كل 12 ساعة';
+
+  @override
+  String doseTimeNumber(Object number) {
+    return 'الوقت $number';
+  }
+
+  @override
+  String timesPerDay(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مرة يومياً',
+      few: '$count مرات يومياً',
+      two: 'مرتين يومياً',
+      one: 'مرة يومياً',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sharedSettings => 'تنطبق على كل الأوقات';
+
+  @override
+  String get variesByDay => 'يختلف حسب اليوم';
+
+  @override
+  String get error_timesRequired => 'أضف وقتاً واحداً على الأقل';
+
+  @override
+  String get containsInnerPacks => 'تحتوي على شرائط';
+
+  @override
+  String get innerPackType => 'العبوة الداخلية';
+
+  @override
+  String innerPacksPer(Object inner, Object outer) {
+    return '$inner في كل $outer';
+  }
+
+  @override
+  String unitsPer(Object unit, Object pack) {
+    return '$unit في كل $pack';
+  }
+
+  @override
+  String get looseUnits => 'وحدات إضافية منفصلة';
+
+  @override
+  String packagingBreakdown(Object breakdown, Object total) {
+    return '$breakdown = $total';
+  }
+
+  @override
+  String get packaging_strip => 'شريط';
+
+  @override
+  String get storageOnly => 'للتخزين فقط';
+
+  @override
+  String get storageOnlyHint =>
+      'احتفظ بهذا الدواء في المخزون دون إضافته لعلاج المريض. لا تُنشأ مواعيد أو تذكيرات.';
+
+  @override
+  String get newStorageMedicine => 'دواء جديد للتخزين فقط';
+
+  @override
+  String get startTaking => 'بدء تناول هذا الدواء';
+
+  @override
+  String get moveToStorage => 'نقل إلى التخزين فقط';
+
+  @override
+  String get storageBadge => 'تخزين';
+
+  @override
+  String get filterActive => 'نشطة';
+
+  @override
+  String get filterArchived => 'مؤرشفة';
+
+  @override
+  String get filterStorage => 'التخزين';
+
+  @override
+  String timeInZone(Object timezone) {
+    return 'توقيت $timezone';
+  }
+
+  @override
+  String get mealTimeMode => 'وقت الوجبة';
+
+  @override
+  String get sameEveryDay => 'نفس الوقت كل يوم';
+
+  @override
+  String get differentByDay => 'مختلف حسب اليوم';
+
+  @override
+  String get mealWeeklyNote =>
+      'حدد وقتاً لكل يوم. الأيام الفارغة تستخدم الوقت الافتراضي.';
+
+  @override
+  String get measurementContext => 'متى تم القياس؟';
+
+  @override
+  String get context_random => 'أي وقت';
+
+  @override
+  String get context_fasting => 'صائم';
+
+  @override
+  String get context_before_meal => 'قبل الأكل';
+
+  @override
+  String get context_after_meal => 'بعد الأكل';
+
+  @override
+  String get context_after_medication => 'بعد تناول الدواء';
+
+  @override
+  String get relatedMeal => 'أي وجبة';
+
+  @override
+  String get relatedMedication => 'أي دواء';
+
+  @override
+  String get minutesAfter => 'بعد كم دقيقة';
+
+  @override
+  String contextAfterMeal(Object meal, Object minutes) {
+    return 'بعد $meal · $minutes دقيقة';
+  }
+
+  @override
+  String contextAfterMedication(Object medicine, Object minutes) {
+    return 'بعد $medicine · $minutes دقيقة';
+  }
+
+  @override
+  String get takePhoto => 'التقاط صورة';
+
+  @override
+  String get addPage => 'إضافة صفحة أخرى';
+
+  @override
+  String pagesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صفحة',
+      few: '$count صفحات',
+      two: 'صفحتان',
+      one: 'صفحة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get saveAs => 'الحفظ كـ';
+
+  @override
+  String get formatPhoto => 'صورة';
+
+  @override
+  String get formatPdf => 'PDF';
+
+  @override
+  String get multiPagePdfNote => 'تُحفظ الصفحات المتعددة في ملف PDF واحد.';
+
+  @override
+  String get cameraPermissionDenied =>
+      'الوصول للكاميرا متوقف. اسمح به لتصوير الروشتات.';
+
+  @override
+  String get openSettings => 'فتح الإعدادات';
+
+  @override
+  String get groupBy => 'التصنيف حسب';
+
+  @override
+  String get groupDoctor => 'الطبيب';
+
+  @override
+  String get groupDate => 'التاريخ';
+
+  @override
+  String get groupFileType => 'نوع الملف';
+
+  @override
+  String get unknownDoctor => 'طبيب غير محدد';
+
+  @override
+  String get noDate => 'بدون تاريخ';
+
+  @override
+  String get fileType_image => 'صور';
+
+  @override
+  String get fileType_pdf => 'ملفات PDF';
+
+  @override
+  String get fileType_other => 'ملفات أخرى';
+
+  @override
+  String get error_cameraDenied => 'تم رفض الوصول للكاميرا';
 }

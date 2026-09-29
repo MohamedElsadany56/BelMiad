@@ -176,9 +176,33 @@
   "scheduleEveryNDays": "every {count} days",
   "scheduleWeekdays": "on {days}",
   "scheduleEveryNWeeks": "every {count} weeks on {days}",
+  "@scheduleEveryNWeeks": {
+    "placeholders": {
+      "count": {},
+      "days": {}
+    }
+  },
   "scheduleCycle": "{on} days on, {off} days off",
+  "@scheduleCycle": {
+    "placeholders": {
+      "on": {},
+      "off": {}
+    }
+  },
   "scheduleBeforeMeal": "{minutes} min before {meal}",
+  "@scheduleBeforeMeal": {
+    "placeholders": {
+      "minutes": {},
+      "meal": {}
+    }
+  },
   "scheduleAfterMeal": "{minutes} min after {meal}",
+  "@scheduleAfterMeal": {
+    "placeholders": {
+      "minutes": {},
+      "meal": {}
+    }
+  },
   "scheduleWithMeal": "with {meal}",
   "todayTitle": "Today",
   "noDoses": "No doses on this day",
@@ -200,17 +224,36 @@
   "howMuchTaken": "How much was actually taken?",
   "insufficientStockTitle": "Not enough stock",
   "insufficientStockBody": "Required {required}, but only {available} is available in usable stock.",
+  "@insufficientStockBody": {
+    "placeholders": {
+      "required": {},
+      "available": {}
+    }
+  },
   "customAmount": "Custom",
   "leaveScheduled": "Leave scheduled",
   "zeroTakenNote": "Nothing was taken. The dose is not marked taken and no stock is used.",
   "maxExceededTitle": "Daily maximum would be exceeded",
   "maxExceededBody": "Maximum {maximum} per day. Already taken today: {taken}. This dose: {attempt}.",
+  "@maxExceededBody": {
+    "placeholders": {
+      "maximum": {},
+      "taken": {},
+      "attempt": {}
+    }
+  },
   "recordAnyway": "Record anyway",
   "doseWindowClosed": "This dose is past its allowed window and is now missed.",
   "chooseBatches": "Stock batches",
   "automaticFefo": "Automatic (first expiring first)",
   "manualSelection": "Choose batches",
   "allocatedOf": "Allocated {allocated} of {required}",
+  "@allocatedOf": {
+    "placeholders": {
+      "allocated": {},
+      "required": {}
+    }
+  },
   "stockNotRecordedNote": "Stock is not recorded for this medicine; no stock will be deducted.",
   "requiredQuantity": "Required",
   "actualQuantity": "Actually taken",
@@ -221,7 +264,19 @@
   "upcomingAppointment": "Next appointment",
   "alerts": "Alerts",
   "dosesDone": "{done} of {total} doses taken",
+  "@dosesDone": {
+    "placeholders": {
+      "done": {},
+      "total": {}
+    }
+  },
   "partialDose": "Partial: {actual} of {required}",
+  "@partialDose": {
+    "placeholders": {
+      "actual": {},
+      "required": {}
+    }
+  },
   "prnTaken": "As needed",
   "inventoryTitle": "Stock",
   "totalMedications": "Medicines",
@@ -286,6 +341,12 @@
   "packaging_container": "Container",
   "packaging_other": "Other",
   "quantityChange": "{previous} → {next}",
+  "@quantityChange": {
+    "placeholders": {
+      "previous": {},
+      "next": {}
+    }
+  },
   "consumedForDose": "Dose {date}",
   "reversed": "Reversed (undo)",
   "manual": "Manual",
@@ -376,6 +437,12 @@
   "reportGeneratedOn": "Generated {date}",
   "reportPeriodAll": "Period: everything",
   "reportPeriodRange": "Period: {from} – {to}",
+  "@reportPeriodRange": {
+    "placeholders": {
+      "from": {},
+      "to": {}
+    }
+  },
   "adherence": "Adherence",
   "overallAdherence": "Overall adherence",
   "takenOnTime": "Taken on time",
@@ -405,6 +472,12 @@
   "backupSaved": "Backup ready: {name}",
   "importDone": "Imported {name}",
   "mergeDone": "Merged: {added} added, {updated} updated",
+  "@mergeDone": {
+    "placeholders": {
+      "added": {},
+      "updated": {}
+    }
+  },
   "invalidBackup": "This file is not a valid BelMiad backup",
   "newerBackup": "This backup was made by a newer version of the app",
   "backupPatientMissing": "This backup's patient does not exist here. Import it as a new patient instead.",
@@ -552,5 +625,118 @@
         "type": "int"
       }
     }
-  }
+  },
+  "dosePlan": "Dose plan",
+  "doseTimes": "Times of day",
+  "addTime": "Add time",
+  "removeTime": "Remove time",
+  "quickSetup": "Quick setup",
+  "presetOnce": "Once a day",
+  "presetTwice": "Twice a day",
+  "presetThree": "3 times a day",
+  "presetFour": "4 times a day",
+  "presetAfterMeals": "After each main meal",
+  "presetBeforeMeals": "Before each main meal",
+  "presetEvery8h": "Every 8 hours",
+  "presetEvery12h": "Every 12 hours",
+  "doseTimeNumber": "Time {number}",
+  "timesPerDay": "{count, plural, =1{Once a day} =2{Twice a day} other{{count} times a day}}",
+  "@timesPerDay": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharedSettings": "Applies to all times",
+  "variesByDay": "varies by day",
+  "error_timesRequired": "Add at least one time",
+  "containsInnerPacks": "Contains strips or blisters",
+  "innerPackType": "Inner pack",
+  "innerPacksPer": "{inner} per {outer}",
+  "@innerPacksPer": {
+    "placeholders": {
+      "inner": {},
+      "outer": {}
+    }
+  },
+  "unitsPer": "{unit} per {pack}",
+  "@unitsPer": {
+    "placeholders": {
+      "unit": {},
+      "pack": {}
+    }
+  },
+  "looseUnits": "Extra loose units",
+  "packagingBreakdown": "{breakdown} = {total}",
+  "@packagingBreakdown": {
+    "placeholders": {
+      "breakdown": {},
+      "total": {}
+    }
+  },
+  "packaging_strip": "Strip",
+  "storageOnly": "Storage only",
+  "storageOnlyHint": "Keep this medicine in storage without adding it to the patient's treatment. No schedules or reminders are created.",
+  "newStorageMedicine": "New medicine just for storage",
+  "startTaking": "Start taking this medicine",
+  "moveToStorage": "Move to storage only",
+  "storageBadge": "Storage",
+  "filterActive": "Active",
+  "filterArchived": "Archived",
+  "filterStorage": "Storage",
+  "timeInZone": "{timezone} time",
+  "mealTimeMode": "Meal time",
+  "sameEveryDay": "Same every day",
+  "differentByDay": "Different by weekday",
+  "mealWeeklyNote": "Set a time for each day. Days left empty use the default time.",
+  "measurementContext": "When was it measured?",
+  "context_random": "Any time",
+  "context_fasting": "Fasting",
+  "context_before_meal": "Before a meal",
+  "context_after_meal": "After a meal",
+  "context_after_medication": "After taking medicine",
+  "relatedMeal": "Which meal",
+  "relatedMedication": "Which medicine",
+  "minutesAfter": "Minutes after",
+  "contextAfterMeal": "After {meal} · {minutes} min",
+  "@contextAfterMeal": {
+    "placeholders": {
+      "meal": {},
+      "minutes": {}
+    }
+  },
+  "contextAfterMedication": "After {medicine} · {minutes} min",
+  "@contextAfterMedication": {
+    "placeholders": {
+      "medicine": {},
+      "minutes": {}
+    }
+  },
+  "takePhoto": "Take photo",
+  "addPage": "Add another page",
+  "pagesCount": "{count, plural, =1{1 page} other{{count} pages}}",
+  "@pagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "saveAs": "Save as",
+  "formatPhoto": "Photo",
+  "formatPdf": "PDF",
+  "multiPagePdfNote": "Several pages are saved as one PDF.",
+  "cameraPermissionDenied": "Camera access is off. Allow it to photograph prescriptions.",
+  "openSettings": "Open settings",
+  "groupBy": "Group by",
+  "groupDoctor": "Doctor",
+  "groupDate": "Date",
+  "groupFileType": "File type",
+  "unknownDoctor": "Unknown doctor",
+  "noDate": "No date",
+  "fileType_image": "Photos",
+  "fileType_pdf": "PDF documents",
+  "fileType_other": "Other files",
+  "error_cameraDenied": "Camera access was denied"
 }
