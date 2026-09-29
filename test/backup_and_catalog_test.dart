@@ -2,14 +2,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:belmiad/core/backup/backup_service.dart';
 import 'package:belmiad/features/backup/data/backup_merge_service.dart';
 import 'package:belmiad/features/catalog/data/csv_parser.dart';
+import 'package:belmiad/features/catalog/data/drug_catalog_repository.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   test('CSV parser preserves quoted commas', () {
     final rows = const CsvToListConverter().convert(
       'commercial_name_en,commercial_name_ar,price_egp\n"Test, Plus","اختبار",12',
     );
     expect(rows[1][0], 'Test, Plus');
     expect(rows[1][2], '12');
+  });
+  test('Egyptian drug catalog returns searchable entries', () async {
+    final entries = await DrugCatalogRepository().search('panadol');
+
+    expect(entries, isNotEmpty);
+    expect(entries.first.nameEn.toLowerCase(), contains('panadol'));
   });
   test('backup merge preserves unique history and latest duplicate values', () {
     final merged = BackupMergeService().merge(

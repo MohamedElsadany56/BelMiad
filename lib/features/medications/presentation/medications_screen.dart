@@ -8,6 +8,77 @@ import '../../patients/data/patient_providers.dart';
 import '../../catalog/data/drug_catalog_repository.dart';
 import '../../catalog/domain/drug_catalog_entry.dart';
 
+Future<DrugCatalogEntry?> _chooseCatalogEntry(
+  BuildContext context,
+  DrugCatalogRepository catalog,
+) async {
+  final query = TextEditingController();
+  return showDialog<DrugCatalogEntry>(
+    context: context,
+    builder: (_) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Add medicine from catalog'),
+        content: SizedBox(
+          width: 520,
+          height: 420,
+          child: Column(
+            children: [
+              TextField(
+                controller: query,
+                autofocus: true,
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(
+                  labelText: 'Search English or Arabic name',
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: FutureBuilder<List<DrugCatalogEntry>>(
+                  future: catalog.search(query.text),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Text('Catalog unavailable: ${snapshot.error}');
+                    }
+                    if (query.text.trim().length < 2) {
+                      return const Center(
+                          child: Text('Type at least two characters to search.'));
+                    }
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final entries = snapshot.data ?? const <DrugCatalogEntry>[];
+                    if (entries.isEmpty) {
+                      return const Center(child: Text('No matching medicines.'));
+                    }
+                    return ListView.builder(
+                      itemCount: entries.length,
+                      itemBuilder: (_, index) {
+                        final entry = entries[index];
+                        return ListTile(
+                          title: Text(entry.nameEn),
+                          subtitle: Text('${entry.nameAr} · EGP ${entry.priceEgp}'),
+                          onTap: () => Navigator.pop(context, entry),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 Future<void> _addMedicine(
   BuildContext context,
   WidgetRef ref,
@@ -34,6 +105,22 @@ Future<void> _addMedicine(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () async {
+                  final entry = await _chooseCatalogEntry(context, catalog);
+                  if (entry != null) {
+                    name.text = entry.nameEn;
+                    arabic.text = entry.nameAr;
+                    catalogId = entry.id;
+                    setState(() {});
+                  }
+                },
+                icon: const Icon(Icons.menu_book_outlined),
+                label: const Text('Choose from Egyptian drug catalog'),
+              ),
+            ),
             TextField(
               controller: name,
               onChanged: (_) => setState(() {}),
@@ -43,6 +130,9 @@ Future<void> _addMedicine(
               FutureBuilder<List<DrugCatalogEntry>>(
                 future: catalog.search(name.text),
                 builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Text('Catalog unavailable: ${snapshot.error}');
+                  }
                   final matches = snapshot.data ?? const <DrugCatalogEntry>[];
                   if (matches.isEmpty) return const SizedBox.shrink();
                   return ConstrainedBox(
