@@ -33,10 +33,12 @@ Future<void> _editPatient(
                     child: const Text('Save'))
               ]));
   if (result == true && name.text.trim().isNotEmpty) {
+    final id = patient?.id ?? DateTime.now().microsecondsSinceEpoch.toString();
     await ref.read(patientRepositoryProvider).save(
-        id: patient?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: id,
         name: name.text.trim(),
         relation: relation.text.trim());
+    ref.read(activePatientIdProvider.notifier).state = id;
     ref.invalidate(patientsProvider);
   }
 }
@@ -76,7 +78,10 @@ class PatientsScreen extends ConsumerWidget {
                     subtitle: Text(
                         '${patient.relation ?? 'Patient'} · ${patient.timezone}'),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _editPatient(context, ref, patient)))),
+                      onTap: () {
+                        ref.read(activePatientIdProvider.notifier).state = patient.id;
+                        _editPatient(context, ref, patient);
+                      }))),
           ]),
         ));
   }

@@ -36,7 +36,10 @@ class SettingsScreen extends ConsumerWidget {
           if (items.isEmpty) {
             return const Center(child: Text('Create a patient before configuring notifications.'));
           }
-          final patientId = items.first.id;
+            final selectedPatientId = ref.watch(activePatientIdProvider);
+            final patientId = items.any((patient) => patient.id == selectedPatientId)
+              ? selectedPatientId!
+              : items.first.id;
           final medicationNotifications =
               ref.watch(medicationNotificationsProvider(patientId));
           final inventoryNotifications =

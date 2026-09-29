@@ -10,3 +10,5 @@ final patientsProvider = FutureProvider.autoDispose(
   (ref) => ref.watch(patientRepositoryProvider).list(),
 );
 
+final activePatientIdProvider = StateProvider<String?>((ref) => null);
+

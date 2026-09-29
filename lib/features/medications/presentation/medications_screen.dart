@@ -83,7 +83,10 @@ class MedicationsScreen extends ConsumerWidget {
             child: Center(child: Text('Create a patient before adding medicines.')),
           );
         }
-        final patientId = patientItems.first.id;
+        final selectedPatientId = ref.watch(activePatientIdProvider);
+        final patientId = patientItems.any((patient) => patient.id == selectedPatientId)
+          ? selectedPatientId!
+          : patientItems.first.id;
         final medications = ref.watch(medicationsForPatientProvider(patientId));
         return AppScaffold(
           title: 'Medicines',
