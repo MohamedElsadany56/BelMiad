@@ -15,7 +15,12 @@ Future<void> _addMedicine(
   final name = TextEditingController(text: medication?.nameEn);
   final arabic = TextEditingController(text: medication?.nameAr);
   final strength = TextEditingController(text: medication?.strength);
+  final dosageForm = TextEditingController(text: medication?.dosageForm);
+  final route = TextEditingController(text: medication?.route);
   final dose = TextEditingController(text: medication?.doseUnit);
+  final maxDaily = TextEditingController(
+      text: medication?.maxDailyQuantityScaled?.toString());
+  var isPrn = medication?.isPrn ?? false;
   final result = await showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
@@ -37,8 +42,36 @@ Future<void> _addMedicine(
               decoration: const InputDecoration(labelText: 'Strength'),
             ),
             TextField(
+              controller: dosageForm,
+              decoration: const InputDecoration(labelText: 'Dosage form'),
+            ),
+            TextField(
+              controller: route,
+              decoration: const InputDecoration(labelText: 'Route'),
+            ),
+            TextField(
               controller: dose,
               decoration: const InputDecoration(labelText: 'Dose'),
+            ),
+            StatefulBuilder(
+              builder: (context, setState) => Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('As-needed medicine (PRN)'),
+                    value: isPrn,
+                    onChanged: (value) => setState(() => isPrn = value),
+                  ),
+                  if (isPrn)
+                    TextField(
+                      controller: maxDaily,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Maximum daily quantity (scaled)',
+                      ),
+                    ),
+                ],
+              ),
             ),
           ],
         ),
@@ -62,7 +95,11 @@ Future<void> _addMedicine(
           nameEn: name.text.trim(),
           nameAr: arabic.text.trim(),
           strength: strength.text.trim(),
+          dosageForm: dosageForm.text.trim(),
+          route: route.text.trim(),
           doseUnit: dose.text.trim().isEmpty ? 'unit' : dose.text.trim(),
+          isPrn: isPrn,
+          maxDailyQuantityScaled: int.tryParse(maxDaily.text.trim()),
         );
     ref.invalidate(medicationsForPatientProvider(patientId));
   }
@@ -137,7 +174,13 @@ class MedicationsScreen extends ConsumerWidget {
                   ),
                   title: Text(medicine.nameEn),
                   subtitle: Text(
-                    [medicine.nameAr, medicine.strength, medicine.dosageForm]
+                    [
+                      medicine.nameAr,
+                      medicine.strength,
+                      medicine.dosageForm,
+                      medicine.route,
+                      if (medicine.isPrn) 'PRN',
+                    ]
                         .whereType<String>()
                         .where((v) => v.isNotEmpty)
                         .join(' · '),
