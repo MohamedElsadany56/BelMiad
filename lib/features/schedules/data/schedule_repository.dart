@@ -39,6 +39,45 @@ class ScheduleInput {
   final bool isActive;
 }
 
+/// One time of day within a dose plan.
+class ScheduleSlot {
+  const ScheduleSlot({
+    required this.scheduleType,
+    required this.doseQuantityScaled,
+    this.scheduleId,
+    this.fixedTime,
+    this.mealId,
+    this.timingRelation,
+    this.offsetMinutes,
+  });
+
+  /// Existing schedule being edited, or null for a new time.
+  final String? scheduleId;
+  final String scheduleType;
+  final String? fixedTime;
+  final String? mealId;
+  final String? timingRelation;
+  final int? offsetMinutes;
+  final int doseQuantityScaled;
+
+  ScheduleInput toInput({
+    required RecurrenceRule rule,
+    String? validFrom,
+    String? validUntil,
+  }) =>
+      ScheduleInput(
+        scheduleType: scheduleType,
+        fixedTime: fixedTime,
+        mealId: mealId,
+        timingRelation: timingRelation,
+        offsetMinutes: offsetMinutes,
+        doseQuantityScaled: doseQuantityScaled,
+        rule: rule,
+        validFrom: validFrom,
+        validUntil: validUntil,
+      );
+}
+
 class ScheduleRepository {
   ScheduleRepository(this._db, this._audit, {Clock clock = systemClock})
       : _clock = clock;
@@ -167,6 +206,105 @@ class ScheduleRepository {
         action: AuditActions.deleted,
       );
     });
+  }
+
+  /// Schedules of one dose plan (or a single ungrouped schedule).
+  Future<List<MedicationSchedule>> getGroup(String groupOrScheduleId) =>
+      (_db.select(_db.medicationSchedules)
+            ..where(
+              (s) =>
+                  (s.groupId.equals(groupOrScheduleId) |
+                      s.scheduleId.equals(groupOrScheduleId)) &
+                  s.deletedAt.isNull(),
+            ))
+          .get();
+
+  /// Saves a dose plan with several times of day in one transaction, e.g.
+  /// "3 times a day after meals". Times removed from an existing plan are
+  /// soft-deleted; their past doses stay in the history.
+  Future<String> saveGroup({
+    required String medicationId,
+    required List<ScheduleSlot> slots,
+    required RecurrenceRule rule,
+    String? groupId,
+    String? validFrom,
+    String? validUntil,
+  }) async {
+    if (slots.isEmpty) throw const ValidationException('timesRequired');
+    for (final slot in slots) {
+      _validate(
+        slot.toInput(rule: rule, validFrom: validFrom, validUntil: validUntil),
+      );
+    }
+    final medication = await _medication(medicationId);
+    final id = groupId ?? newId();
+    final now = _clock();
+    await _db.transaction(() async {
+      final existing =
+          groupId == null ? <MedicationSchedule>[] : await getGroup(groupId);
+      final kept = slots.map((s) => s.scheduleId).whereType<String>().toSet();
+      for (final old in existing) {
+        if (kept.contains(old.scheduleId)) continue;
+        await (_db.update(_db.medicationSchedules)
+              ..where((s) => s.scheduleId.equals(old.scheduleId)))
+            .write(MedicationSchedulesCompanion(
+          isActive: const Value(false),
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ));
+      }
+      for (final slot in slots) {
+        final input = slot.toInput(
+            rule: rule, validFrom: validFrom, validUntil: validUntil);
+        final companion = MedicationSchedulesCompanion(
+          groupId: Value(id),
+          scheduleType: Value(input.scheduleType),
+          fixedTime: Value(input.fixedTime),
+          mealId: Value(input.mealId),
+          timingRelation: Value(input.timingRelation),
+          offsetMinutes: Value(input.offsetMinutes),
+          doseQuantityScaled: Value(input.doseQuantityScaled),
+          recurrenceRule: Value(rule.encode()),
+          validFrom: Value(validFrom),
+          validUntil: Value(validUntil),
+          isActive: const Value(true),
+          updatedAt: Value(now),
+        );
+        if (slot.scheduleId != null &&
+            existing.any((e) => e.scheduleId == slot.scheduleId)) {
+          await (_db.update(_db.medicationSchedules)
+                ..where((s) => s.scheduleId.equals(slot.scheduleId!)))
+              .write(companion);
+        } else {
+          await _db.into(_db.medicationSchedules).insert(
+                companion.copyWith(
+                  scheduleId: Value(newId()),
+                  medicationId: Value(medicationId),
+                  createdAt: Value(now),
+                ),
+              );
+        }
+      }
+      await _audit.record(
+        patientId: medication.patientId,
+        entityType: EntityTypes.schedule,
+        entityId: id,
+        action: groupId == null ? AuditActions.created : AuditActions.updated,
+        metadata: {
+          'medication': medication.nameEn,
+          'times': slots.length,
+          'rule': rule.toJson(),
+        },
+      );
+    });
+    return id;
+  }
+
+  Future<void> deleteGroup(String groupOrScheduleId) async {
+    final schedules = await getGroup(groupOrScheduleId);
+    for (final schedule in schedules) {
+      await delete(schedule.scheduleId);
+    }
   }
 
   Future<Medication> _medication(String medicationId) async {
