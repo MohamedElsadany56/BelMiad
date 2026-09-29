@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:belmiad/core/backup/backup_service.dart';
 import 'package:belmiad/features/backup/data/backup_merge_service.dart';
 import 'package:belmiad/features/catalog/data/csv_parser.dart';
 
@@ -30,6 +31,21 @@ void main() {
     final rows = (merged['doses'] as List).cast<Map>();
     expect(rows, hasLength(3));
     expect(rows.firstWhere((r) => r['id'] == 'a')['status'], 'SCHEDULED');
+  });
+  test('backup JSON round trip preserves the version marker', () {
+    final service = BackupService();
+    final source = service.encode(
+      patients: const [],
+      medications: const [],
+      batches: const [],
+      doses: const [],
+      records: const [],
+    );
+
+    final decoded = service.fromJson(service.toJson(source));
+
+    expect(decoded['backup_version'], BackupService.currentVersion);
+    expect(decoded['patients'], isEmpty);
   });
 }
 
