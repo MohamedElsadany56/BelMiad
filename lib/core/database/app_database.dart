@@ -94,6 +94,7 @@ class HealthRecords extends Table {
   TextColumn get type => text()();
   TextColumn get title => text()();
   TextColumn get notes => text().nullable()();
+  TextColumn get metadataJson => text().nullable()();
   DateTimeColumn get occurredAt => dateTime()();
   @override
   Set<Column> get primaryKey => {id};
@@ -147,7 +148,7 @@ class AuditEvents extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -156,6 +157,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) {
             await m.createTable(prescriptions);
             await m.createTable(notificationPreferences);
+          }
+          if (from < 3) {
+            await m.addColumn(healthRecords, healthRecords.metadataJson);
           }
         },
       );

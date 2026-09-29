@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../../app/app_scaffold.dart';
@@ -22,6 +23,7 @@ Future<void> _editRecord(
 ) async {
   final title = TextEditingController(text: record?.title);
   final notes = TextEditingController(text: record?.notes);
+  final metadata = TextEditingController(text: record?.metadataJson);
   String type = record?.type ?? 'Vital';
   DateTime occurredAt = record?.occurredAt ?? DateTime.now();
   final result = await showDialog<bool>(
@@ -50,6 +52,11 @@ Future<void> _editRecord(
                     TextField(
                         controller: notes,
                       decoration: const InputDecoration(labelText: 'Notes')),
+                    TextField(
+                      controller: metadata,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Details (JSON, optional)')),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(
@@ -95,8 +102,20 @@ Future<void> _editRecord(
         type: type,
         title: title.text.trim(),
         notes: drift.Value(notes.text.trim()),
+        metadataJson: drift.Value(_validMetadata(metadata.text)),
         occurredAt: occurredAt));
     ref.invalidate(healthRecordsProvider);
+  }
+}
+
+String? _validMetadata(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return null;
+  try {
+    final decoded = jsonDecode(trimmed);
+    return decoded is Map<String, dynamic> ? trimmed : null;
+  } on FormatException {
+    return null;
   }
 }
 

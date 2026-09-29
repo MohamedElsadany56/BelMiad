@@ -71,6 +71,7 @@ class BackupService {
                 'type': r.type,
                 'title': r.title,
                 'notes': r.notes,
+                'metadata_json': r.metadataJson,
                 'occurred_at': r.occurredAt.toIso8601String(),
               },
             )

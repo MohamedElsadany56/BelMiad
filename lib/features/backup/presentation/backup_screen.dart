@@ -173,6 +173,7 @@ class BackupScreen extends ConsumerWidget {
                 type: _string(record['type']),
                 title: _string(record['title']),
                 notes: drift.Value(_nullableString(record['notes'])),
+                metadataJson: drift.Value(_nullableString(record['metadata_json'])),
                 occurredAt: DateTime.parse(_string(record['occurred_at'])),
               ),
             );
