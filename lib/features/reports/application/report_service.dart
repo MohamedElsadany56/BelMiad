@@ -15,8 +15,9 @@ typedef ScheduleDescriber = String Function(
 
 DoseOutcome outcomeOf(DoseInstance dose) =>
     switch (DoseStatus.fromCode(dose.status)) {
-      DoseStatus.taken =>
-        isTakenLate(dose.lateMinutes) ? DoseOutcome.takenLate : DoseOutcome.takenOnTime,
+      DoseStatus.taken => isTakenLate(dose.lateMinutes)
+          ? DoseOutcome.takenLate
+          : DoseOutcome.takenOnTime,
       DoseStatus.missed => DoseOutcome.missed,
       DoseStatus.skipped => DoseOutcome.skipped,
       DoseStatus.scheduled => DoseOutcome.pending,
@@ -55,7 +56,8 @@ class ReportService {
         : await (_db.select(_db.medicationSchedules)
               ..where(
                 (s) =>
-                    s.medicationId.isIn(medications.map((m) => m.medicationId)) &
+                    s.medicationId
+                        .isIn(medications.map((m) => m.medicationId)) &
                     s.deletedAt.isNull() &
                     s.isActive.equals(true),
               ))
@@ -70,7 +72,10 @@ class ReportService {
         (d) =>
             d.patientId.equals(patientId) &
             (d.isPrn.equals(false) | d.status.equals(DoseStatus.taken.code)) &
-            d.scheduledAt.isSmallerOrEqualValue(to ?? now),
+            // Due doses, plus doses already resolved ahead of time (e.g.
+            // taken early).
+            (d.scheduledAt.isSmallerOrEqualValue(to ?? now) |
+                d.status.equals(DoseStatus.scheduled.code).not()),
       )
       ..orderBy([(d) => OrderingTerm.asc(d.scheduledAt)]);
     if (from != null) {
@@ -176,7 +181,8 @@ class ReportService {
             ..orderBy([(i) => OrderingTerm.desc(i.diagnosedDate)]))
           .get(),
       dietaryRules: await (_db.select(_db.dietaryRules)
-            ..where((d) => d.patientId.equals(patientId) & d.deletedAt.isNull()))
+            ..where(
+                (d) => d.patientId.equals(patientId) & d.deletedAt.isNull()))
           .get(),
     );
   }
@@ -193,8 +199,7 @@ class ReportService {
       generatedAt: _clock(),
       patientName: person.fullName,
       rows: [
-        for (final item in data.items)
-          _inventoryRow(item, arabic),
+        for (final item in data.items) _inventoryRow(item, arabic),
       ],
     );
   }

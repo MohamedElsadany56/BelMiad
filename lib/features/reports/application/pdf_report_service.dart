@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -118,7 +119,8 @@ class PdfReportService {
         cellStyle: const pw.TextStyle(fontSize: 9),
         cellAlignment: pw.Alignment.centerLeft,
         headerAlignment: pw.Alignment.centerLeft,
-        oddRowDecoration: const pw.BoxDecoration(color: PdfColor.fromInt(0xFFF1F6FF)),
+        oddRowDecoration:
+            const pw.BoxDecoration(color: PdfColor.fromInt(0xFFF1F6FF)),
         border: null,
       );
 
@@ -126,6 +128,7 @@ class PdfReportService {
     DoctorReport report,
     AppLocalizations l10n,
   ) async {
+    await initializeDateFormatting(l10n.localeName);
     final arabic = l10n.localeName == 'ar';
     final time = PatientTime(report.patient.timezone);
     final dateTime = DateFormat.yMMMd(l10n.localeName).add_Hm();
@@ -276,6 +279,7 @@ class PdfReportService {
     required String timezone,
     required String Function(String unitCode) unitLabel,
   }) async {
+    await initializeDateFormatting(l10n.localeName);
     final arabic = l10n.localeName == 'ar';
     final time = PatientTime(timezone);
     final doc = pw.Document(theme: await _theme());
@@ -289,7 +293,9 @@ class PdfReportService {
           r.summary.earliestExpiration?.toIso() ?? '-',
           remainingDaysText(r.summary, l10n),
           stockStateLabel(r.summary.state, l10n),
-          r.summary.expiredScaled == 0 ? '-' : formatScaled(r.summary.expiredScaled),
+          r.summary.expiredScaled == 0
+              ? '-'
+              : formatScaled(r.summary.expiredScaled),
           [
             if (r.lastPurchaseDate != null) r.lastPurchaseDate!,
             if (r.lastPurchasePrice != null)
@@ -348,7 +354,8 @@ String doseOutcomeText(ReportDose dose, AppLocalizations l10n) {
   if (dose.isPrn) return l10n.prnTaken;
   return switch (dose.outcome) {
     DoseOutcome.takenOnTime => l10n.takenOnTime,
-    DoseOutcome.takenLate => '${l10n.takenLate} (${l10n.lateBy(dose.lateMinutes ?? 0)})',
+    DoseOutcome.takenLate =>
+      '${l10n.takenLate} (${l10n.lateBy(dose.lateMinutes ?? 0)})',
     DoseOutcome.missed => l10n.missed,
     DoseOutcome.skipped => l10n.skipped,
     DoseOutcome.pending => l10n.pending,
