@@ -9,7 +9,6 @@ import 'package:belmiad/features/medications/data/medication_repository.dart';
 import 'package:belmiad/features/patients/data/patient_repository.dart';
 import 'package:belmiad/features/schedules/data/schedule_repository.dart';
 import 'package:belmiad/features/schedules/domain/recurrence_rule.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers/test_harness.dart';
@@ -154,7 +153,8 @@ void main() {
       );
       await addSchedule();
       final doses = await h.allDoses(patientId);
-      expect(doses.map((d) => d.localDate).toSet(), {'2026-09-28', '2026-09-29'});
+      expect(
+          doses.map((d) => d.localDate).toSet(), {'2026-09-28', '2026-09-29'});
     });
   });
 
@@ -375,8 +375,7 @@ void main() {
         ),
         throwsA(isA<NegativeStockException>()),
       );
-      final adjustments =
-          await h.db.select(h.db.inventoryAdjustments).get();
+      final adjustments = await h.db.select(h.db.inventoryAdjustments).get();
       expect(adjustments.single.previousQuantityScaled, 10000);
       expect(adjustments.single.newQuantityScaled, 7000);
       expect(adjustments.single.actorPersonId, h.session.actorPersonId);
@@ -425,9 +424,11 @@ void main() {
         label: 'Panadol batch',
       );
       expect(await h.inventory.getBatchesForMedication(medicationId), isEmpty);
-      final item = (await h.trash.watchActive(patientId: patientId).first).single;
+      final item =
+          (await h.trash.watchActive(patientId: patientId).first).single;
       await h.trash.restore(item.trashItemId);
-      expect(await h.inventory.getBatchesForMedication(medicationId), hasLength(1));
+      expect(await h.inventory.getBatchesForMedication(medicationId),
+          hasLength(1));
     });
   });
 
@@ -450,8 +451,7 @@ void main() {
       expect(await h.patients.listActive(), hasLength(2));
     });
 
-    test('permanent delete removes the patient but keeps other data',
-        () async {
+    test('permanent delete removes the patient but keeps other data', () async {
       final other = await h.createPatient('Father');
       await h.createMedication(other, name: 'Concor');
       await h.trash.moveToTrash(
@@ -477,7 +477,8 @@ void main() {
       expect(await h.caregivers.watchAssignments(patientId).first, isEmpty);
       final dose = await h.dose(id);
       expect(dose.loggedByPersonId, caregiverId);
-      expect((await h.caregivers.getPerson(caregiverId))!.fullName, 'Nurse Sara');
+      expect(
+          (await h.caregivers.getPerson(caregiverId))!.fullName, 'Nurse Sara');
     });
   });
 }

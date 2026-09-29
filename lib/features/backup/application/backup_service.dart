@@ -215,9 +215,8 @@ class BackupService {
   // ---------------------------------------------------------------- export
 
   Future<List<RawRow>> _select(String sql, List<Object?> args) async {
-    final rows = await _db
-        .customSelect(sql, variables: [for (final a in args) _variable(a)])
-        .get();
+    final rows = await _db.customSelect(sql,
+        variables: [for (final a in args) _variable(a)]).get();
     return [for (final r in rows) Map<String, Object?>.of(r.data)];
   }
 
@@ -424,8 +423,9 @@ class BackupService {
       final oldPath = row['file_path'] as String?;
       final bytes = oldPath == null ? null : package.files[oldPath];
       if (oldPath == null || bytes == null) continue;
-      final extension =
-          oldPath.contains('.') ? oldPath.substring(oldPath.lastIndexOf('.')) : '';
+      final extension = oldPath.contains('.')
+          ? oldPath.substring(oldPath.lastIndexOf('.'))
+          : '';
       prescriptionFiles[oldPath] = await _files.save(
         PrescriptionRepository.folder,
         '${idMap[row['prescription_id']]}$extension',

@@ -71,9 +71,8 @@ class ScheduleRepository {
             _db.medications.deletedAt.isNull() &
             _db.medicationSchedules.deletedAt.isNull(),
       );
-    return query
-        .watch()
-        .map((rows) => rows.map((r) => r.readTable(_db.medicationSchedules)).toList());
+    return query.watch().map((rows) =>
+        rows.map((r) => r.readTable(_db.medicationSchedules)).toList());
   }
 
   Future<MedicationSchedule?> get(String scheduleId) =>
@@ -178,7 +177,8 @@ class ScheduleRepository {
     return medication;
   }
 
-  Map<String, Object?> _metadata(Medication medication, ScheduleInput input) => {
+  Map<String, Object?> _metadata(Medication medication, ScheduleInput input) =>
+      {
         'medication': medication.nameEn,
         'type': input.scheduleType,
         'time': input.fixedTime,

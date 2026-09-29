@@ -79,7 +79,8 @@ class DoseGenerationService {
         final localDate = dose.localDate.toIso();
         await _db.into(_db.doseInstances).insert(
               DoseInstancesCompanion.insert(
-                doseInstanceId: scheduledDoseId(dose.plan.scheduleId, localDate),
+                doseInstanceId:
+                    scheduledDoseId(dose.plan.scheduleId, localDate),
                 patientId: patientId,
                 medicationId: dose.plan.medicationId,
                 scheduleId: Value(dose.plan.scheduleId),
@@ -126,7 +127,8 @@ class DoseGenerationService {
         .get();
     if (ids.isEmpty) return;
     await (_db.update(_db.notifications)
-          ..where((n) => n.doseInstanceId.isIn(ids) & n.status.equals('scheduled')))
+          ..where(
+              (n) => n.doseInstanceId.isIn(ids) & n.status.equals('scheduled')))
         .write(NotificationsCompanion(
       status: const Value('cancelled'),
       updatedAt: Value(now),

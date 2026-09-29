@@ -116,9 +116,8 @@ class AppointmentRepository {
         patientId: patientId,
         entityType: EntityTypes.appointment,
         entityId: id,
-        action: appointmentId == null
-            ? AuditActions.created
-            : AuditActions.updated,
+        action:
+            appointmentId == null ? AuditActions.created : AuditActions.updated,
         metadata: {'doctor': doctorName.trim(), 'status': status},
       );
     });
@@ -178,10 +177,13 @@ class VitalsRepository {
         patientId: patientId,
         entityType: EntityTypes.vital,
         entityId: id,
-        action: measurementId == null
-            ? AuditActions.created
-            : AuditActions.updated,
-        metadata: {'type': measurementType, 'value_1': value1, 'value_2': value2},
+        action:
+            measurementId == null ? AuditActions.created : AuditActions.updated,
+        metadata: {
+          'type': measurementType,
+          'value_1': value1,
+          'value_2': value2
+        },
       );
     });
     return id;

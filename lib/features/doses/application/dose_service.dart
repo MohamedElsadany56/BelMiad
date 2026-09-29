@@ -349,7 +349,8 @@ class DoseService {
     await _db.transaction(() async {
       final now = _clock();
       final dose = await _dose(doseInstanceId);
-      DoseStatus.fromCode(dose.status).ensureCanTransitionTo(DoseStatus.skipped);
+      DoseStatus.fromCode(dose.status)
+          .ensureCanTransitionTo(DoseStatus.skipped);
       await (_db.update(_db.doseInstances)
             ..where((d) => d.doseInstanceId.equals(doseInstanceId)))
           .write(DoseInstancesCompanion(
@@ -373,7 +374,8 @@ class DoseService {
   Future<void> _cancelDoseNotifications(String doseId, DateTime now) async {
     await (_db.update(_db.notifications)
           ..where(
-            (n) => n.doseInstanceId.equals(doseId) & n.status.equals('scheduled'),
+            (n) =>
+                n.doseInstanceId.equals(doseId) & n.status.equals('scheduled'),
           ))
         .write(NotificationsCompanion(
       status: const Value('cancelled'),

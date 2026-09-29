@@ -26,7 +26,8 @@ class _SqliteSink implements CatalogSink {
 }
 
 Future<void> main(List<String> args) async {
-  final input = File(args.isNotEmpty ? args[0] : 'assets/data/egyptian-drugs.csv');
+  final input =
+      File(args.isNotEmpty ? args[0] : 'assets/data/egyptian-drugs.csv');
   final output =
       File(args.length > 1 ? args[1] : 'assets/data/drug_catalog.sqlite');
   if (!input.existsSync()) {
@@ -64,11 +65,13 @@ Future<void> main(List<String> args) async {
       ],
     );
     db.execute('COMMIT');
-    db.execute("INSERT INTO drug_catalog_fts(drug_catalog_fts) VALUES('optimize')");
+    db.execute(
+        "INSERT INTO drug_catalog_fts(drug_catalog_fts) VALUES('optimize')");
     db.execute('PRAGMA user_version = ${CatalogSchema.version}');
     db.execute('VACUUM');
 
-    stdout.writeln('Catalog built in ${stopwatch.elapsedMilliseconds} ms: $report');
+    stdout.writeln(
+        'Catalog built in ${stopwatch.elapsedMilliseconds} ms: $report');
     for (final rejected in report.rejected.take(50)) {
       stdout.writeln('  rejected $rejected');
     }

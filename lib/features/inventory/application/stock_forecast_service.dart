@@ -28,8 +28,7 @@ class InventoryDashboardData {
   final List<MedicationStock> items;
 
   int get totalMedications => items.length;
-  int get withStock =>
-      items.where((i) => i.summary.usableScaled > 0).length;
+  int get withStock => items.where((i) => i.summary.usableScaled > 0).length;
   int get lowStock => items.where((i) => i.summary.isLowStock).length;
   int get emptyStock => items
       .where(
@@ -38,11 +37,9 @@ class InventoryDashboardData {
             i.summary.state == StockState.expiredOnly,
       )
       .length;
-  int get expiringSoon =>
-      items.where((i) => i.summary.hasExpiringBatch).length;
-  int get noStockRecorded => items
-      .where((i) => i.summary.state == StockState.noStockRecorded)
-      .length;
+  int get expiringSoon => items.where((i) => i.summary.hasExpiringBatch).length;
+  int get noStockRecorded =>
+      items.where((i) => i.summary.state == StockState.noStockRecorded).length;
 }
 
 /// Computes stock state, low-stock forecast and remaining days (spec §21–§23)
@@ -96,7 +93,8 @@ class StockForecastService {
         : await (_db.select(_db.medicationInventoryBatches)
               ..where(
                 (b) =>
-                    b.medicationId.isIn(medications.map((m) => m.medicationId)) &
+                    b.medicationId
+                        .isIn(medications.map((m) => m.medicationId)) &
                     b.deletedAt.isNull(),
               ))
             .get();

@@ -15,17 +15,15 @@ class MealRepository {
   final AuditLog _audit;
   final Clock _clock;
 
-  Stream<List<Meal>> watchForPatient(String patientId) =>
-      (_db.select(_db.meals)
-            ..where((m) => m.patientId.equals(patientId) & m.deletedAt.isNull())
-            ..orderBy([(m) => OrderingTerm.asc(m.defaultTime)]))
-          .watch();
+  Stream<List<Meal>> watchForPatient(String patientId) => (_db.select(_db.meals)
+        ..where((m) => m.patientId.equals(patientId) & m.deletedAt.isNull())
+        ..orderBy([(m) => OrderingTerm.asc(m.defaultTime)]))
+      .watch();
 
-  Future<List<Meal>> listForPatient(String patientId) =>
-      (_db.select(_db.meals)
-            ..where((m) => m.patientId.equals(patientId) & m.deletedAt.isNull())
-            ..orderBy([(m) => OrderingTerm.asc(m.defaultTime)]))
-          .get();
+  Future<List<Meal>> listForPatient(String patientId) => (_db.select(_db.meals)
+        ..where((m) => m.patientId.equals(patientId) & m.deletedAt.isNull())
+        ..orderBy([(m) => OrderingTerm.asc(m.defaultTime)]))
+      .get();
 
   Future<String> create({
     required String patientId,

@@ -362,8 +362,7 @@ class TrashRepository {
     await (_db.update(_db.trashItems)
           ..where(
             (t) =>
-                t.patientId.equals(patientId) &
-                t.permanentlyDeletedAt.isNull(),
+                t.patientId.equals(patientId) & t.permanentlyDeletedAt.isNull(),
           ))
         .write(TrashItemsCompanion(
       permanentlyDeletedAt: Value(_clock()),

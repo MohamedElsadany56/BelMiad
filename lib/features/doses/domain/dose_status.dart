@@ -20,7 +20,11 @@ enum DoseStatus {
   bool get isTerminal => this == missed || this == skipped;
 
   static const _allowed = {
-    DoseStatus.scheduled: {DoseStatus.taken, DoseStatus.missed, DoseStatus.skipped},
+    DoseStatus.scheduled: {
+      DoseStatus.taken,
+      DoseStatus.missed,
+      DoseStatus.skipped
+    },
     DoseStatus.taken: {DoseStatus.scheduled},
     DoseStatus.missed: <DoseStatus>{},
     DoseStatus.skipped: <DoseStatus>{},

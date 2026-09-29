@@ -2,8 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/services.dart';
 
-import 'catalog_asset_stub.dart'
-    if (dart.library.io) 'catalog_asset_io.dart' as asset;
+import 'catalog_asset_stub.dart' if (dart.library.io) 'catalog_asset_io.dart'
+    as asset;
 import 'catalog_importer.dart';
 
 part 'drug_catalog_database.g.dart';

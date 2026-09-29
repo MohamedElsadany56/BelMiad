@@ -485,8 +485,7 @@ class NotificationEngine {
     if (enabled) {
       for (final appointment in appointments) {
         final local = time.toLocal(appointment.scheduledTime);
-        final when =
-            '${LocalDate(local.year, local.month, local.day).toIso()} '
+        final when = '${LocalDate(local.year, local.month, local.day).toIso()} '
             '${time.localTimeOf(appointment.scheduledTime).toHHmm()}';
         for (final lead in const [Duration(hours: 24), Duration(hours: 2)]) {
           final at = appointment.scheduledTime.subtract(lead);
@@ -518,7 +517,8 @@ class NotificationEngine {
             (n) =>
                 n.patientId.equals(patient.patientId) &
                 n.status.equals(NotificationStatus.scheduled) &
-                n.notificationType.equals(NotificationTypes.appointmentReminder),
+                n.notificationType
+                    .equals(NotificationTypes.appointmentReminder),
           ))
         .get();
     for (final row in pending) {
@@ -548,7 +548,9 @@ class NotificationEngine {
                 n.scheduledAt.isBiggerThanValue(now),
           ))
         .get();
-    if (pendingIds.isEmpty && rows.isNotEmpty && _notifier is NoopLocalNotifier) {
+    if (pendingIds.isEmpty &&
+        rows.isNotEmpty &&
+        _notifier is NoopLocalNotifier) {
       return;
     }
     for (final row in rows) {

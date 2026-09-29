@@ -33,9 +33,9 @@ class CaregiverRepository {
         ..orderBy([(p) => OrderingTerm.asc(p.fullName)]))
       .watch();
 
-  Future<Person?> getPerson(String personId) => (_db.select(_db.persons)
-        ..where((p) => p.personId.equals(personId)))
-      .getSingleOrNull();
+  Future<Person?> getPerson(String personId) =>
+      (_db.select(_db.persons)..where((p) => p.personId.equals(personId)))
+          .getSingleOrNull();
 
   /// All persons ever recorded, including removed ones, so historical actors
   /// can always be displayed.

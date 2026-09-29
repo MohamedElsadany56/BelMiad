@@ -217,8 +217,9 @@ class InventoryRepository {
             hasHistory ? const Value.absent() : Value(input.quantityScaled),
         availableQuantityScaled:
             hasHistory ? const Value.absent() : Value(input.quantityScaled),
-        isDepleted:
-            hasHistory ? const Value.absent() : Value(input.quantityScaled == 0),
+        isDepleted: hasHistory
+            ? const Value.absent()
+            : Value(input.quantityScaled == 0),
         updatedAt: Value(_clock()),
       ));
       await _audit.record(
@@ -320,9 +321,8 @@ class InventoryRepository {
     required LocalDate today,
   }) async {
     final batches = await getBatchesForMedication(medicationId);
-    final order = fefoOrder(batches.map(snapshotOf), today)
-        .map((b) => b.id)
-        .toList();
+    final order =
+        fefoOrder(batches.map(snapshotOf), today).map((b) => b.id).toList();
     final byId = {for (final b in batches) b.inventoryBatchId: b};
     return [for (final id in order) byId[id]!];
   }

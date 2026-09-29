@@ -22,7 +22,8 @@ class DoseRepository {
       _db.select(_db.doseInstances).join([
         innerJoin(
           _db.medications,
-          _db.medications.medicationId.equalsExp(_db.doseInstances.medicationId),
+          _db.medications.medicationId
+              .equalsExp(_db.doseInstances.medicationId),
         ),
       ]);
 

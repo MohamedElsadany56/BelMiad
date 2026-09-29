@@ -170,7 +170,8 @@ class LegacyBackupMigrator {
                 'available_quantity_scaled':
                     b['available_quantity_scaled'] ?? 0,
                 'quantity_scale': b['quantity_scale'] ?? 1000,
-                'is_depleted': (b['available_quantity_scaled'] ?? 0) == 0 ? 1 : 0,
+                'is_depleted':
+                    (b['available_quantity_scaled'] ?? 0) == 0 ? 1 : 0,
                 'notes': b['source'],
                 'created_at': now,
                 'updated_at': now,

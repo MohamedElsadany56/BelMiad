@@ -51,7 +51,8 @@ void main() {
     });
 
     test('selected weekdays', () {
-      const rule = RecurrenceRule(type: RecurrenceType.weekly, weekdays: [1, 3]);
+      const rule =
+          RecurrenceRule(type: RecurrenceType.weekly, weekdays: [1, 3]);
       expect(rule.occursOn(anchor, fallbackAnchor: anchor), isTrue);
       expect(rule.occursOn(anchor.addDays(1), fallbackAnchor: anchor), isFalse);
       expect(rule.occursOn(anchor.addDays(2), fallbackAnchor: anchor), isTrue);
@@ -73,7 +74,8 @@ void main() {
       expect(rule.occursOn(anchor, fallbackAnchor: anchor), isTrue);
       expect(rule.occursOn(anchor.addDays(1), fallbackAnchor: anchor), isFalse);
       expect(rule.occursOn(anchor.addDays(3), fallbackAnchor: anchor), isTrue);
-      expect(rule.occursOn(anchor.addDays(-3), fallbackAnchor: anchor), isFalse);
+      expect(
+          rule.occursOn(anchor.addDays(-3), fallbackAnchor: anchor), isFalse);
     });
 
     test('custom cycle: 21 days on, 7 days off', () {
@@ -83,8 +85,10 @@ void main() {
         offDays: 7,
       );
       expect(rule.occursOn(anchor.addDays(20), fallbackAnchor: anchor), isTrue);
-      expect(rule.occursOn(anchor.addDays(21), fallbackAnchor: anchor), isFalse);
-      expect(rule.occursOn(anchor.addDays(27), fallbackAnchor: anchor), isFalse);
+      expect(
+          rule.occursOn(anchor.addDays(21), fallbackAnchor: anchor), isFalse);
+      expect(
+          rule.occursOn(anchor.addDays(27), fallbackAnchor: anchor), isFalse);
       expect(rule.occursOn(anchor.addDays(28), fallbackAnchor: anchor), isTrue);
     });
 
@@ -158,8 +162,14 @@ void main() {
 
     test('late minutes are calculated, never negative', () {
       final scheduled = DateTime.utc(2026, 1, 1, 8);
-      expect(calculateLateMinutes(scheduled, scheduled.add(const Duration(minutes: 47))), 47);
-      expect(calculateLateMinutes(scheduled, scheduled.subtract(const Duration(minutes: 5))), 0);
+      expect(
+          calculateLateMinutes(
+              scheduled, scheduled.add(const Duration(minutes: 47))),
+          47);
+      expect(
+          calculateLateMinutes(
+              scheduled, scheduled.subtract(const Duration(minutes: 5))),
+          0);
       expect(isTakenLate(20), isFalse);
       expect(isTakenLate(45), isTrue);
     });
@@ -207,7 +217,8 @@ void main() {
     ];
 
     test('orders by earliest expiration, excluding expired stock', () {
-      expect(fefoOrder(batches, today).map((b) => b.id), ['a', 'b', 'no-expiry']);
+      expect(
+          fefoOrder(batches, today).map((b) => b.id), ['a', 'b', 'no-expiry']);
     });
 
     test('one dose can span multiple batches', () {
@@ -391,15 +402,18 @@ void main() {
         ExpirationState.expiresToday,
       );
       expect(
-        expirationStateOf(today.addDays(-1), today: today, expiringWithinDays: 30),
+        expirationStateOf(today.addDays(-1),
+            today: today, expiringWithinDays: 30),
         ExpirationState.expired,
       );
       expect(
-        expirationStateOf(today.addDays(10), today: today, expiringWithinDays: 30),
+        expirationStateOf(today.addDays(10),
+            today: today, expiringWithinDays: 30),
         ExpirationState.expiresSoon,
       );
       expect(
-        expirationStateOf(today.addDays(40), today: today, expiringWithinDays: 30),
+        expirationStateOf(today.addDays(40),
+            today: today, expiringWithinDays: 30),
         ExpirationState.none,
       );
       final summary = const StockForecaster().summarize(

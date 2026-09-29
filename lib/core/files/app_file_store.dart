@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'app_file_store_stub.dart'
-    if (dart.library.io) 'app_file_store_io.dart' as impl;
+import 'app_file_store_stub.dart' if (dart.library.io) 'app_file_store_io.dart'
+    as impl;
 
 /// App-private file storage (prescription images, backup staging).
 ///

@@ -133,12 +133,11 @@ void main() {
       expect(batches.single.inventoryBatchId, isNot(batch));
 
       final doses = await h.allDoses(result.patientId);
-      final taken =
-          doses.singleWhere((d) => d.status == DoseStatus.taken.code);
+      final taken = doses.singleWhere((d) => d.status == DoseStatus.taken.code);
       final consumption =
           await h.doseRepository.consumptionFor(taken.doseInstanceId);
-      expect(consumption.single.inventoryBatchId,
-          batches.single.inventoryBatchId);
+      expect(
+          consumption.single.inventoryBatchId, batches.single.inventoryBatchId);
 
       // Undo on the imported copy restores the imported batch only.
       await h.doses.undoDose(taken.doseInstanceId);
@@ -213,10 +212,20 @@ void main() {
       final legacy = {
         'backup_version': 1,
         'patients': [
-          {'id': 'p1', 'name': 'Grandma', 'relation': 'Mother', 'timezone': 'Africa/Cairo'},
+          {
+            'id': 'p1',
+            'name': 'Grandma',
+            'relation': 'Mother',
+            'timezone': 'Africa/Cairo'
+          },
         ],
         'medications': [
-          {'id': 'm1', 'patient_id': 'p1', 'name_en': 'Concor', 'is_prn': false},
+          {
+            'id': 'm1',
+            'patient_id': 'p1',
+            'name_en': 'Concor',
+            'is_prn': false
+          },
         ],
         'inventory_batches': [
           {
@@ -231,7 +240,13 @@ void main() {
         ],
         'doses': [],
         'health_records': [
-          {'id': 'r1', 'patient_id': 'p1', 'type': 'illness', 'title': 'Hypertension', 'occurred_at': '2020-01-01T00:00:00.000'},
+          {
+            'id': 'r1',
+            'patient_id': 'p1',
+            'type': 'illness',
+            'title': 'Hypertension',
+            'occurred_at': '2020-01-01T00:00:00.000'
+          },
         ],
       };
       final packages =
@@ -287,7 +302,8 @@ void main() {
       final doseId = await todaysDose();
       final reminderId = notificationIdFor('dose_reminder:$doseId');
       expect(notifier.scheduled.containsKey(reminderId), isTrue);
-      await h.doses.takeDose(doseInstanceId: doseId, actualQuantityScaled: 1000);
+      await h.doses
+          .takeDose(doseInstanceId: doseId, actualQuantityScaled: 1000);
       await engine.sync(languageCode: 'en');
       expect(notifier.scheduled.containsKey(reminderId), isFalse);
     });
@@ -307,14 +323,15 @@ void main() {
       expect(notifier.shown, hasLength(1));
 
       final prefs = NotificationRepository(h.db, clock: h.clock);
-      await prefs.setPreference(patientId, NotificationTypes.doseReminder, false);
+      await prefs.setPreference(
+          patientId, NotificationTypes.doseReminder, false);
       await engine.sync(languageCode: 'en');
-      final pendingReminders = (await h.db.select(h.db.notifications).get())
-          .where(
-            (n) =>
-                n.notificationType == NotificationTypes.doseReminder &&
-                n.status == NotificationStatus.scheduled,
-          );
+      final pendingReminders =
+          (await h.db.select(h.db.notifications).get()).where(
+        (n) =>
+            n.notificationType == NotificationTypes.doseReminder &&
+            n.status == NotificationStatus.scheduled,
+      );
       expect(pendingReminders, isEmpty);
     });
 
@@ -348,9 +365,8 @@ void main() {
       h.now = DateTime.utc(2026, 10, 1, 7, 5);
       await h.generation.syncPatient(patientId, graceMinutes: 180);
       await h.doses.takeDose(
-        doseInstanceId: all
-            .firstWhere((d) => d.localDate == '2026-10-01')
-            .doseInstanceId,
+        doseInstanceId:
+            all.firstWhere((d) => d.localDate == '2026-10-01').doseInstanceId,
         actualQuantityScaled: 1000,
       );
       final service = ReportService(h.db, h.forecast, clock: h.clock);
@@ -401,7 +417,8 @@ void main() {
       for (final statement in CatalogSchema.statements) {
         await catalog.customStatement(statement);
       }
-      const csv = 'commercial_name_en,commercial_name_ar,scientific_name,price_egp\n'
+      const csv =
+          'commercial_name_en,commercial_name_ar,scientific_name,price_egp\n'
           'PANADOL 500MG 24 TABS.,بانادول,PARACETAMOL,30\n'
           'PANADOL EXTRA 24 TABS.,بانادول إكسترا,PARACETAMOL+CAFFEINE,54\n'
           '"CONCOR 5, 30 TABS.",كونكور,BISOPROLOL,90\n'
@@ -474,8 +491,7 @@ class DrugCatalogDatabaseForTest extends GeneratedDatabase {
   int get schemaVersion => 1;
 
   @override
-  MigrationStrategy get migration =>
-      MigrationStrategy(onCreate: (m) async {});
+  MigrationStrategy get migration => MigrationStrategy(onCreate: (m) async {});
 }
 
 class _DriftSink implements CatalogSink {
@@ -494,7 +510,9 @@ class _DriftSink implements CatalogSink {
         CatalogSchema.insert,
         variables: [
           for (final p in params)
-            p is double ? Variable.withReal(p) : Variable.withString(p as String),
+            p is double
+                ? Variable.withReal(p)
+                : Variable.withString(p as String),
         ],
       );
     }
@@ -507,5 +525,6 @@ class MedicationInputLite {
 
   final String name;
 
-  MedicationInput toInput() => MedicationInput(nameEn: name, doseUnit: 'tablet');
+  MedicationInput toInput() =>
+      MedicationInput(nameEn: name, doseUnit: 'tablet');
 }

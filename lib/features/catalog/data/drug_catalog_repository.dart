@@ -113,7 +113,10 @@ class DrugCatalogRepository {
       variables: [for (final id in ids) Variable.withString(id)],
     ).get();
     final byId = {for (final r in rows.map(_map)) r.catalogId: r};
-    return [for (final id in ids) if (byId[id] != null) byId[id]!];
+    return [
+      for (final id in ids)
+        if (byId[id] != null) byId[id]!
+    ];
   }
 
   Future<int> count() async {

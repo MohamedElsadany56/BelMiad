@@ -53,7 +53,8 @@ class BatchAllocation {
 /// FEFO ordering (spec §15): only valid, non-expired stock; earliest
 /// expiration, then earliest purchase date, then stable ID. Batches without an
 /// expiration date are used last.
-List<BatchSnapshot> fefoOrder(Iterable<BatchSnapshot> batches, LocalDate today) {
+List<BatchSnapshot> fefoOrder(
+    Iterable<BatchSnapshot> batches, LocalDate today) {
   final usable = batches.where((b) => b.isUsableOn(today)).toList();
   int compareNullableDates(LocalDate? a, LocalDate? b) {
     if (a == null && b == null) return 0;

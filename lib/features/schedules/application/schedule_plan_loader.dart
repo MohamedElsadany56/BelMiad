@@ -71,9 +71,9 @@ class SchedulePlanLoader {
         offsetMinutes: schedule.offsetMinutes ?? 0,
       );
     } else {
-      minutes = (LocalTime.tryParse(schedule.fixedTime) ??
-              const LocalTime(8, 0))
-          .minutesOfDay;
+      minutes =
+          (LocalTime.tryParse(schedule.fixedTime) ?? const LocalTime(8, 0))
+              .minutesOfDay;
     }
     final created = LocalDate.fromDateTime(schedule.createdAt.toUtc());
     return SchedulePlan(

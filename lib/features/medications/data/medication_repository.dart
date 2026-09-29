@@ -86,10 +86,9 @@ class MedicationRepository {
         ..where((m) => m.medicationId.equals(medicationId)))
       .getSingleOrNull();
 
-  Stream<Medication?> watch(String medicationId) =>
-      (_db.select(_db.medications)
-            ..where((m) => m.medicationId.equals(medicationId)))
-          .watchSingleOrNull();
+  Stream<Medication?> watch(String medicationId) => (_db.select(_db.medications)
+        ..where((m) => m.medicationId.equals(medicationId)))
+      .watchSingleOrNull();
 
   Future<String> create(String patientId, MedicationInput input) async {
     _validate(input);

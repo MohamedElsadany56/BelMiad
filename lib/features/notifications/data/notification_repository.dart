@@ -22,10 +22,10 @@ class NotificationRepository {
             (n) =>
                 n.patientId.equals(patientId) &
                 n.status.isIn([
-                      NotificationStatus.delivered,
-                      NotificationStatus.resolved,
-                      NotificationStatus.scheduled,
-                    ]) &
+                  NotificationStatus.delivered,
+                  NotificationStatus.resolved,
+                  NotificationStatus.scheduled,
+                ]) &
                 n.scheduledAt.isSmallerOrEqualValue(now),
           )
           ..orderBy([(n) => OrderingTerm.desc(n.scheduledAt)])
@@ -50,12 +50,11 @@ class NotificationRepository {
     return query.watchSingle().map((r) => r.read(count) ?? 0);
   }
 
-  Future<void> markAllRead(String patientId) =>
-      (_db.update(_db.notifications)
-            ..where(
-              (n) => n.patientId.equals(patientId) & n.isRead.equals(false),
-            ))
-          .write(const NotificationsCompanion(isRead: Value(true)));
+  Future<void> markAllRead(String patientId) => (_db.update(_db.notifications)
+        ..where(
+          (n) => n.patientId.equals(patientId) & n.isRead.equals(false),
+        ))
+      .write(const NotificationsCompanion(isRead: Value(true)));
 
   Stream<Map<String, bool>> watchPreferences(String patientId) =>
       (_db.select(_db.patientNotificationPreferences)

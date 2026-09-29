@@ -107,9 +107,9 @@ class TestHarness {
             ..orderBy([(d) => OrderingTerm.asc(d.scheduledAt)]))
           .get();
 
-  Future<DoseInstance> dose(String id) => (db.select(db.doseInstances)
-        ..where((d) => d.doseInstanceId.equals(id)))
-      .getSingle();
+  Future<DoseInstance> dose(String id) =>
+      (db.select(db.doseInstances)..where((d) => d.doseInstanceId.equals(id)))
+          .getSingle();
 
   Future<InventoryBatch> batch(String id) =>
       (db.select(db.medicationInventoryBatches)

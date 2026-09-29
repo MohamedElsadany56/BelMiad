@@ -6,7 +6,8 @@ import 'package:timezone/timezone.dart' as tz;
 enum NotificationChannel {
   doses('dose_reminders', 'Medication reminders', Importance.max),
   missed('missed_doses', 'Missed doses', Importance.high),
-  inventory('inventory_alerts', 'Stock and expiry alerts', Importance.defaultImportance),
+  inventory('inventory_alerts', 'Stock and expiry alerts',
+      Importance.defaultImportance),
   appointments('appointments', 'Appointment reminders', Importance.high);
 
   const NotificationChannel(this.id, this.label, this.importance);

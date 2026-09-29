@@ -126,8 +126,7 @@ class PatientRepository {
               sex: Value(_blank(input.sex)),
               bloodType: Value(_blank(input.bloodType)),
               emergencyContactName: Value(_blank(input.emergencyContactName)),
-              emergencyContactPhone:
-                  Value(_blank(input.emergencyContactPhone)),
+              emergencyContactPhone: Value(_blank(input.emergencyContactPhone)),
               notes: Value(_blank(input.notes)),
               timezone: input.timezone,
               createdAt: now,

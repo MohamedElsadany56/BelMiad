@@ -78,13 +78,13 @@ class AuditLog {
             entityId: entityId,
             action: action,
             occurredAt: _clock(),
-            metadataJson:
-                Value(metadata == null ? null : jsonEncode(metadata)),
+            metadataJson: Value(metadata == null ? null : jsonEncode(metadata)),
           ),
         );
   }
 
-  Stream<List<AuditEvent>> watchForPatient(String patientId, {int limit = 300}) =>
+  Stream<List<AuditEvent>> watchForPatient(String patientId,
+          {int limit = 300}) =>
       (_db.select(_db.auditEvents)
             ..where((a) => a.patientId.equals(patientId))
             ..orderBy([(a) => OrderingTerm.desc(a.occurredAt)])

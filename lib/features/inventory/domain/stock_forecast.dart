@@ -203,7 +203,8 @@ class StockForecaster {
     if (!hasFutureDoses) return null;
 
     final remaining = [
-      for (final b in usable) _MutableBatch(b.expirationDate, b.availableScaled),
+      for (final b in usable)
+        _MutableBatch(b.expirationDate, b.availableScaled),
     ];
     var coveredDays = 0;
     for (var day = today; !day.isAfter(lastDay); day = day.addDays(1)) {
