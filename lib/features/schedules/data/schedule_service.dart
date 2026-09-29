@@ -32,10 +32,22 @@ class ScheduleService {
             ..where((m) => m.id.equals(s.medicationId)))
           .getSingleOrNull();
       if (med == null || med.patientId != patientId) continue;
+      final scheduleType = RecurrenceType.values.firstWhere(
+        (type) => type.name == s.scheduleType,
+        orElse: () => RecurrenceType.daily,
+      );
+      final weekdays = s.recurrenceRule
+          .split(',')
+          .where((value) => value.isNotEmpty)
+          .map(int.tryParse)
+          .whereType<int>()
+          .toSet();
+      final rule = RecurrenceRule(type: scheduleType, weekdays: weekdays);
       final p = (s.fixedTime ?? '08:00').split(':');
       for (var d = 0; d < days; d++) {
         final date = DateTime(from.year, from.month, from.day + d,
             int.tryParse(p[0]) ?? 8, int.tryParse(p[1]) ?? 0);
+        if (!rule.occursOn(date, anchor: from)) continue;
         final exists = await (database.select(database.doseInstances)
               ..where((x) =>
                   x.medicationId.equals(med.id) & x.scheduledAt.equals(date)))

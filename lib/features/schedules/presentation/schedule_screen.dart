@@ -28,9 +28,11 @@ Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
   String medId = meds.first.id;
   final time = TextEditingController(text: '08:00');
   final qty = TextEditingController(text: '1000');
+    var recurrence = RecurrenceType.daily;
+    final weekdays = <int>{};
   final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (_) => StatefulBuilder(builder: (context, setState) => AlertDialog(
               title: const Text('Add schedule'),
               content: Column(mainAxisSize: MainAxisSize.min, children: [
                 DropdownButtonFormField<String>(
@@ -49,7 +51,38 @@ Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
                     controller: qty,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                        labelText: 'Quantity scaled (1000 = 1 unit)'))
+                        labelText: 'Quantity scaled (1000 = 1 unit)'),
+                DropdownButtonFormField<RecurrenceType>(
+                    initialValue: recurrence,
+                    items: RecurrenceType.values
+                        .map((value) => DropdownMenuItem(
+                            value: value,
+                            child: Text(value == RecurrenceType.everyNDays
+                                ? 'Every N days'
+                                : value.name)))
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) setState(() => recurrence = value);
+                    },
+                    decoration: const InputDecoration(labelText: 'Repeat')),
+                if (recurrence == RecurrenceType.weekly)
+                  Wrap(
+                    spacing: 4,
+                    children: [
+                      for (var day = 1; day <= 7; day++)
+                        FilterChip(
+                          label: Text(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][day - 1]),
+                          selected: weekdays.contains(day),
+                          onSelected: (selected) => setState(() {
+                            if (selected) {
+                              weekdays.add(day);
+                            } else {
+                              weekdays.remove(day);
+                            }
+                          }),
+                        ),
+                    ],
+                  )
               ]),
               actions: [
                 TextButton(
@@ -58,27 +91,28 @@ Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
                 FilledButton(
                     onPressed: () => Navigator.pop(context, true),
                     child: const Text('Save'))
-              ]));
+              ])));
   if (ok == true) {
+    final selectedMedication = meds.firstWhere((medication) => medication.id == medId);
     await ScheduleService(db).createSchedule(
         id: DateTime.now().microsecondsSinceEpoch.toString(),
         medicationId: medId,
         time: time.text,
         quantityScaled: int.tryParse(qty.text) ?? 1000,
-        rule: const RecurrenceRule(type: RecurrenceType.daily));
+        rule: RecurrenceRule(type: recurrence, weekdays: weekdays));
     await ScheduleService(db).generateDoses(
-      patientId: meds.first.patientId,
+      patientId: selectedMedication.patientId,
       from: DateTime.now(),
       days: 7,
     );
     final notificationsEnabled = await NotificationPreferencesRepository(db)
-        .isEnabled(meds.first.patientId, 'medications');
+        .isEnabled(selectedMedication.patientId, 'medications');
     if (notificationsEnabled) {
       final notificationService =
           OfflineNotificationService(FlutterLocalNotificationsPlugin());
       await notificationService.initialize();
       final generatedDoses = await (db.select(db.doseInstances)
-            ..where((dose) => dose.patientId.equals(meds.first.patientId)))
+            ..where((dose) => dose.patientId.equals(selectedMedication.patientId)))
           .get();
       final medicine = meds.firstWhere((med) => med.id == medId);
       for (final dose in generatedDoses.where(
