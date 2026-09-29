@@ -25,6 +25,7 @@ class AppStrings {
     'records': 'Health records',
     'settings': 'Settings',
     'reports': 'Reports',
+    'backup': 'Backup',
     'arabic': 'عربي',
     'english': 'English',
   };
@@ -39,6 +40,7 @@ class AppStrings {
     'records': 'السجل الصحي',
     'settings': 'الإعدادات',
     'reports': 'التقارير',
+    'backup': 'النسخ الاحتياطي',
     'arabic': 'عربي',
     'english': 'English',
   };

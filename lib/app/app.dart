@@ -11,6 +11,7 @@ import '../features/records/presentation/records_screen.dart';
 import '../features/schedules/presentation/schedule_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/reports/presentation/reports_screen.dart';
+import '../features/backup/presentation/backup_screen.dart';
 
 class BelMiadApp extends ConsumerWidget {
   const BelMiadApp({super.key});
@@ -59,6 +60,10 @@ class BelMiadApp extends ConsumerWidget {
           GoRoute(
             path: '/reports',
             builder: (_, __) => const ReportsScreen(),
+          ),
+          GoRoute(
+            path: '/backup',
+            builder: (_, __) => const BackupScreen(),
           ),
         ],
       ),

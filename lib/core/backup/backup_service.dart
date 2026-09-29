@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import '../../core/database/app_database.dart';
 
@@ -91,7 +90,5 @@ class BackupService {
     return decoded;
   }
 
-  Future<void> writeFile(File file, Map<String, dynamic> backup) =>
-      file.writeAsString(toJson(backup));
 }
 
