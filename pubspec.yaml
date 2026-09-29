@@ -21,6 +21,7 @@ dependencies:
   timezone: ^0.9.4
   pdf: ^3.11.1
   share_plus: ^10.1.2
+  drift_flutter: ^0.2.8
 dev_dependencies:
   flutter_test:
     sdk: flutter
