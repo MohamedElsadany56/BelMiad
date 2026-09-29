@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../app/app_scaffold.dart';
 import '../../../core/providers/database_provider.dart';
+import '../../patients/data/patient_providers.dart';
+import '../data/pdf_report_service.dart';
 import '../domain/inventory_report.dart';
 
 final inventoryReportProvider = FutureProvider.autoDispose<InventoryReport>((ref) async {
@@ -43,6 +46,25 @@ final inventoryReportProvider = FutureProvider.autoDispose<InventoryReport>((ref
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
 
+  Future<void> _exportInventoryReport(
+    BuildContext context,
+    WidgetRef ref,
+    InventoryReport report,
+  ) async {
+    final patients = await ref.read(patientsProvider.future);
+    final bytes = await PdfReportService().buildInventoryReport(
+      patientName: patients.isEmpty ? 'Patient' : patients.first.name,
+      report: report,
+    );
+    await Share.shareXFiles([
+      XFile.fromData(
+        bytes,
+        name: 'belmiad_inventory_report.pdf',
+        mimeType: 'application/pdf',
+      ),
+    ], subject: 'BelMiad inventory report');
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final report = ref.watch(inventoryReportProvider);
@@ -58,6 +80,14 @@ class ReportsScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Text('${inventory.rows.length} medicines · ${inventory.totalUnits} total units'),
             const SizedBox(height: 18),
+            FilledButton.icon(
+              onPressed: inventory.rows.isEmpty
+                  ? null
+                  : () => _exportInventoryReport(context, ref, inventory),
+              icon: const Icon(Icons.picture_as_pdf),
+              label: const Text('Export PDF'),
+            ),
+            const SizedBox(height: 12),
             if (inventory.rows.isEmpty)
               const Card(
                 child: Padding(
