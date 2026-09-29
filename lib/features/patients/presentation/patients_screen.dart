@@ -43,6 +43,64 @@ Future<void> _editPatient(
   }
 }
 
+Future<void> _archivePatient(
+  BuildContext context,
+  WidgetRef ref,
+  PatientsData patient,
+) async {
+  await ref.read(patientRepositoryProvider).archive(patient.id);
+  if (ref.read(activePatientIdProvider) == patient.id) {
+    ref.read(activePatientIdProvider.notifier).state = null;
+  }
+  ref.invalidate(patientsProvider);
+}
+
+Future<void> _showArchivedPatients(BuildContext context, WidgetRef ref) async {
+  var archived = await ref.read(patientRepositoryProvider).list(includeArchived: true);
+  archived = archived.where((patient) => patient.isArchived).toList();
+  if (!context.mounted) return;
+  await showDialog<void>(
+    context: context,
+    builder: (_) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Archived patients'),
+        content: SizedBox(
+          width: 420,
+          child: archived.isEmpty
+              ? const Text('No archived patients.')
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: archived.length,
+                  itemBuilder: (_, index) {
+                    final patient = archived[index];
+                    return ListTile(
+                      title: Text(patient.name),
+                      subtitle: Text(patient.relation ?? 'Patient'),
+                      trailing: IconButton(
+                        tooltip: 'Restore patient',
+                        icon: const Icon(Icons.restore),
+                        onPressed: () async {
+                          await ref.read(patientRepositoryProvider).restore(patient.id);
+                          archived = archived.where((item) => item.id != patient.id).toList();
+                          ref.invalidate(patientsProvider);
+                          setState(() {});
+                        },
+                      ),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class PatientsScreen extends ConsumerWidget {
   const PatientsScreen({super.key});
   @override
@@ -61,7 +119,11 @@ class PatientsScreen extends ConsumerWidget {
               FilledButton.icon(
                   onPressed: () => _editPatient(context, ref, null),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add patient'))
+                  label: const Text('Add patient')),
+                OutlinedButton.icon(
+                  onPressed: () => _showArchivedPatients(context, ref),
+                  icon: const Icon(Icons.archive_outlined),
+                  label: const Text('Archived'))
             ]),
             const SizedBox(height: 18),
             if (items.isEmpty)
@@ -77,7 +139,19 @@ class PatientsScreen extends ConsumerWidget {
                     title: Text(patient.name),
                     subtitle: Text(
                         '${patient.relation ?? 'Patient'} · ${patient.timezone}'),
-                      trailing: const Icon(Icons.chevron_right),
+                      trailing: PopupMenuButton<String>(
+                        onSelected: (action) {
+                          if (action == 'archive') {
+                            _archivePatient(context, ref, patient);
+                          }
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: 'archive',
+                            child: Text('Archive patient'),
+                          ),
+                        ],
+                      ),
                       onTap: () {
                         ref.read(activePatientIdProvider.notifier).state = patient.id;
                         _editPatient(context, ref, patient);

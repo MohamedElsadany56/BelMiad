@@ -47,5 +47,17 @@ class PatientRepository {
       ),
     );
   }
+
+  Future<void> restore(String id) async {
+    await (database.update(
+      database.patients,
+    )..where((p) => p.id.equals(id)))
+        .write(
+      PatientsCompanion(
+        isArchived: const Value(false),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
 }
 
