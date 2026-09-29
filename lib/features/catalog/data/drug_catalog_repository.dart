@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
@@ -20,8 +19,9 @@ class DrugCatalogRepository {
     final en = header.indexOf('commercial_name_en');
     final ar = header.indexOf('commercial_name_ar');
     final price = header.indexOf('price_egp');
-    if (en < 0 || ar < 0 || price < 0)
+    if (en < 0 || ar < 0 || price < 0) {
       throw const FormatException('Catalog columns are invalid');
+    }
     final output = <DrugCatalogEntry>[];
     for (var i = 1; i < rows.length; i++) {
       final row = rows[i];

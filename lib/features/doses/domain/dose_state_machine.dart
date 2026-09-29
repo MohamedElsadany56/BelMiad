@@ -11,8 +11,9 @@ class DoseStateMachine {
       };
 
   static DoseStatus transition(DoseStatus from, DoseStatus to) {
-    if (!canTransition(from, to))
+    if (!canTransition(from, to)) {
       throw StateError('Invalid dose transition: $from → $to');
+    }
     return to;
   }
 }

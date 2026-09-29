@@ -9,7 +9,7 @@ class AppScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final route = GoRouterState.of(context).uri.path;
-    final destinations = const [
+    const destinations = [
       ('/', 'Dashboard', Icons.dashboard_outlined),
       ('/medications', 'Medicines', Icons.medication_outlined),
       ('/inventory', 'Stock & batches', Icons.inventory_2_outlined),

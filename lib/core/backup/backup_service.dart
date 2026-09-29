@@ -82,10 +82,12 @@ class BackupService {
       const JsonEncoder.withIndent('  ').convert(backup);
   Map<String, dynamic> fromJson(String source) {
     final decoded = jsonDecode(source);
-    if (decoded is! Map<String, dynamic> || decoded['backup_version'] is! int)
+    if (decoded is! Map<String, dynamic> || decoded['backup_version'] is! int) {
       throw const FormatException('Invalid BelMiad backup');
-    if ((decoded['backup_version'] as int) > currentVersion)
+    }
+    if ((decoded['backup_version'] as int) > currentVersion) {
       throw const FormatException('Backup is from a newer version');
+    }
     return decoded;
   }
 

@@ -4,23 +4,28 @@ import 'package:drift/drift.dart' as drift;
 import '../../../app/app_scaffold.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../../core/database/app_database.dart';
+import '../../patients/data/patient_providers.dart';
 
 final healthRecordsProvider = FutureProvider.autoDispose((ref) async {
   final db = await ref.watch(databaseProvider.future);
   return db.select(db.healthRecords).get();
 });
-Future<void> _addRecord(BuildContext context, WidgetRef ref) async {
-  final title = TextEditingController();
-  final notes = TextEditingController();
-  String type = 'Vital';
+Future<void> _editRecord(
+  BuildContext context,
+  WidgetRef ref,
+  HealthRecordsData? record,
+) async {
+  final title = TextEditingController(text: record?.title);
+  final notes = TextEditingController(text: record?.notes);
+  String type = record?.type ?? 'Vital';
   final result = await showDialog<bool>(
       context: context,
       builder: (_) => StatefulBuilder(
           builder: (context, setState) => AlertDialog(
-                  title: const Text('Add health record'),
+                  title: Text(record == null ? 'Add health record' : 'Edit health record'),
                   content: Column(mainAxisSize: MainAxisSize.min, children: [
                     DropdownButtonFormField<String>(
-                        value: type,
+                        initialValue: type,
                         items: [
                           'Vital',
                           'Appointment',
@@ -49,14 +54,22 @@ Future<void> _addRecord(BuildContext context, WidgetRef ref) async {
                         child: const Text('Save'))
                   ])));
   if (result == true && title.text.trim().isNotEmpty) {
+    final patients = await ref.read(patientsProvider.future);
+    if (patients.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Create a patient first')));
+      }
+      return;
+    }
     final db = await ref.read(databaseProvider.future);
-    await db.into(db.healthRecords).insert(HealthRecordsCompanion.insert(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
-        patientId: 'current-patient',
+    await db.into(db.healthRecords).insertOnConflictUpdate(HealthRecordsCompanion.insert(
+        id: record?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+        patientId: record?.patientId ?? patients.first.id,
         type: type,
         title: title.text.trim(),
         notes: drift.Value(notes.text.trim()),
-        occurredAt: DateTime.now()));
+        occurredAt: record?.occurredAt ?? DateTime.now()));
     ref.invalidate(healthRecordsProvider);
   }
 }
@@ -77,7 +90,7 @@ class RecordsScreen extends ConsumerWidget {
               Text('Health records',
                   style: Theme.of(context).textTheme.headlineMedium),
               FilledButton.icon(
-                  onPressed: () => _addRecord(context, ref),
+                  onPressed: () => _editRecord(context, ref, null),
                   icon: const Icon(Icons.add),
                   label: const Text('Add record'))
             ]),
@@ -93,7 +106,9 @@ class RecordsScreen extends ConsumerWidget {
                     leading: const Icon(Icons.favorite_outline),
                     title: Text(record.title),
                     subtitle: Text(
-                        '${record.type} · ${record.occurredAt.toLocal().toString().split(' ').first}')))),
+                      '${record.type} · ${record.occurredAt.toLocal().toString().split(' ').first}'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _editRecord(context, ref, record)))),
           ]),
         ));
   }

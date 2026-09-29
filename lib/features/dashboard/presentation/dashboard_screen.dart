@@ -17,36 +17,36 @@ class _DashboardBody extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 6),
         const Text(
-            'Everything for your current PatientsData, in one calm view.'),
+            'Everything for your current patient, in one calm view.'),
         const SizedBox(height: 24),
-        Wrap(spacing: 12, runSpacing: 12, children: const [
+        const Wrap(spacing: 12, runSpacing: 12, children: [
           _Stat(label: 'Today’s doses', value: '3'),
           _Stat(label: 'In stock', value: '52'),
           _Stat(label: 'Low stock', value: '1'),
           _Stat(label: 'Expiring soon', value: '1')
         ]),
         const SizedBox(height: 24),
-        Card(
-            child: Padding(
-                padding: EdgeInsets.all(18),
-                child: Column(
+        const Card(
+            child: const Padding(
+                padding: const EdgeInsets.all(18),
+                child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: const [
                       Text('Today’s medicine schedule',
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold)),
                       ListTile(
-                          leading: CircleAvatar(
-                              child: Icon(Icons.medication_outlined)),
-                          title: Text('Panadol Extra'),
-                          subtitle: Text('08:00 · 1 tablet after breakfast'),
-                          trailing: Chip(label: Text('Upcoming'))),
+                          leading: const CircleAvatar(
+                              child: const Icon(Icons.medication_outlined)),
+                          title: const Text('Panadol Extra'),
+                          subtitle: const Text('08:00 · 1 tablet after breakfast'),
+                          trailing: const Chip(label: const Text('Upcoming'))),
                       ListTile(
-                          leading: CircleAvatar(
-                              child: Icon(Icons.medication_outlined)),
-                          title: Text('Augmentin'),
-                          subtitle: Text('14:00 · 1 tablet after lunch'),
-                          trailing: Chip(label: Text('Later')))
+                          leading: const CircleAvatar(
+                              child: const Icon(Icons.medication_outlined)),
+                          title: const Text('Augmentin'),
+                          subtitle: const Text('14:00 · 1 tablet after lunch'),
+                          trailing: const Chip(label: const Text('Later')))
                     ])))
       ]);
 }

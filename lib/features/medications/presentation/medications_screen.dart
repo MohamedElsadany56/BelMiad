@@ -2,21 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/app_scaffold.dart';
+import '../../../core/database/app_database.dart';
 import '../data/medication_providers.dart';
+import '../../patients/data/patient_providers.dart';
 
 Future<void> _addMedicine(
   BuildContext context,
   WidgetRef ref,
   String patientId,
+  MedicationsData? medication,
 ) async {
-  final name = TextEditingController();
-  final arabic = TextEditingController();
-  final strength = TextEditingController();
-  final dose = TextEditingController();
+  final name = TextEditingController(text: medication?.nameEn);
+  final arabic = TextEditingController(text: medication?.nameAr);
+  final strength = TextEditingController(text: medication?.strength);
+  final dose = TextEditingController(text: medication?.doseUnit);
   final result = await showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
-      title: const Text('Add medicine'),
+      title: Text(medication == null ? 'Add medicine' : 'Edit medicine'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -54,7 +57,7 @@ Future<void> _addMedicine(
   );
   if (result == true && name.text.trim().isNotEmpty) {
     await ref.read(medicationRepositoryProvider).save(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: medication?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
           patientId: patientId,
           nameEn: name.text.trim(),
           nameAr: arabic.text.trim(),
@@ -69,14 +72,25 @@ class MedicationsScreen extends ConsumerWidget {
   const MedicationsScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final patientId = 'current-PatientsData';
-    final medications = ref.watch(medicationsForPatientProvider(patientId));
-    return AppScaffold(
-      title: 'Medicines',
-      child: medications.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Unable to load medicines: $e')),
-        data: (items) => ListView(
+    final patients = ref.watch(patientsProvider);
+    return patients.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Unable to load patients: $e')),
+      data: (patientItems) {
+        if (patientItems.isEmpty) {
+          return const AppScaffold(
+            title: 'Medicines',
+            child: Center(child: Text('Create a patient before adding medicines.')),
+          );
+        }
+        final patientId = patientItems.first.id;
+        final medications = ref.watch(medicationsForPatientProvider(patientId));
+        return AppScaffold(
+          title: 'Medicines',
+          child: medications.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('Unable to load medicines: $e')),
+            data: (items) => ListView(
           padding: const EdgeInsets.all(24),
           children: [
             Row(
@@ -87,7 +101,7 @@ class MedicationsScreen extends ConsumerWidget {
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 FilledButton.icon(
-                  onPressed: () => _addMedicine(context, ref, patientId),
+                  onPressed: () => _addMedicine(context, ref, patientId, null),
                   icon: const Icon(Icons.add),
                   label: const Text('Add medicine'),
                 ),
@@ -116,16 +130,16 @@ class MedicationsScreen extends ConsumerWidget {
                         .where((v) => v.isNotEmpty)
                         .join(' · '),
                   ),
-                  trailing: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.more_vert),
-                  ),
+                  onTap: () => _addMedicine(context, ref, patientId, medicine),
+                  trailing: const Icon(Icons.chevron_right),
                 ),
               ),
             ),
           ],
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -10,29 +10,37 @@ final inventoryBatchesProvider = FutureProvider.autoDispose((ref) async {
   return db.select(db.inventoryBatches).get();
 });
 
-Future<void> _addBatch(BuildContext context, WidgetRef ref) async {
+Future<void> _editBatch(
+    BuildContext context,
+    WidgetRef ref,
+    InventoryBatche? batch,
+) async {
   final db = await ref.read(databaseProvider.future);
   final medicines = await db.select(db.medications).get();
   if (medicines.isEmpty) {
-    if (context.mounted)
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Create a medicine first')));
+    }
     return;
   }
-  String medicationId = medicines.first.id;
-  final quantity = TextEditingController();
-  final unit = TextEditingController(text: 'tablets');
-  final source = TextEditingController();
-  DateTime? expiry;
+    String medicationId = batch?.medicationId ?? medicines.first.id;
+    final quantity = TextEditingController(
+            text: batch == null
+                    ? ''
+                    : (batch.availableQuantityScaled / batch.quantityScale).toString());
+    final unit = TextEditingController(text: batch?.unit ?? 'tablets');
+    final source = TextEditingController(text: batch?.source);
+    DateTime? expiry = batch?.expirationDate;
   final saved = await showDialog<bool>(
       context: context,
       builder: (_) => StatefulBuilder(
           builder: (context, setState) => AlertDialog(
-                  title: const Text('Add stock batch'),
+                  title: Text(batch == null ? 'Add stock batch' : 'Edit stock batch'),
                   content: SingleChildScrollView(
                       child: Column(mainAxisSize: MainAxisSize.min, children: [
                     DropdownButtonFormField<String>(
-                        value: medicationId,
+                        initialValue: medicationId,
                         items: medicines
                             .map((m) => DropdownMenuItem(
                                 value: m.id, child: Text(m.nameEn)))
@@ -77,15 +85,27 @@ Future<void> _addBatch(BuildContext context, WidgetRef ref) async {
                   ])));
   final amount = int.tryParse(quantity.text);
   if (saved == true && amount != null && amount >= 0) {
-    await db.into(db.inventoryBatches).insert(InventoryBatchesCompanion.insert(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
-        medicationId: medicationId,
-        availableQuantityScaled: amount * 1000,
-        unit: unit.text.trim().isEmpty ? 'unit' : unit.text.trim(),
-        purchaseDate: DateTime.now(),
-        expirationDate: drift.Value(expiry),
-        source: drift.Value(
-            source.text.trim().isEmpty ? null : source.text.trim())));
+        final values = InventoryBatchesCompanion(
+            medicationId: drift.Value(medicationId),
+            availableQuantityScaled: drift.Value(amount * 1000),
+            unit: drift.Value(unit.text.trim().isEmpty ? 'unit' : unit.text.trim()),
+            expirationDate: drift.Value(expiry),
+            source: drift.Value(source.text.trim().isEmpty ? null : source.text.trim()),
+        );
+        if (batch == null) {
+            await db.into(db.inventoryBatches).insert(InventoryBatchesCompanion.insert(
+                    id: DateTime.now().microsecondsSinceEpoch.toString(),
+                    medicationId: medicationId,
+                    availableQuantityScaled: amount * 1000,
+                    unit: unit.text.trim().isEmpty ? 'unit' : unit.text.trim(),
+                    purchaseDate: DateTime.now(),
+                    expirationDate: drift.Value(expiry),
+                    source: drift.Value(
+                            source.text.trim().isEmpty ? null : source.text.trim())));
+        } else {
+            await (db.update(db.inventoryBatches)..where((b) => b.id.equals(batch.id)))
+                    .write(values);
+        }
     ref.invalidate(inventoryBatchesProvider);
   }
 }
@@ -106,7 +126,7 @@ class InventoryScreen extends ConsumerWidget {
               Text('Stock & batches',
                   style: Theme.of(context).textTheme.headlineMedium),
               FilledButton.icon(
-                  onPressed: () => _addBatch(context, ref),
+                  onPressed: () => _editBatch(context, ref, null),
                   icon: const Icon(Icons.add),
                   label: const Text('Add stock'))
             ]),
@@ -125,8 +145,8 @@ class InventoryScreen extends ConsumerWidget {
                         '${batch.availableQuantityScaled / batch.quantityScale} ${batch.unit}'),
                     subtitle: Text(
                         'Purchased ${batch.purchaseDate.toLocal().toString().split(' ').first}'),
-                    trailing:
-                        Text(batch.isDepleted ? 'Depleted' : 'Available')))),
+                    trailing: Text(batch.isDepleted ? 'Depleted' : 'Available'),
+                    onTap: () => _editBatch(context, ref, batch)))),
           ]),
         ));
   }

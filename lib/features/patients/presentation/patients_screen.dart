@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/app_scaffold.dart';
+import '../../../core/database/app_database.dart';
 import '../data/patient_providers.dart';
 
-Future<void> _addPatient(BuildContext context, WidgetRef ref) async {
-  final name = TextEditingController();
-  final relation = TextEditingController();
+Future<void> _editPatient(
+  BuildContext context,
+  WidgetRef ref,
+  PatientsData? patient,
+) async {
+  final name = TextEditingController(text: patient?.name);
+  final relation = TextEditingController(text: patient?.relation);
   final result = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-              title: const Text('Add PatientsData'),
+              title: Text(patient == null ? 'Add patient' : 'Edit patient'),
               content: Column(mainAxisSize: MainAxisSize.min, children: [
                 TextField(
                     controller: name,
                     decoration:
-                        const InputDecoration(labelText: 'PatientsData name')),
+                        const InputDecoration(labelText: 'Patient name')),
                 TextField(
                     controller: relation,
                     decoration: const InputDecoration(labelText: 'Relation'))
@@ -29,7 +34,7 @@ Future<void> _addPatient(BuildContext context, WidgetRef ref) async {
               ]));
   if (result == true && name.text.trim().isNotEmpty) {
     await ref.read(patientRepositoryProvider).save(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: patient?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
         name: name.text.trim(),
         relation: relation.text.trim());
     ref.invalidate(patientsProvider);
@@ -52,9 +57,9 @@ class PatientsScreen extends ConsumerWidget {
               Text('Patients',
                   style: Theme.of(context).textTheme.headlineMedium),
               FilledButton.icon(
-                  onPressed: () => _addPatient(context, ref),
+                  onPressed: () => _editPatient(context, ref, null),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add PatientsData'))
+                  label: const Text('Add patient'))
             ]),
             const SizedBox(height: 18),
             if (items.isEmpty)
@@ -62,15 +67,16 @@ class PatientsScreen extends ConsumerWidget {
                   child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Text(
-                          'Create a PatientsData profile to begin managing medicines and records.'))),
-            ...items.map((PatientsData) => Card(
+                          'Create a patient profile to begin managing medicines and records.'))),
+            ...items.map((patient) => Card(
                 child: ListTile(
                     leading:
                         const CircleAvatar(child: Icon(Icons.person_outline)),
-                    title: Text(PatientsData.name),
+                    title: Text(patient.name),
                     subtitle: Text(
-                        '${PatientsData.relation ?? 'PatientsData'} · ${PatientsData.timezone}'),
-                    trailing: const Icon(Icons.chevron_right)))),
+                        '${patient.relation ?? 'Patient'} · ${patient.timezone}'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _editPatient(context, ref, patient)))),
           ]),
         ));
   }

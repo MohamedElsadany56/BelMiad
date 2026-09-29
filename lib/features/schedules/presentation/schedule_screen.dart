@@ -12,9 +12,10 @@ Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
   final db = await ref.read(databaseProvider.future);
   final meds = await db.select(db.medications).get();
   if (meds.isEmpty) {
-    if (context.mounted)
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Create a medicine first')));
+    }
     return;
   }
   String medId = meds.first.id;
@@ -55,12 +56,14 @@ Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
     await ScheduleService(db).createSchedule(
         id: DateTime.now().microsecondsSinceEpoch.toString(),
         medicationId: medId,
-        patientId: 'current-patient',
         time: time.text,
         quantityScaled: int.tryParse(qty.text) ?? 1000,
         rule: const RecurrenceRule(type: RecurrenceType.daily));
     await ScheduleService(db).generateDoses(
-        patientId: 'current-patient', from: DateTime.now(), days: 7);
+      patientId: meds.first.patientId,
+      from: DateTime.now(),
+      days: 7,
+    );
     ref.invalidate(todaysDosesProvider);
   }
 }

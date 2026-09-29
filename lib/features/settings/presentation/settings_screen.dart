@@ -28,7 +28,7 @@ class SettingsScreen extends ConsumerWidget {
                         enabled: value,
                       );
                     },
-                    title: const Text('MedicationsData reminders'),
+                    title: const Text('Medication reminders'),
                     subtitle: const Text(
                       'Receive offline reminders for scheduled doses',
                     ),
