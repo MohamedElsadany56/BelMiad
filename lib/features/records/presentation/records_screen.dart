@@ -120,7 +120,7 @@ Future<void> _editRecord(
                           alignment: Alignment.centerLeft,
                           child: OutlinedButton.icon(
                             onPressed: () async {
-                              final result = await FilePicker.platform.pickFiles(
+                              final result = await FilePicker.pickFiles(
                                 withData: true,
                                 allowMultiple: false,
                                 type: FileType.custom,
@@ -198,17 +198,6 @@ Future<void> _editRecord(
           prescriptionData)),
         occurredAt: occurredAt));
     ref.invalidate(healthRecordsProvider);
-  }
-}
-
-String? _validMetadata(String value) {
-  final trimmed = value.trim();
-  if (trimmed.isEmpty) return null;
-  try {
-    final decoded = jsonDecode(trimmed);
-    return decoded is Map<String, dynamic> ? trimmed : null;
-  } on FormatException {
-    return null;
   }
 }
 
