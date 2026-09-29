@@ -4,10 +4,17 @@ import 'package:drift/drift.dart' as drift;
 import '../../../app/app_scaffold.dart';
 import '../../../core/providers/database_provider.dart';
 import '../../../core/database/app_database.dart';
+import '../data/inventory_service.dart';
 
 final inventoryBatchesProvider = FutureProvider.autoDispose((ref) async {
   final db = await ref.watch(databaseProvider.future);
   return db.select(db.inventoryBatches).get();
+});
+
+final inventoryMedicineNamesProvider = FutureProvider.autoDispose((ref) async {
+    final db = await ref.watch(databaseProvider.future);
+    final medicines = await db.select(db.medications).get();
+    return {for (final medicine in medicines) medicine.id: medicine.nameEn};
 });
 
 final inventoryAlertsProvider = FutureProvider.autoDispose((ref) async {
@@ -177,12 +184,65 @@ Future<void> _editBatch(
   }
 }
 
+Future<void> _adjustBatch(
+    BuildContext context,
+    WidgetRef ref,
+    InventoryBatche batch,
+) async {
+    final quantity = TextEditingController();
+    final reason = TextEditingController();
+    final saved = await showDialog<bool>(
+        context: context,
+        builder: (_) => AlertDialog(
+            title: const Text('Adjust stock'),
+            content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                    TextField(
+                        controller: quantity,
+                        keyboardType: const TextInputType.numberWithOptions(signed: true),
+                        decoration: const InputDecoration(
+                            labelText: 'Change in units (+ add, - remove)',
+                        ),
+                    ),
+                    TextField(
+                        controller: reason,
+                        decoration: const InputDecoration(labelText: 'Reason'),
+                    ),
+                ],
+            ),
+            actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                ),
+                FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Apply'),
+                ),
+            ],
+        ),
+    );
+    final delta = int.tryParse(quantity.text.trim());
+    if (saved == true && delta != null && delta != 0 && reason.text.trim().isNotEmpty) {
+        final db = await ref.read(databaseProvider.future);
+        await InventoryService(db).adjustQuantity(
+            batchId: batch.id,
+            deltaScaled: delta * batch.quantityScale,
+            reason: reason.text.trim(),
+        );
+        ref.invalidate(inventoryBatchesProvider);
+        ref.invalidate(inventoryAlertsProvider);
+    }
+}
+
 class InventoryScreen extends ConsumerWidget {
   const InventoryScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final batches = ref.watch(inventoryBatchesProvider);
     final alerts = ref.watch(inventoryAlertsProvider);
+    final medicineNames = ref.watch(inventoryMedicineNamesProvider);
     return AppScaffold(
         title: 'Stock & batches',
         child: batches.when(
@@ -238,11 +298,20 @@ class InventoryScreen extends ConsumerWidget {
                     leading: const CircleAvatar(
                         child: Icon(Icons.inventory_2_outlined)),
                     title: Text(
-                        '${batch.availableQuantityScaled / batch.quantityScale} ${batch.unit}'),
+                        '${medicineNames.value?[batch.medicationId] ?? 'Medicine'} · ${batch.availableQuantityScaled / batch.quantityScale} ${batch.unit}'),
                     subtitle: Text(
                         'Purchased ${batch.purchaseDate.toLocal().toString().split(' ').first}'),
-                    trailing: Text(batch.isDepleted ? 'Depleted' : 'Available'),
-                    onTap: () => _editBatch(context, ref, batch)))),
+                                        trailing: PopupMenuButton<String>(
+                                            onSelected: (action) {
+                                                if (action == 'edit') _editBatch(context, ref, batch);
+                                                if (action == 'adjust') _adjustBatch(context, ref, batch);
+                                            },
+                                            itemBuilder: (_) => const [
+                                                PopupMenuItem(value: 'edit', child: Text('Edit batch')),
+                                                PopupMenuItem(
+                                                        value: 'adjust', child: Text('Adjust quantity')),
+                                            ],
+                                        )))),
           ]),
         ));
   }
