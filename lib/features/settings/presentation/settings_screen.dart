@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/app_scaffold.dart';
 import '../../../core/providers/database_provider.dart';
+import '../../../core/notifications/offline_notification_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../patients/data/patient_providers.dart';
 import '../../notifications/data/notification_preferences_repository.dart';
 
@@ -61,6 +63,13 @@ class SettingsScreen extends ConsumerWidget {
                           type: 'medications',
                           enabled: value,
                         );
+                        if (!value) {
+                          final notifications = OfflineNotificationService(
+                            FlutterLocalNotificationsPlugin(),
+                          );
+                          await notifications.initialize();
+                          await notifications.cancelAll();
+                        }
                         ref.invalidate(medicationNotificationsProvider(patientId));
                       },
                       title: const Text('Medication reminders'),

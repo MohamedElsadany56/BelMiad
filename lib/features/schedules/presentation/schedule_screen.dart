@@ -96,6 +96,12 @@ Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
   }
 }
 
+Future<void> _cancelDoseReminder(String doseId) async {
+  final service = OfflineNotificationService(FlutterLocalNotificationsPlugin());
+  await service.initialize();
+  await service.cancel(doseId.hashCode & 0x7fffffff);
+}
+
 final todaysDosesProvider = FutureProvider.autoDispose((ref) async {
   final db = await ref.watch(databaseProvider.future);
   final selectedPatientId = ref.watch(activePatientIdProvider);
@@ -172,6 +178,7 @@ class ScheduleScreen extends ConsumerWidget {
                                   actualQuantityScaled:
                                       dose.requiredQuantityScaled,
                                 );
+                                await _cancelDoseReminder(dose.id);
                                 ref.invalidate(todaysDosesProvider);
                               },
                               icon: const Icon(Icons.check_circle_outline),
@@ -183,6 +190,7 @@ class ScheduleScreen extends ConsumerWidget {
                                   databaseProvider.future,
                                 );
                                 await DoseRepository(db).skip(dose.id);
+                                await _cancelDoseReminder(dose.id);
                                 ref.invalidate(todaysDosesProvider);
                               },
                               icon: const Icon(Icons.remove_circle_outline),
