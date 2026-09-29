@@ -68,6 +68,15 @@ Future<void> _addMedicine(
   }
 }
 
+Future<void> _archiveMedicine(
+  WidgetRef ref,
+  String patientId,
+  MedicationsData medicine,
+) async {
+  await ref.read(medicationRepositoryProvider).archive(medicine.id);
+  ref.invalidate(medicationsForPatientProvider(patientId));
+}
+
 class MedicationsScreen extends ConsumerWidget {
   const MedicationsScreen({super.key});
   @override
@@ -134,7 +143,19 @@ class MedicationsScreen extends ConsumerWidget {
                         .join(' · '),
                   ),
                   onTap: () => _addMedicine(context, ref, patientId, medicine),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (action) {
+                      if (action == 'archive') {
+                        _archiveMedicine(ref, patientId, medicine);
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                        value: 'archive',
+                        child: Text('Archive medicine'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
