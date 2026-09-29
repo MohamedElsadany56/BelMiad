@@ -49,6 +49,21 @@ abstract final class VitalTypes {
   static bool hasSecondValue(String type) => type == bloodPressure;
 }
 
+/// When a measurement was taken relative to meals or medicines. Offered for
+/// blood pressure and blood glucose.
+abstract final class VitalContexts {
+  static const random = 'random';
+  static const fasting = 'fasting';
+  static const beforeMeal = 'before_meal';
+  static const afterMeal = 'after_meal';
+  static const afterMedication = 'after_medication';
+  static const all = [random, fasting, beforeMeal, afterMeal, afterMedication];
+
+  static bool appliesTo(String measurementType) =>
+      measurementType == VitalTypes.bloodPressure ||
+      measurementType == VitalTypes.bloodGlucose;
+}
+
 abstract final class DietRuleTypes {
   static const avoid = 'avoid';
   static const limit = 'limit';
@@ -148,8 +163,21 @@ class VitalsRepository {
     String? unit,
     required DateTime measuredAt,
     String? notes,
+    String? context,
+    String? relatedMealId,
+    String? relatedMedicationId,
+    int? minutesAfter,
   }) async {
     if (value1 == null) throw const ValidationException('valueRequired');
+    final hasContext = VitalContexts.appliesTo(measurementType) &&
+        context != null &&
+        context != VitalContexts.random;
+    final afterMeal = hasContext && context == VitalContexts.afterMeal;
+    final afterMedication =
+        hasContext && context == VitalContexts.afterMedication;
+    if (minutesAfter != null && minutesAfter < 0) {
+      throw const ValidationException('invalidTime');
+    }
     final now = _clock();
     final id = measurementId ?? newId();
     final companion = VitalsMeasurementsCompanion(
@@ -159,6 +187,12 @@ class VitalsRepository {
       value1: Value(value1),
       value2: Value(value2),
       unit: Value(_blank(unit)),
+      context: Value(
+        VitalContexts.appliesTo(measurementType) ? context : null,
+      ),
+      relatedMealId: Value(afterMeal ? relatedMealId : null),
+      relatedMedicationId: Value(afterMedication ? relatedMedicationId : null),
+      minutesAfter: Value(afterMeal || afterMedication ? minutesAfter : null),
       measuredAt: Value(measuredAt.toUtc()),
       notes: Value(_blank(notes)),
       updatedAt: Value(now),
@@ -182,7 +216,8 @@ class VitalsRepository {
         metadata: {
           'type': measurementType,
           'value_1': value1,
-          'value_2': value2
+          'value_2': value2,
+          'context': context,
         },
       );
     });

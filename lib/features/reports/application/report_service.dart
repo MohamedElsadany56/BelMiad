@@ -130,7 +130,7 @@ class ReportService {
     if (level == ReportLevel.summary) {
       final latest = <String, VitalMeasurement>{};
       for (final v in vitals) {
-        latest.putIfAbsent(v.measurementType, () => v);
+        latest.putIfAbsent('${v.measurementType}|${v.context}', () => v);
       }
       vitals = latest.values.toList();
     }
@@ -148,6 +148,14 @@ class ReportService {
     final appointments = await appointmentsQuery.get();
 
     return DoctorReport(
+      mealNames: {
+        for (final m in meals)
+          m.mealId: arabic && m.nameAr.isNotEmpty ? m.nameAr : m.nameEn,
+      },
+      medicationNames: {
+        for (final m in medications)
+          m.medicationId: medicationDisplayName(m, arabic: arabic),
+      },
       level: level,
       generatedAt: now,
       patientName: person.fullName,

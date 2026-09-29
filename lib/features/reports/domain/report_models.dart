@@ -92,6 +92,8 @@ class DoctorReport {
     required this.appointments,
     required this.illnesses,
     required this.dietaryRules,
+    this.mealNames = const {},
+    this.medicationNames = const {},
   });
 
   final ReportLevel level;
@@ -111,6 +113,10 @@ class DoctorReport {
   final List<Appointment> appointments;
   final List<Illness> illnesses;
   final List<DietaryRule> dietaryRules;
+
+  /// Names used to describe measurement context ("after lunch").
+  final Map<String, String> mealNames;
+  final Map<String, String> medicationNames;
 }
 
 class InventoryReportRow {
