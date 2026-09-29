@@ -26,10 +26,11 @@ class BelMiadApp extends ConsumerWidget {
       supportedLocales: const [Locale('en'), Locale('ar')],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xff12b8b0),
+          seedColor: const Color(0xff0064f6),
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(0xfff7faf9),
+        scaffoldBackgroundColor: Colors.white,
+        canvasColor: Colors.white,
         useMaterial3: true,
         fontFamily: 'Arial',
       ),
