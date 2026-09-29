@@ -25,6 +25,7 @@ class MedicationRepository {
     required String id,
     required String patientId,
     required String nameEn,
+    String? catalogId,
     String? nameAr,
     String? strength,
     String? dosageForm,
@@ -38,6 +39,7 @@ class MedicationRepository {
           MedicationsCompanion.insert(
             id: id,
             patientId: patientId,
+            catalogId: Value(catalogId),
             nameEn: nameEn,
             nameAr: Value(nameAr),
             strength: Value(strength),

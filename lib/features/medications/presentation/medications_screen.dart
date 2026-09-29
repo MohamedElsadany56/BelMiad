@@ -5,6 +5,8 @@ import '../../../app/app_scaffold.dart';
 import '../../../core/database/app_database.dart';
 import '../data/medication_providers.dart';
 import '../../patients/data/patient_providers.dart';
+import '../../catalog/data/drug_catalog_repository.dart';
+import '../../catalog/domain/drug_catalog_entry.dart';
 
 Future<void> _addMedicine(
   BuildContext context,
@@ -21,18 +23,51 @@ Future<void> _addMedicine(
   final maxDaily = TextEditingController(
       text: medication?.maxDailyQuantityScaled?.toString());
   var isPrn = medication?.isPrn ?? false;
+  String? catalogId = medication?.catalogId;
+  final catalog = DrugCatalogRepository();
   final result = await showDialog<bool>(
     context: context,
-    builder: (_) => AlertDialog(
-      title: Text(medication == null ? 'Add medicine' : 'Edit medicine'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+    builder: (_) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: Text(medication == null ? 'Add medicine' : 'Edit medicine'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             TextField(
               controller: name,
+              onChanged: (_) => setState(() {}),
               decoration: const InputDecoration(labelText: 'Medicine name'),
             ),
+            if (name.text.trim().length >= 2)
+              FutureBuilder<List<DrugCatalogEntry>>(
+                future: catalog.search(name.text),
+                builder: (context, snapshot) {
+                  final matches = snapshot.data ?? const <DrugCatalogEntry>[];
+                  if (matches.isEmpty) return const SizedBox.shrink();
+                  return ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 160),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: matches.length,
+                      itemBuilder: (_, index) {
+                        final entry = matches[index];
+                        return ListTile(
+                          dense: true,
+                          title: Text(entry.nameEn),
+                          subtitle: Text('${entry.nameAr} · EGP ${entry.priceEgp}'),
+                          onTap: () {
+                            name.text = entry.nameEn;
+                            arabic.text = entry.nameAr;
+                            catalogId = entry.id;
+                            setState(() {});
+                          },
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             TextField(
               controller: arabic,
               decoration: const InputDecoration(labelText: 'Arabic name'),
@@ -73,10 +108,10 @@ Future<void> _addMedicine(
                 ],
               ),
             ),
-          ],
+            ],
+          ),
         ),
-      ),
-      actions: [
+        actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
@@ -85,7 +120,8 @@ Future<void> _addMedicine(
           onPressed: () => Navigator.pop(context, true),
           child: const Text('Save'),
         ),
-      ],
+        ],
+      ),
     ),
   );
   if (result == true && name.text.trim().isNotEmpty) {
@@ -93,6 +129,7 @@ Future<void> _addMedicine(
           id: medication?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
           patientId: patientId,
           nameEn: name.text.trim(),
+          catalogId: catalogId,
           nameAr: arabic.text.trim(),
           strength: strength.text.trim(),
           dosageForm: dosageForm.text.trim(),
