@@ -143,6 +143,8 @@ class _Dashboard extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         StockStateBadge(state: item.summary.state),
+                        if (item.medication.storageOnly)
+                          StatusBadge(l10n.storageBadge),
                         if (item.summary.isLowStock &&
                             item.summary.hasExpiringBatch)
                           StatusBadge(l10n.expiringSoon,

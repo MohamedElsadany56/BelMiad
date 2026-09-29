@@ -10,7 +10,10 @@ import '../../inventory/domain/stock_forecast.dart';
 import '../../reports/application/pdf_report_service.dart';
 import '../data/medication_repository.dart';
 
-final _showArchivedProvider = StateProvider<bool>((ref) => false);
+enum MedicationFilter { active, archived, storage }
+
+final _filterProvider =
+    StateProvider<MedicationFilter>((ref) => MedicationFilter.active);
 final _medicationQueryProvider = StateProvider<String>((ref) => '');
 
 final patientMedicationsProvider =
@@ -24,21 +27,10 @@ class MedicationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final showArchived = ref.watch(_showArchivedProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.medications),
-        actions: [
-          IconButton(
-            tooltip: l10n.showArchived,
-            isSelected: showArchived,
-            icon: const Icon(Icons.archive_outlined),
-            selectedIcon: const Icon(Icons.archive),
-            onPressed: () =>
-                ref.read(_showArchivedProvider.notifier).state = !showArchived,
-          ),
-          const PatientSwitcher(),
-        ],
+        actions: const [PatientSwitcher()],
       ),
       floatingActionButton: ref.watch(currentPatientIdProvider) == null
           ? null
@@ -62,7 +54,7 @@ class _MedicationList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final showArchived = ref.watch(_showArchivedProvider);
+    final filter = ref.watch(_filterProvider);
     final query = ref.watch(_medicationQueryProvider).trim().toLowerCase();
     final stock = ref.watch(inventoryDashboardProvider(patientId)).valueOrNull;
     final stockById = {
@@ -74,7 +66,12 @@ class _MedicationList extends ConsumerWidget {
       builder: (all) {
         final visible = all.where((m) {
           final archived = m.status == MedicationStatus.archived;
-          if (archived != showArchived) return false;
+          final matches = switch (filter) {
+            MedicationFilter.active => !archived && !m.storageOnly,
+            MedicationFilter.archived => archived,
+            MedicationFilter.storage => m.storageOnly && !archived,
+          };
+          if (!matches) return false;
           if (query.isEmpty) return true;
           return m.nameEn.toLowerCase().contains(query) ||
               (m.nameAr ?? '').contains(query);
@@ -90,6 +87,25 @@ class _MedicationList extends ConsumerWidget {
                 ),
                 onChanged: (v) =>
                     ref.read(_medicationQueryProvider.notifier).state = v,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  for (final (value, label) in [
+                    (MedicationFilter.active, l10n.filterActive),
+                    (MedicationFilter.storage, l10n.filterStorage),
+                    (MedicationFilter.archived, l10n.filterArchived),
+                  ])
+                    ChoiceChip(
+                      label: Text(label),
+                      selected: filter == value,
+                      onSelected: (_) =>
+                          ref.read(_filterProvider.notifier).state = value,
+                    ),
+                ],
               ),
             ),
             Expanded(
@@ -128,6 +144,8 @@ class _MedicationList extends ConsumerWidget {
                                 spacing: 6,
                                 runSpacing: 4,
                                 children: [
+                                  if (medication.storageOnly)
+                                    StatusBadge(l10n.storageBadge),
                                   if (medication.isPrn)
                                     StatusBadge(l10n.prnBadge,
                                         tone: BadgeTone.brand),

@@ -13,6 +13,7 @@ import '../domain/batch_selection.dart';
 abstract final class PackagingTypes {
   static const all = [
     'box',
+    'strip',
     'blister',
     'bottle',
     'tube',
@@ -45,14 +46,21 @@ class BatchInput {
     this.packagingType,
     this.packagesCount,
     this.unitsPerPackage,
+    this.subPackagingType,
+    this.subPackagesPerPackage,
+    this.looseQuantityScaled,
     this.notes,
   });
 
-  /// Builds the input from a package count: `2 boxes × 20 = 40 units`.
+  /// Builds the input from packages, optionally with inner packs:
+  /// `2 boxes × 3 strips × 10 tablets (+ 4 loose) = 64 tablets`.
   factory BatchInput.fromPackages({
     required String medicationId,
     required int packagesCount,
     required int unitsPerPackage,
+    int? subPackagesPerPackage,
+    String? subPackagingType,
+    int looseQuantityScaled = 0,
     String? packagingType,
     String? purchaseDate,
     double? purchasePrice,
@@ -64,9 +72,16 @@ class BatchInput {
         quantityScaled: ScaledQuantity.fromPackages(
           packages: packagesCount,
           unitsPerPackage: unitsPerPackage,
+          subPackagesPerPackage: subPackagesPerPackage,
+          loose: ScaledQuantity(looseQuantityScaled),
         ).scaled,
         packagesCount: packagesCount,
         unitsPerPackage: unitsPerPackage,
+        subPackagesPerPackage: subPackagesPerPackage,
+        subPackagingType:
+            subPackagesPerPackage == null ? null : subPackagingType,
+        looseQuantityScaled:
+            looseQuantityScaled == 0 ? null : looseQuantityScaled,
         packagingType: packagingType,
         purchaseDate: purchaseDate,
         purchasePrice: purchasePrice,
@@ -82,6 +97,9 @@ class BatchInput {
   final String? packagingType;
   final int? packagesCount;
   final int? unitsPerPackage;
+  final String? subPackagingType;
+  final int? subPackagesPerPackage;
+  final int? looseQuantityScaled;
   final String? notes;
 }
 
@@ -165,6 +183,9 @@ class InventoryRepository {
               packagingType: Value(input.packagingType),
               unitsPerPackage: Value(input.unitsPerPackage),
               packagesCount: Value(input.packagesCount),
+              subPackagingType: Value(input.subPackagingType),
+              subPackagesPerPackage: Value(input.subPackagesPerPackage),
+              looseQuantityScaled: Value(input.looseQuantityScaled),
               initialQuantityScaled: input.quantityScaled,
               availableQuantityScaled: input.quantityScaled,
               isDepleted: Value(input.quantityScaled == 0),
@@ -212,6 +233,9 @@ class InventoryRepository {
         packagingType: Value(input.packagingType),
         unitsPerPackage: Value(input.unitsPerPackage),
         packagesCount: Value(input.packagesCount),
+        subPackagingType: Value(input.subPackagingType),
+        subPackagesPerPackage: Value(input.subPackagesPerPackage),
+        looseQuantityScaled: Value(input.looseQuantityScaled),
         notes: Value(input.notes),
         initialQuantityScaled:
             hasHistory ? const Value.absent() : Value(input.quantityScaled),
@@ -375,6 +399,13 @@ class InventoryRepository {
       throw const ValidationException('invalidPackages');
     }
     if (input.unitsPerPackage != null && input.unitsPerPackage! < 0) {
+      throw const ValidationException('invalidPackages');
+    }
+    if (input.subPackagesPerPackage != null &&
+        input.subPackagesPerPackage! < 1) {
+      throw const ValidationException('invalidPackages');
+    }
+    if (input.looseQuantityScaled != null && input.looseQuantityScaled! < 0) {
       throw const ValidationException('invalidPackages');
     }
     if (input.purchasePrice != null && input.purchasePrice! < 0) {

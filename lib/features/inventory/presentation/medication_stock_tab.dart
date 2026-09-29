@@ -243,7 +243,15 @@ class _BatchCard extends ConsumerWidget {
       if (batch.purchasePrice != null)
         '${l10n.purchasePrice}: ${batch.purchasePrice!.toStringAsFixed(2)}',
       if (batch.packagesCount != null && batch.unitsPerPackage != null)
-        '${batch.packagesCount} × ${batch.unitsPerPackage} (${packagingLabel(batch.packagingType, l10n)})',
+        [
+              '${batch.packagesCount} ${packagingLabel(batch.packagingType, l10n)}',
+              if (batch.subPackagesPerPackage != null)
+                '${batch.subPackagesPerPackage} ${packagingLabel(batch.subPackagingType, l10n)}',
+              '${batch.unitsPerPackage} ${unitLabelFor(medication.doseUnit, null, l10n)}',
+            ].join(' × ') +
+            (batch.looseQuantityScaled == null
+                ? ''
+                : ' + ${formatScaled(batch.looseQuantityScaled)}'),
     ].join('\n');
     return Card(
       child: ListTile(

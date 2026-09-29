@@ -8,12 +8,20 @@ import '../../../app/widgets/common.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/time/local_date.dart';
 import '../../../core/utilities/scaled_quantity.dart';
+import '../../catalog/data/drug_catalog_repository.dart';
 import '../../medications/data/medication_repository.dart';
+import '../../medications/presentation/medication_form_screen.dart';
 import '../../medications/presentation/medications_screen.dart';
 import '../data/inventory_repository.dart';
 
-/// Add stock (from inventory, medication details, or after creating a
-/// medication) or edit an existing batch (spec §13, §20).
+/// Outer packages that commonly contain inner packs (box → strips).
+const _outerWithInner = {'box', 'container'};
+const _innerTypes = ['strip', 'blister', 'sachet', 'ampoule', 'vial', 'bottle'];
+const _newStorageMedicine = '__new_storage__';
+
+/// Add stock (from inventory, medication details, after creating a
+/// medication, or for a storage-only medicine) or edit a batch (spec §13,
+/// §20). Supports nested packaging such as boxes of strips of tablets.
 class BatchFormScreen extends ConsumerStatefulWidget {
   const BatchFormScreen({this.medicationId, this.batchId, super.key});
 
@@ -28,12 +36,16 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   final _form = GlobalKey<FormState>();
   final _quantity = TextEditingController();
   final _packages = TextEditingController(text: '1');
-  final _unitsPerPackage = TextEditingController();
+  final _innerPerPackage = TextEditingController(text: '2');
+  final _unitsPerPack = TextEditingController();
+  final _loose = TextEditingController();
   final _price = TextEditingController();
   final _notes = TextEditingController();
   String? _medicationId;
   bool _byPackages = true;
   String _packaging = 'box';
+  bool _hasInner = true;
+  String _innerType = 'strip';
   String? _purchaseDate = LocalDate.fromDateTime(DateTime.now()).toIso();
   String? _expirationDate;
   bool _hasHistory = false;
@@ -41,6 +53,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   bool _busy = false;
 
   bool get _editing => widget.batchId != null;
+  bool get _innerApplies => _hasInner && _outerWithInner.contains(_packaging);
 
   @override
   void initState() {
@@ -60,7 +73,13 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
         _byPackages =
             batch.packagesCount != null && batch.unitsPerPackage != null;
         _packages.text = '${batch.packagesCount ?? 1}';
-        _unitsPerPackage.text = '${batch.unitsPerPackage ?? ''}';
+        _unitsPerPack.text = '${batch.unitsPerPackage ?? ''}';
+        _hasInner = batch.subPackagesPerPackage != null;
+        _innerPerPackage.text = '${batch.subPackagesPerPackage ?? 2}';
+        _innerType = batch.subPackagingType ?? 'strip';
+        _loose.text = batch.looseQuantityScaled == null
+            ? ''
+            : formatScaled(batch.looseQuantityScaled);
         _quantity.text = formatScaled(batch.initialQuantityScaled);
         _packaging = batch.packagingType ?? 'box';
         _purchaseDate = batch.purchaseDate;
@@ -74,35 +93,66 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
 
   @override
   void dispose() {
-    for (final c in [_quantity, _packages, _unitsPerPackage, _price, _notes]) {
+    for (final c in [
+      _quantity,
+      _packages,
+      _innerPerPackage,
+      _unitsPerPack,
+      _loose,
+      _price,
+      _notes,
+    ]) {
       c.dispose();
     }
     super.dispose();
   }
 
+  int get _looseScaled => ScaledQuantity.tryParse(_loose.text)?.scaled ?? 0;
+
   int? get _packageTotal {
     final packages = int.tryParse(_packages.text);
-    final units = int.tryParse(_unitsPerPackage.text);
+    final units = int.tryParse(_unitsPerPack.text);
+    final inner = _innerApplies ? int.tryParse(_innerPerPackage.text) : null;
     if (packages == null || units == null) return null;
+    if (_innerApplies && inner == null) return null;
     return ScaledQuantity.fromPackages(
       packages: packages,
       unitsPerPackage: units,
+      subPackagesPerPackage: inner,
+      loose: ScaledQuantity(_looseScaled),
     ).scaled;
+  }
+
+  String _breakdown(String unitCode) {
+    final l10n = context.l10n;
+    final parts = [
+      '${_packages.text} ${packagingLabel(_packaging, l10n)}',
+      if (_innerApplies)
+        '${_innerPerPackage.text} ${packagingLabel(_innerType, l10n)}',
+      '${_unitsPerPack.text} ${unitLabelFor(unitCode, null, l10n)}',
+    ];
+    final loose = _looseScaled > 0 ? ' + ${formatScaled(_looseScaled)}' : '';
+    return '${parts.join(' × ')}$loose';
   }
 
   Future<void> _save() async {
     if (!_form.currentState!.validate() || _medicationId == null) return;
     final price = double.tryParse(_price.text.replaceAll(',', '.'));
+    final notes = _notes.text.trim().isEmpty ? null : _notes.text.trim();
     final input = _byPackages
         ? BatchInput.fromPackages(
             medicationId: _medicationId!,
             packagesCount: int.parse(_packages.text),
-            unitsPerPackage: int.parse(_unitsPerPackage.text),
+            unitsPerPackage: int.parse(_unitsPerPack.text),
+            subPackagesPerPackage:
+                _innerApplies ? int.parse(_innerPerPackage.text) : null,
+            subPackagingType: _innerApplies ? _innerType : null,
+            looseQuantityScaled: _looseScaled,
             packagingType: _packaging,
             purchaseDate: _purchaseDate,
             purchasePrice: price,
             expirationDate: _expirationDate,
-            notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
+            notes: notes,
           )
         : BatchInput(
             medicationId: _medicationId!,
@@ -111,7 +161,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
             purchaseDate: _purchaseDate,
             purchasePrice: price,
             expirationDate: _expirationDate,
-            notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
+            notes: notes,
           );
     setState(() => _busy = true);
     final repo = ref.read(inventoryRepositoryProvider);
@@ -130,6 +180,16 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
     }
   }
 
+  Future<void> _createStorageMedicine() async {
+    final id = await Navigator.of(context, rootNavigator: true).push<String>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const StorageMedicineScreen(),
+      ),
+    );
+    if (id != null && mounted) setState(() => _medicationId = id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -140,14 +200,19 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
     final medications =
         (ref.watch(patientMedicationsProvider(patientId)).valueOrNull ??
                 const <Medication>[])
-            .where((m) =>
-                m.status == MedicationStatus.active ||
-                m.medicationId == _medicationId)
+            .where(
+              (m) =>
+                  m.status == MedicationStatus.active ||
+                  m.medicationId == _medicationId,
+            )
             .toList();
     final selected =
         medications.where((m) => m.medicationId == _medicationId).firstOrNull;
-    final unit = unitLabel(selected?.doseUnit ?? 'unit', l10n);
+    final unitCode = selected?.doseUnit ?? 'unit';
+    final unit = unitLabelFor(unitCode, null, l10n);
     final quantityLocked = _editing && _hasHistory;
+    final innerPackLabel =
+        packagingLabel(_innerApplies ? _innerType : _packaging, l10n);
 
     return Scaffold(
       appBar: AppBar(title: Text(_editing ? l10n.editBatch : l10n.addStock)),
@@ -161,6 +226,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
         child: FormBody(
           children: [
             DropdownButtonFormField<String>(
+              key: ValueKey(_medicationId),
               initialValue: _medicationId,
               isExpanded: true,
               decoration: InputDecoration(labelText: l10n.selectMedication),
@@ -170,14 +236,39 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                   DropdownMenuItem(
                     value: m.medicationId,
                     child: Text(
-                      medicationDisplayName(m, arabic: context.isArabic),
+                      m.storageOnly
+                          ? '${medicationDisplayName(m, arabic: context.isArabic)} · ${l10n.storageBadge}'
+                          : medicationDisplayName(m, arabic: context.isArabic),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                if (!_editing)
+                  DropdownMenuItem(
+                    value: _newStorageMedicine,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.add_box_outlined, size: 20),
+                        const SizedBox(width: 8),
+                        Flexible(child: Text(l10n.newStorageMedicine)),
+                      ],
+                    ),
+                  ),
               ],
-              onChanged:
-                  _editing ? null : (v) => setState(() => _medicationId = v),
+              onChanged: _editing
+                  ? null
+                  : (v) {
+                      if (v == _newStorageMedicine) {
+                        _createStorageMedicine();
+                      } else {
+                        setState(() => _medicationId = v);
+                      }
+                    },
             ),
+            if (selected?.storageOnly ?? false)
+              Text(
+                l10n.storageOnlyHint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             if (quantityLocked)
               Card(
                 child: ListTile(
@@ -201,52 +292,122 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
               items: [
                 for (final p in PackagingTypes.all)
                   DropdownMenuItem(
-                      value: p, child: Text(packagingLabel(p, l10n))),
+                    value: p,
+                    child: Text(packagingLabel(p, l10n)),
+                  ),
               ],
-              onChanged: (v) => setState(() => _packaging = v ?? 'box'),
+              onChanged: quantityLocked
+                  ? null
+                  : (v) => setState(() => _packaging = v ?? 'box'),
             ),
             if (_byPackages) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _packages,
-                      enabled: !quantityLocked,
-                      keyboardType: TextInputType.number,
-                      decoration:
-                          InputDecoration(labelText: l10n.packagesCount),
-                      onChanged: (_) => setState(() {}),
-                      validator: (v) => (int.tryParse(v ?? '') ?? -1) < 0
-                          ? l10n.error_invalidPackages
-                          : null,
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text('×'),
-                  ),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _unitsPerPackage,
-                      enabled: !quantityLocked,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: l10n.unitsPerPackage,
-                        suffixText: unit,
+              TextFormField(
+                controller: _packages,
+                enabled: !quantityLocked,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText:
+                      '${l10n.packagesCount} (${packagingLabel(_packaging, l10n)})',
+                ),
+                onChanged: (_) => setState(() {}),
+                validator: (v) => (int.tryParse(v ?? '') ?? 0) < 1
+                    ? l10n.error_invalidPackages
+                    : null,
+              ),
+              if (_outerWithInner.contains(_packaging)) ...[
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _hasInner,
+                  title: Text(l10n.containsInnerPacks),
+                  onChanged: quantityLocked
+                      ? null
+                      : (v) => setState(() => _hasInner = v),
+                ),
+                if (_hasInner)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          initialValue: _innerType,
+                          decoration:
+                              InputDecoration(labelText: l10n.innerPackType),
+                          items: [
+                            for (final t in _innerTypes)
+                              DropdownMenuItem(
+                                value: t,
+                                child: Text(packagingLabel(t, l10n)),
+                              ),
+                          ],
+                          onChanged: quantityLocked
+                              ? null
+                              : (v) =>
+                                  setState(() => _innerType = v ?? 'strip'),
+                        ),
                       ),
-                      onChanged: (_) => setState(() {}),
-                      validator: (v) => (int.tryParse(v ?? '') ?? 0) < 1
-                          ? l10n.error_quantityRequired
-                          : null,
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _innerPerPackage,
+                          enabled: !quantityLocked,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: l10n.innerPacksPer(
+                              packagingLabel(_innerType, l10n),
+                              packagingLabel(_packaging, l10n),
+                            ),
+                          ),
+                          onChanged: (_) => setState(() {}),
+                          validator: (v) => (int.tryParse(v ?? '') ?? 0) < 1
+                              ? l10n.error_invalidPackages
+                              : null,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+              ],
+              TextFormField(
+                controller: _unitsPerPack,
+                enabled: !quantityLocked,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: l10n.unitsPer(unit, innerPackLabel),
+                  suffixText: unit,
+                ),
+                onChanged: (_) => setState(() {}),
+                validator: (v) => (int.tryParse(v ?? '') ?? 0) < 1
+                    ? l10n.error_quantityRequired
+                    : null,
+              ),
+              TextFormField(
+                controller: _loose,
+                enabled: !quantityLocked,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: '${l10n.looseUnits} (${l10n.optional})',
+                  suffixText: unit,
+                ),
+                onChanged: (_) => setState(() {}),
+                validator: (v) => validateQuantity(
+                  v,
+                  l10n,
+                  required: false,
+                  allowZero: true,
+                ),
               ),
               if (_packageTotal != null)
-                Text(
-                  l10n.packagesTotal(quantityWithUnit(
-                      _packageTotal, selected?.doseUnit ?? 'unit', l10n)),
-                  style: Theme.of(context).textTheme.titleSmall,
+                Card(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      l10n.packagingBreakdown(
+                        _breakdown(unitCode),
+                        quantityWithUnit(_packageTotal, unitCode, l10n),
+                      ),
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
                 ),
             ] else
               TextFormField(
@@ -295,6 +456,126 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Creates a medicine that is only kept in storage (no schedules), from the
+/// catalog or as a custom entry. Pops with the new medication ID.
+class StorageMedicineScreen extends ConsumerStatefulWidget {
+  const StorageMedicineScreen({super.key});
+
+  @override
+  ConsumerState<StorageMedicineScreen> createState() =>
+      _StorageMedicineScreenState();
+}
+
+class _StorageMedicineScreenState extends ConsumerState<StorageMedicineScreen> {
+  final _form = GlobalKey<FormState>();
+  final _nameEn = TextEditingController();
+  final _nameAr = TextEditingController();
+  final _strength = TextEditingController();
+  String _unit = 'tablet';
+  String? _catalogId;
+  double? _catalogPrice;
+  bool _showForm = false;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _nameEn.dispose();
+    _nameAr.dispose();
+    _strength.dispose();
+    super.dispose();
+  }
+
+  void _selected(DrugSearchResult result) => setState(() {
+        _catalogId = result.catalogId;
+        _catalogPrice = result.priceEgp;
+        _nameEn.text = result.nameEn;
+        _nameAr.text = result.nameAr;
+        _showForm = true;
+      });
+
+  Future<void> _save() async {
+    if (!_form.currentState!.validate()) return;
+    final patientId = ref.read(currentPatientIdProvider);
+    if (patientId == null) return;
+    setState(() => _busy = true);
+    String? id;
+    await runGuarded(context, () async {
+      id = await ref.read(medicationRepositoryProvider).create(
+            patientId,
+            MedicationInput(
+              nameEn: _nameEn.text.trim().isEmpty ? _nameAr.text : _nameEn.text,
+              nameAr: _nameAr.text,
+              strength: _strength.text,
+              doseUnit: _unit,
+              catalogId: _catalogId,
+              catalogPriceEgp: _catalogPrice,
+              storageOnly: true,
+            ),
+          );
+    });
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (id != null) Navigator.pop(context, id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.newStorageMedicine)),
+      floatingActionButton: _showForm
+          ? FloatingActionButton.extended(
+              onPressed: _busy ? null : _save,
+              icon: const Icon(Icons.check),
+              label: Text(l10n.save),
+            )
+          : null,
+      body: !_showForm
+          ? CatalogSearch(
+              onSelected: _selected,
+              onCustom: () => setState(() => _showForm = true),
+            )
+          : Form(
+              key: _form,
+              child: FormBody(
+                children: [
+                  Text(l10n.storageOnlyHint),
+                  TextFormField(
+                    controller: _nameEn,
+                    decoration: InputDecoration(labelText: l10n.nameEn),
+                    validator: (v) => (v?.trim().isEmpty ?? true) &&
+                            _nameAr.text.trim().isEmpty
+                        ? l10n.error_nameRequired
+                        : null,
+                  ),
+                  TextFormField(
+                    controller: _nameAr,
+                    textDirection: TextDirection.rtl,
+                    decoration: InputDecoration(labelText: l10n.nameAr),
+                  ),
+                  TextFormField(
+                    controller: _strength,
+                    decoration: InputDecoration(labelText: l10n.strength),
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: _unit,
+                    decoration: InputDecoration(labelText: l10n.doseUnit),
+                    items: [
+                      for (final unit in doseUnits)
+                        DropdownMenuItem(
+                          value: unit,
+                          child: Text(unitLabel(unit, l10n)),
+                        ),
+                    ],
+                    onChanged: (v) => setState(() => _unit = v ?? 'tablet'),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }
