@@ -10,7 +10,7 @@ Future<void> _addMedicine(
   BuildContext context,
   WidgetRef ref,
   String patientId,
-  MedicationsData? medication,
+  Medication? medication,
 ) async {
   final name = TextEditingController(text: medication?.nameEn);
   final arabic = TextEditingController(text: medication?.nameAr);
@@ -71,7 +71,7 @@ Future<void> _addMedicine(
 Future<void> _archiveMedicine(
   WidgetRef ref,
   String patientId,
-  MedicationsData medicine,
+  Medication medicine,
 ) async {
   await ref.read(medicationRepositoryProvider).archive(medicine.id);
   ref.invalidate(medicationsForPatientProvider(patientId));

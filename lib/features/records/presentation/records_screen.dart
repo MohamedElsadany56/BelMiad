@@ -19,7 +19,7 @@ final healthRecordsProvider = FutureProvider.autoDispose((ref) async {
 Future<void> _editRecord(
   BuildContext context,
   WidgetRef ref,
-  HealthRecordsData? record,
+  HealthRecord? record,
 ) async {
   final title = TextEditingController(text: record?.title);
   final notes = TextEditingController(text: record?.notes);

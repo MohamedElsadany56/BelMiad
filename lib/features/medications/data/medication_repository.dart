@@ -6,7 +6,7 @@ class MedicationRepository {
   MedicationRepository(this.database);
   final AppDatabase database;
 
-  Future<List<MedicationsData>> listForPatient(
+  Future<List<Medication>> listForPatient(
     String patientId, {
     bool includeInactive = false,
   }) async {
@@ -16,7 +16,7 @@ class MedicationRepository {
     return query.get();
   }
 
-  Future<MedicationsData?> get(String id) => (database.select(
+  Future<Medication?> get(String id) => (database.select(
         database.medications,
       )..where((m) => m.id.equals(id)))
           .getSingleOrNull();

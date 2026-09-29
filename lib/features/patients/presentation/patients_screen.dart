@@ -7,7 +7,7 @@ import '../data/patient_providers.dart';
 Future<void> _editPatient(
   BuildContext context,
   WidgetRef ref,
-  PatientsData? patient,
+  Patient? patient,
 ) async {
   final name = TextEditingController(text: patient?.name);
   final relation = TextEditingController(text: patient?.relation);
@@ -46,7 +46,7 @@ Future<void> _editPatient(
 Future<void> _archivePatient(
   BuildContext context,
   WidgetRef ref,
-  PatientsData patient,
+  Patient patient,
 ) async {
   await ref.read(patientRepositoryProvider).archive(patient.id);
   if (ref.read(activePatientIdProvider) == patient.id) {

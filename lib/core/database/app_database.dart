@@ -164,8 +164,8 @@ class AppDatabase extends _$AppDatabase {
         },
       );
 
-  Future<List<PatientsData>> watchPatients() => select(patients).get();
-  Future<List<MedicationsData>> medicationsForPatient(String patientId) =>
+  Future<List<Patient>> watchPatients() => select(patients).get();
+  Future<List<Medication>> medicationsForPatient(String patientId) =>
       (select(medications)
             ..where(
               (m) => m.patientId.equals(patientId) & m.isActive.equals(true),

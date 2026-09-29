@@ -6,13 +6,13 @@ class PatientRepository {
   PatientRepository(this.database);
   final AppDatabase database;
 
-  Future<List<PatientsData>> list({bool includeArchived = false}) async {
+  Future<List<Patient>> list({bool includeArchived = false}) async {
     final query = database.select(database.patients);
     if (!includeArchived) query.where((p) => p.isArchived.equals(false));
     return query.get();
   }
 
-  Future<PatientsData?> get(String id) => (database.select(
+  Future<Patient?> get(String id) => (database.select(
         database.patients,
       )..where((p) => p.id.equals(id)))
           .getSingleOrNull();
