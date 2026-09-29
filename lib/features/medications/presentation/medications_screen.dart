@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -96,6 +97,11 @@ Future<void> _addMedicine(
   var isPrn = medication?.isPrn ?? false;
   String? catalogId = medication?.catalogId;
   final catalog = DrugCatalogRepository();
+
+  Timer? debounceTimer;
+  Future<List<DrugCatalogEntry>>? searchFuture;
+  String lastQuery = name.text.trim();
+
   final result = await showDialog<bool>(
     context: context,
     builder: (_) => StatefulBuilder(
@@ -114,6 +120,8 @@ Future<void> _addMedicine(
                     name.text = entry.nameEn;
                     arabic.text = entry.nameAr;
                     catalogId = entry.id;
+                    lastQuery = entry.nameEn;
+                    searchFuture = null;
                     setState(() {});
                   }
                 },
@@ -123,38 +131,48 @@ Future<void> _addMedicine(
             ),
             TextField(
               controller: name,
-              onChanged: (_) => setState(() {}),
+              onChanged: (val) {
+                if (val.trim() == lastQuery) return;
+                lastQuery = val.trim();
+                debounceTimer?.cancel();
+                if (lastQuery.length >= 2) {
+                  debounceTimer = Timer(const Duration(milliseconds: 400), () {
+                    setState(() {
+                      searchFuture = catalog.search(lastQuery);
+                    });
+                  });
+                } else {
+                  setState(() {
+                    searchFuture = null;
+                  });
+                }
+                setState(() {});
+              },
               decoration: const InputDecoration(labelText: 'Medicine name'),
             ),
-            if (name.text.trim().length >= 2)
+            if (searchFuture != null)
               FutureBuilder<List<DrugCatalogEntry>>(
-                future: catalog.search(name.text),
+                future: searchFuture,
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return Text('Catalog unavailable: ${snapshot.error}');
                   }
                   final matches = snapshot.data ?? const <DrugCatalogEntry>[];
                   if (matches.isEmpty) return const SizedBox.shrink();
-                  return ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 160),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: matches.length,
-                      itemBuilder: (_, index) {
-                        final entry = matches[index];
-                        return ListTile(
-                          dense: true,
-                          title: Text(entry.nameEn),
-                          subtitle: Text('${entry.nameAr} · EGP ${entry.priceEgp}'),
-                          onTap: () {
-                            name.text = entry.nameEn;
-                            arabic.text = entry.nameAr;
-                            catalogId = entry.id;
-                            setState(() {});
-                          },
-                        );
+                  return Column(
+                    children: matches.map((entry) => ListTile(
+                      dense: true,
+                      title: Text(entry.nameEn),
+                      subtitle: Text('${entry.nameAr} · EGP ${entry.priceEgp}'),
+                      onTap: () {
+                        name.text = entry.nameEn;
+                        arabic.text = entry.nameAr;
+                        catalogId = entry.id;
+                        lastQuery = entry.nameEn;
+                        searchFuture = null;
+                        setState(() {});
                       },
-                    ),
+                    )).toList(),
                   );
                 },
               ),
