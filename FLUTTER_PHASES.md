@@ -1,14 +1,19 @@
 # BelMiad Flutter implementation phases
 
-1. **Foundation** — Flutter project, theme, routing, feature-first folders, offline asset wiring. *(Started and committed.)*
-2. **Local data layer** — Drift SQLite database, migrations, patient context, audit events, trash.
-3. **Patients and medicines** — Patient CRUD, caregiver identity, medicine CRUD, catalog search, Arabic/English fields.
-4. **Schedules and doses** — Recurrence, PRN, meals, dose state machine, scaled quantities, dose history.
-5. **Inventory** — Batch ledger, boxes/strips/units, expiry, FEFO, stock adjustments, low-stock forecast, consumption transactions.
-6. **Health records** — Appointments, vitals, illnesses, diet rules, prescription files.
-7. **Notifications** — Offline medication, missed-dose, low-stock, and expiry notifications.
-8. **Reports and backup** — Doctor reports, inventory reports, PDF export, versioned backup/import/merge.
-9. **Localization and polish** — Arabic RTL, accessibility, responsive layouts, empty/error states.
-10. **Verification and release** — Unit, integration, and widget tests; build and release configuration.
-
-The Flutter SDK is not currently installed in this environment, so Phase 1 is committed as source scaffolding but cannot yet be run or dependency-resolved here.
+1. **Foundation** — Flutter project, feature-first folders, dependencies. *(Done)*
+2. **Theme and localization** — `#0064F6`/white Material 3 theme, dark mode, gen_l10n ARB (English/Arabic), RTL, bundled Arabic font. *(Done)*
+3. **Drift database** — specification schema, indexes, soft deletion, settings. *(Done)*
+4. **Persons, patients, caregivers** — device caregiver identity, assignments, current patient. *(Done)*
+5. **Medications and drug catalog** — FTS5 catalog asset built from CSV, custom medicines, PRN, maximum daily quantity. *(Done)*
+6. **Schedules and recurrence** — fixed and meal-relative timing, generic recurrence, per-weekday quantities. *(Done)*
+7. **Dose generation** — deterministic per schedule/date, regeneration on changes, missed marking. *(Done)*
+8. **Inventory batches** — ledger, adjustments, FEFO, forecasting, expiration. *(Done)*
+9. **Dose consumption transactions** — take/PRN/skip/undo with multi-batch allocation. *(Done)*
+10. **Notifications** — offline reminders and alerts with deduplication. *(Done)*
+11. **Appointments, vitals, diet, illnesses** — *(Done)*
+12. **Prescription storage** — app-private files. *(Done)*
+13. **Reports and PDF** — summary/detailed doctor reports, storage report. *(Done)*
+14. **Backup, import, merge** — versioned ZIP, legacy migration. *(Done)*
+15. **Trash and audit** — *(Done)*
+16. **Testing** — unit, Drift integration, widget and PDF tests. *(Done)*
+17. **Polish and release** — release signing and store assets remain to be configured.

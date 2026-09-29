@@ -1,18 +1,106 @@
 # BelMiad — بالميعاد
 
-BelMiad is an offline-first patient health and medication management app. This workspace contains a lightweight browser build that stores medicine and stock data locally on the device.
+Offline-first patient health and medication management app for patients,
+family caregivers and private nurses, built with Flutter. Everything is
+stored on the device in SQLite; there is no backend, account, cloud or
+encryption (by design, see the specification).
 
-## Run locally
+## Features
 
-Open `index.html` in a modern browser. No server, account, or network connection is required.
+- **Patients and caregivers** — multiple patients on one phone, a current
+  patient switcher, device caregiver identity (attribution only, no login),
+  caregiver assignments that keep historical actors after removal.
+- **Medicines** — offline Egyptian drug catalog (25,065 entries, English and
+  Arabic FTS5 search) or custom medicines, separate English/Arabic
+  instructions, PRN, maximum daily quantity, archive/restore, trash.
+- **Schedules** — fixed times or relative to meals (before/with/after with
+  offsets), daily, selected weekdays every N weeks, every N days, custom
+  on/off cycles, per-weekday quantities, start/end dates, patient timezone.
+- **Doses** — SCHEDULED/TAKEN/MISSED/SKIPPED with calculated late minutes,
+  a grace window before doses become missed, undo, partial and zero
+  quantities, PRN logging and the daily-maximum warning.
+- **Inventory** — batch ledger (package or quantity entry, purchase date and
+  price, expiration), FEFO or manual multi-batch consumption stored per dose,
+  exact-batch undo, audited adjustments, forecast-based low stock (next 3
+  days), remaining days simulated from real schedules, expiration states.
+- **Health records** — appointments, vitals, illnesses, dietary rules and
+  prescription images/PDFs in app-private storage.
+- **Notifications** — offline dose reminders, missed doses, low/empty stock,
+  expiring/expired batches and appointment reminders, per-patient
+  preferences, deduplicated across launches, plus an in-app centre.
+- **Reports** — summary and detailed doctor reports and a storage report,
+  in-app and as PDF (Arabic and English).
+- **Backup** — versioned `backup.zip` export per patient, import as a new
+  patient, merge into the same patient, legacy v1 migration.
+- **Trash and audit** — restore or permanently delete; full activity history.
+- **Arabic/English** with RTL/LTR, blue (`#0064F6`) and white theme, light
+  mode by default and dark mode.
 
-## Included in this first version
+## Getting started
 
-- Dashboard with side menu for all core areas
-- Multiple medicine records, including medicines without stock
-- Stock batches with boxes, strips, units, purchase date, expiry date, and source
-- Medicine schedule with dose tracking actions
-- Local browser persistence via `localStorage`
-- Responsive layout for desktop and mobile
+```bash
+flutter pub get
+flutter run
+```
 
-The Egyptian medicine CSV is retained as the source catalog asset for the next catalog-search slice.
+Code generation (Drift, Freezed, json_serializable) and localizations are
+committed; regenerate after changing tables, freezed models or ARB files:
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
+flutter gen-l10n
+```
+
+### Drug catalog asset
+
+`assets/data/drug_catalog.sqlite` is generated from
+`assets/data/egyptian-drugs.csv` at development time (never at app start):
+
+```bash
+dart run tool/build_catalog.dart
+```
+
+After regenerating, bump `catalogAssetVersion` in
+`lib/features/catalog/data/drug_catalog_database.dart` so devices copy the
+new catalog. Patient data lives in a separate database and is never touched.
+
+### Tests
+
+```bash
+flutter test
+```
+
+Unit, Drift integration, widget and PDF tests cover scaled quantities,
+recurrence, meal timing, FEFO, multi-batch consumption, partial/zero doses,
+undo, rollback on failure, PRN maximums, forecasting, expiration, dose
+generation, timezone changes, notification deduplication, backup/merge,
+catalog search, RTL/LTR and dose confirmation.
+
+## Architecture
+
+Feature-first layers: `presentation → application → domain → data → database`.
+Business rules live in domain/application services; widgets never mutate
+tables directly. Critical dose/inventory operations run in single Drift
+transactions.
+
+```text
+lib/
+├── app/          theme, router, providers, localization labels, widgets
+├── core/         database, time, files, notifications, settings, errors
+├── features/     patients, caregivers, medications, catalog, schedules,
+│                 doses, inventory, meals, health, notifications, reports,
+│                 backup, trash, audit, dashboard, settings
+└── l10n/         ARB files and generated localizations
+```
+
+## Platform notes
+
+- Android needs notification and exact-alarm permissions (declared in the
+  manifest); scheduled notifications survive reboots.
+- The web build uses Drift WASM (`web/sqlite3.wasm`, `web/drift_worker.js`);
+  OS notifications are not available there, but the in-app centre works.
+- Fonts: Noto Naskh Arabic (SIL OFL, `assets/fonts/OFL.txt`) is bundled so
+  Arabic renders offline in the UI and PDFs.
+
+`index.html`, `app.js` and `styles.css` in the repository root are the
+earlier browser prototype and are not part of the Flutter app.

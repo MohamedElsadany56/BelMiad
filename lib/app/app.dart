@@ -1,74 +1,98 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'localization/app_localization.dart';
-import '../features/dashboard/presentation/dashboard_screen.dart';
-import '../features/inventory/presentation/inventory_screen.dart';
-import '../features/medications/presentation/medications_screen.dart';
-import '../features/patients/presentation/patients_screen.dart';
-import '../features/records/presentation/records_screen.dart';
-import '../features/schedules/presentation/schedule_screen.dart';
-import '../features/settings/presentation/settings_screen.dart';
-import '../features/reports/presentation/reports_screen.dart';
-import '../features/backup/presentation/backup_screen.dart';
+import '../l10n/app_localizations.dart';
+import 'providers/app_providers.dart';
+import 'router/app_router.dart';
+import 'theme/app_theme.dart';
 
-class BelMiadApp extends ConsumerWidget {
+class BelMiadApp extends ConsumerStatefulWidget {
   const BelMiadApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BelMiadApp> createState() => _BelMiadAppState();
+}
+
+class _BelMiadAppState extends ConsumerState<BelMiadApp>
+    with WidgetsBindingObserver {
+  Timer? _periodicSync;
+  Timer? _inactivity;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    Future.microtask(() async {
+      await ref.read(localNotifierProvider).initialize();
+      ref.read(syncCoordinatorProvider).request();
+    });
+    // Keeps missed-dose marking and notifications current while open.
+    _periodicSync = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => ref.read(syncCoordinatorProvider).request(),
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _periodicSync?.cancel();
+    _inactivity?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(syncCoordinatorProvider).request();
+    }
+  }
+
+  /// Inactivity reset (spec §3): returns to the start screen. It is not a
+  /// lock and never asks for credentials.
+  void _resetInactivityTimer() {
+    _inactivity?.cancel();
+    final minutes =
+        ref.read(settingsProvider).valueOrNull?.inactivityMinutes ?? 0;
+    if (minutes <= 0) return;
+    _inactivity = Timer(Duration(minutes: minutes), () {
+      final navigator = rootNavigatorKey.currentState;
+      navigator?.popUntil((route) => route.isFirst);
+      ref.read(routerProvider).go('/today');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
+    final themeMode = ref.watch(themeModeProvider);
+    final router = ref.watch(routerProvider);
+    ref.listen(localeProvider, (_, __) {
+      ref.read(syncCoordinatorProvider).request();
+    });
     return MaterialApp.router(
-      title: 'BelMiad — بالميعاد',
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       locale: locale,
-      supportedLocales: const [Locale('en'), Locale('ar')],
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xff0064f6),
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: Colors.white,
-        canvasColor: Colors.white,
-        useMaterial3: true,
-        fontFamily: 'Arial',
-      ),
-      routerConfig: GoRouter(
-        routes: [
-          GoRoute(path: '/', builder: (_, __) => const DashboardScreen()),
-          GoRoute(
-            path: '/medications',
-            builder: (_, __) => const MedicationsScreen(),
-          ),
-          GoRoute(
-            path: '/inventory',
-            builder: (_, __) => const InventoryScreen(),
-          ),
-          GoRoute(
-            path: '/schedule',
-            builder: (_, __) => const ScheduleScreen(),
-          ),
-          GoRoute(
-            path: '/patients',
-            builder: (_, __) => const PatientsScreen(),
-          ),
-          GoRoute(path: '/records', builder: (_, __) => const RecordsScreen()),
-          GoRoute(
-            path: '/settings',
-            builder: (_, __) => const SettingsScreen(),
-          ),
-          GoRoute(
-            path: '/reports',
-            builder: (_, __) => const ReportsScreen(),
-          ),
-          GoRoute(
-            path: '/backup',
-            builder: (_, __) => const BackupScreen(),
-          ),
-        ],
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
+      routerConfig: router,
+      builder: (context, child) => Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) => _resetInactivityTimer(),
+        child: child ?? const SizedBox.shrink(),
       ),
     );
   }
 }
-
