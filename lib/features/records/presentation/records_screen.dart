@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../../app/app_scaffold.dart';
@@ -33,6 +34,7 @@ Future<void> _editRecord(
   final symptoms = TextEditingController();
   final dietRule = TextEditingController();
   final prescriptionPath = TextEditingController();
+  String? prescriptionData;
   String type = record?.type ?? 'Vital';
   DateTime occurredAt = record?.occurredAt ?? DateTime.now();
   final result = await showDialog<bool>(
@@ -108,11 +110,34 @@ Future<void> _editRecord(
                           controller: dietRule,
                           decoration: const InputDecoration(
                             labelText: 'Dietary rule or restriction')),
-                      if (type == 'Prescription')
+                      if (type == 'Prescription') ...[
                         TextField(
                           controller: prescriptionPath,
+                          readOnly: true,
                           decoration: const InputDecoration(
-                            labelText: 'Prescription image/file path')),
+                            labelText: 'Prescription attachment')),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final result = await FilePicker.platform.pickFiles(
+                                withData: true,
+                                allowMultiple: false,
+                                type: FileType.custom,
+                                allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+                              );
+                              final file = result?.files.single;
+                              if (file?.bytes != null) {
+                                prescriptionPath.text = file!.name;
+                                prescriptionData = base64Encode(file.bytes!);
+                                setState(() {});
+                              }
+                            },
+                            icon: const Icon(Icons.attach_file),
+                            label: const Text('Choose file'),
+                          ),
+                        ),
+                      ],
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(
@@ -169,7 +194,8 @@ Future<void> _editRecord(
           diagnosis.text,
           symptoms.text,
           dietRule.text,
-          prescriptionPath.text)),
+          prescriptionPath.text,
+          prescriptionData)),
         occurredAt: occurredAt));
     ref.invalidate(healthRecordsProvider);
   }
@@ -198,6 +224,7 @@ String? _buildMetadata(
   String symptoms,
   String dietRule,
   String prescriptionPath,
+  String? prescriptionData,
 ) {
   final values = <String, dynamic>{};
   dynamic manualValue;
@@ -225,6 +252,9 @@ String? _buildMetadata(
       add('diet_rule', dietRule);
     case 'Prescription':
       add('file_path', prescriptionPath);
+      if (prescriptionData != null) {
+        values['file_base64'] = prescriptionData;
+      }
   }
   return values.isEmpty ? null : jsonEncode(values);
 }
