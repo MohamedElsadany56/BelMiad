@@ -8,7 +8,12 @@ import '../../patients/data/patient_providers.dart';
 
 final healthRecordsProvider = FutureProvider.autoDispose((ref) async {
   final db = await ref.watch(databaseProvider.future);
-  return db.select(db.healthRecords).get();
+  final selectedPatientId = ref.watch(activePatientIdProvider);
+  final query = db.select(db.healthRecords);
+  if (selectedPatientId != null) {
+    query.where((record) => record.patientId.equals(selectedPatientId));
+  }
+  return query.get();
 });
 Future<void> _editRecord(
   BuildContext context,

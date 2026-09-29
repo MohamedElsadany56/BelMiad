@@ -9,10 +9,15 @@ import '../data/schedule_service.dart';
 import '../domain/recurrence_rule.dart';
 import '../../doses/data/dose_repository.dart';
 import '../../notifications/data/notification_preferences_repository.dart';
+import '../../patients/data/patient_providers.dart';
 
 Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
   final db = await ref.read(databaseProvider.future);
-  final meds = await db.select(db.medications).get();
+  final selectedPatientId = ref.read(activePatientIdProvider);
+  final allMeds = await db.select(db.medications).get();
+  final meds = selectedPatientId == null
+      ? allMeds
+      : allMeds.where((medication) => medication.patientId == selectedPatientId).toList();
   if (meds.isEmpty) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +98,12 @@ Future<void> _addSchedule(BuildContext context, WidgetRef ref) async {
 
 final todaysDosesProvider = FutureProvider.autoDispose((ref) async {
   final db = await ref.watch(databaseProvider.future);
-  return db.select(db.doseInstances).get();
+  final selectedPatientId = ref.watch(activePatientIdProvider);
+  final query = db.select(db.doseInstances);
+  if (selectedPatientId != null) {
+    query.where((dose) => dose.patientId.equals(selectedPatientId));
+  }
+  return query.get();
 });
 
 class ScheduleScreen extends ConsumerWidget {
