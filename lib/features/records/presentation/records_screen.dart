@@ -24,6 +24,15 @@ Future<void> _editRecord(
   final title = TextEditingController(text: record?.title);
   final notes = TextEditingController(text: record?.notes);
   final metadata = TextEditingController(text: record?.metadataJson);
+  final bloodPressure = TextEditingController();
+  final pulse = TextEditingController();
+  final weight = TextEditingController();
+  final doctor = TextEditingController();
+  final location = TextEditingController();
+  final diagnosis = TextEditingController();
+  final symptoms = TextEditingController();
+  final dietRule = TextEditingController();
+  final prescriptionPath = TextEditingController();
   String type = record?.type ?? 'Vital';
   DateTime occurredAt = record?.occurredAt ?? DateTime.now();
   final result = await showDialog<bool>(
@@ -57,6 +66,53 @@ Future<void> _editRecord(
                       maxLines: 3,
                       decoration: const InputDecoration(
                         labelText: 'Details (JSON, optional)')),
+                      if (type == 'Vital') ...[
+                        TextField(
+                          controller: bloodPressure,
+                          decoration:
+                            const InputDecoration(labelText: 'Blood pressure')),
+                        TextField(
+                          controller: pulse,
+                          keyboardType: TextInputType.number,
+                          decoration:
+                            const InputDecoration(labelText: 'Pulse (bpm)')),
+                        TextField(
+                          controller: weight,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                          decoration:
+                            const InputDecoration(labelText: 'Weight (kg)')),
+                      ],
+                      if (type == 'Appointment') ...[
+                        TextField(
+                          controller: doctor,
+                          decoration:
+                            const InputDecoration(labelText: 'Doctor')),
+                        TextField(
+                          controller: location,
+                          decoration:
+                            const InputDecoration(labelText: 'Location')),
+                      ],
+                      if (type == 'Illness') ...[
+                        TextField(
+                          controller: diagnosis,
+                          decoration:
+                            const InputDecoration(labelText: 'Diagnosis')),
+                        TextField(
+                          controller: symptoms,
+                          decoration:
+                            const InputDecoration(labelText: 'Symptoms')),
+                      ],
+                      if (type == 'Diet')
+                        TextField(
+                          controller: dietRule,
+                          decoration: const InputDecoration(
+                            labelText: 'Dietary rule or restriction')),
+                      if (type == 'Prescription')
+                        TextField(
+                          controller: prescriptionPath,
+                          decoration: const InputDecoration(
+                            labelText: 'Prescription image/file path')),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(
@@ -102,7 +158,18 @@ Future<void> _editRecord(
         type: type,
         title: title.text.trim(),
         notes: drift.Value(notes.text.trim()),
-        metadataJson: drift.Value(_validMetadata(metadata.text)),
+        metadataJson: drift.Value(_buildMetadata(
+          type,
+          metadata.text,
+          bloodPressure.text,
+          pulse.text,
+          weight.text,
+          doctor.text,
+          location.text,
+          diagnosis.text,
+          symptoms.text,
+          dietRule.text,
+          prescriptionPath.text)),
         occurredAt: occurredAt));
     ref.invalidate(healthRecordsProvider);
   }
@@ -117,6 +184,49 @@ String? _validMetadata(String value) {
   } on FormatException {
     return null;
   }
+}
+
+String? _buildMetadata(
+  String type,
+  String manual,
+  String bloodPressure,
+  String pulse,
+  String weight,
+  String doctor,
+  String location,
+  String diagnosis,
+  String symptoms,
+  String dietRule,
+  String prescriptionPath,
+) {
+  final values = <String, dynamic>{};
+  dynamic manualValue;
+  try {
+    manualValue = manual.trim().isEmpty ? null : jsonDecode(manual);
+  } on FormatException {
+    manualValue = null;
+  }
+  if (manualValue is Map<String, dynamic>) values.addAll(manualValue);
+  void add(String key, String value) {
+    if (value.trim().isNotEmpty) values[key] = value.trim();
+  }
+  switch (type) {
+    case 'Vital':
+      add('blood_pressure', bloodPressure);
+      add('pulse_bpm', pulse);
+      add('weight_kg', weight);
+    case 'Appointment':
+      add('doctor', doctor);
+      add('location', location);
+    case 'Illness':
+      add('diagnosis', diagnosis);
+      add('symptoms', symptoms);
+    case 'Diet':
+      add('diet_rule', dietRule);
+    case 'Prescription':
+      add('file_path', prescriptionPath);
+  }
+  return values.isEmpty ? null : jsonEncode(values);
 }
 
 class RecordsScreen extends ConsumerWidget {
