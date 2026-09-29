@@ -24,6 +24,7 @@ class AppStrings {
     'patients': 'Patients',
     'records': 'Health records',
     'settings': 'Settings',
+    'reports': 'Reports',
     'arabic': 'عربي',
     'english': 'English',
   };
@@ -37,6 +38,7 @@ class AppStrings {
     'patients': 'المرضى',
     'records': 'السجل الصحي',
     'settings': 'الإعدادات',
+    'reports': 'التقارير',
     'arabic': 'عربي',
     'english': 'English',
   };

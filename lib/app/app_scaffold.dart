@@ -22,6 +22,7 @@ class AppScaffold extends ConsumerWidget {
       ('/patients', 'patients', Icons.people_outline),
       ('/records', 'records', Icons.favorite_outline),
       ('/settings', 'settings', Icons.settings_outlined),
+      ('/reports', 'reports', Icons.assessment_outlined),
     ];
     return Scaffold(
       appBar: AppBar(
@@ -78,6 +79,7 @@ class AppScaffold extends ConsumerWidget {
       'Patients': 'patients',
       'Health records': 'records',
       'Settings': 'settings',
+      'Reports': 'reports',
     };
     return keys[title] ?? title;
   }

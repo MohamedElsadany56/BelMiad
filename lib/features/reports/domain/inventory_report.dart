@@ -1,13 +1,13 @@
 class InventoryReportRow {
   const InventoryReportRow({
-    required this.MedicationsData,
+    required this.medicationName,
     required this.quantity,
     required this.unit,
     required this.batchCount,
     this.earliestExpiration,
     required this.stockState,
   });
-  final String MedicationsData;
+  final String medicationName;
   final int quantity;
   final String unit;
   final int batchCount;

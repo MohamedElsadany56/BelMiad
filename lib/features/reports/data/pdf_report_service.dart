@@ -16,12 +16,12 @@ class PdfReportService {
           pw.Header(level: 0, child: pw.Text('BelMiad inventory report')),
           pw.Text('Patient: $patientName'),
           pw.SizedBox(height: 16),
-          pw.Table.fromTextArray(
+          pw.TableHelper.fromTextArray(
             headers: const ['Medicine', 'Quantity', 'Unit', 'Batches', 'State'],
             data: report.rows
                 .map(
                   (row) => [
-                    row.MedicationsData,
+                    row.medicationName,
                     row.quantity.toString(),
                     row.unit,
                     row.batchCount.toString(),
