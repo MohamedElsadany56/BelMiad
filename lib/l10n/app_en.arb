@@ -36,13 +36,11 @@
   "errorGeneric": "Something went wrong: {message}",
   "savedMessage": "Saved",
   "deletedMessage": "Moved to trash",
-
   "navToday": "Today",
   "navMedications": "Medicines",
   "navInventory": "Stock",
   "navHealth": "Health",
   "navMore": "More",
-
   "welcomeTitle": "Welcome to BelMiad",
   "welcomeBody": "Track medicines, doses, stock and health records for yourself or the people you care for. Everything stays on this phone and works offline.",
   "getStarted": "Get started",
@@ -54,7 +52,6 @@
   "patientIsSomeoneElse": "Someone else",
   "relationshipLabel": "Relationship (e.g. Mother)",
   "continueAction": "Continue",
-
   "patients": "Patients",
   "patient": "Patient",
   "addPatient": "Add patient",
@@ -90,7 +87,6 @@
   "deviceCaregiver": "Caregiver on this phone",
   "changeCaregiver": "Change caregiver",
   "caregiverSwitched": "Now recording as {name}",
-
   "medications": "Medicines",
   "medication": "Medicine",
   "addMedication": "Add medicine",
@@ -134,7 +130,6 @@
   "later": "Later",
   "prnBadge": "PRN",
   "maxPerDay": "Max {quantity} per day",
-
   "unit_tablet": "tablet",
   "unit_capsule": "capsule",
   "unit_ml": "ml",
@@ -148,7 +143,6 @@
   "unit_mg": "mg",
   "unit_g": "g",
   "unit_unit": "unit",
-
   "addSchedule": "Add schedule",
   "editSchedule": "Edit schedule",
   "scheduleType": "Timing",
@@ -186,7 +180,6 @@
   "scheduleBeforeMeal": "{minutes} min before {meal}",
   "scheduleAfterMeal": "{minutes} min after {meal}",
   "scheduleWithMeal": "with {meal}",
-
   "todayTitle": "Today",
   "noDoses": "No doses on this day",
   "take": "Take",
@@ -201,7 +194,7 @@
   "skipDoseTitle": "Skip this dose?",
   "skipDoseBody": "A skipped dose cannot be taken later.",
   "takenAt": "Taken at {time}",
-  "lateBy": "{minutes} min late",
+  "lateBy": "{minutes, plural, =1{1 min late} other{{minutes} min late}}",
   "onTime": "On time",
   "logPrn": "Log as-needed dose",
   "howMuchTaken": "How much was actually taken?",
@@ -230,7 +223,6 @@
   "dosesDone": "{done} of {total} doses taken",
   "partialDose": "Partial: {actual} of {required}",
   "prnTaken": "As needed",
-
   "inventoryTitle": "Stock",
   "totalMedications": "Medicines",
   "withStock": "With stock",
@@ -265,7 +257,7 @@
   "depleted": "Depleted",
   "expired": "Expired",
   "expiresToday": "Expires today",
-  "expiresInDays": "Expires in {count} days",
+  "expiresInDays": "{count, plural, =1{Expires in 1 day} other{Expires in {count} days}}",
   "expiresOn": "Expires {date}",
   "noExpiry": "No expiry date",
   "adjustStock": "Adjust stock",
@@ -308,7 +300,6 @@
   "stockState": "Stock state",
   "currentQuantity": "Current quantity",
   "unit": "Unit",
-
   "health": "Health",
   "appointments": "Appointments",
   "vitals": "Vitals",
@@ -360,7 +351,6 @@
   "prescriptionsPrivateNote": "Stored privately in the app. Prescriptions are never included in doctor reports.",
   "filesUnsupported": "Attaching files is not available on this platform",
   "noRecords": "Nothing recorded yet",
-
   "meals": "Meals",
   "addMeal": "Add meal",
   "editMeal": "Edit meal",
@@ -373,7 +363,6 @@
   "mealTime": "Meal time",
   "mealDefaultTime": "Default {time}",
   "mealsNote": "Changing a meal time moves every dose scheduled relative to it.",
-
   "reports": "Reports",
   "doctorReport": "Doctor report",
   "summaryReport": "Summary",
@@ -404,7 +393,6 @@
   "whatToBuy": "What needs to be purchased?",
   "nothingToBuy": "Nothing needs to be purchased",
   "pdfArabicFontMissing": "Arabic PDF font is not bundled; Arabic text may not render in the PDF.",
-
   "backup": "Backup",
   "backupTitle": "Backup and restore",
   "backupNote": "Backups are portable ZIP files (not encrypted). Keep them somewhere safe.",
@@ -420,7 +408,6 @@
   "invalidBackup": "This file is not a valid BelMiad backup",
   "newerBackup": "This backup was made by a newer version of the app",
   "backupPatientMissing": "This backup's patient does not exist here. Import it as a new patient instead.",
-
   "trash": "Trash",
   "trashEmpty": "Trash is empty",
   "restored": "Restored",
@@ -437,7 +424,6 @@
   "entity_dietary_rule": "Diet rule",
   "entity_prescription": "Prescription",
   "entity_meal": "Meal",
-
   "auditLog": "Activity history",
   "auditEmpty": "No activity yet",
   "systemActor": "App",
@@ -464,7 +450,6 @@
   "audit_caregiver_removed": "Caregiver removed",
   "audit_imported": "Imported from backup",
   "audit_merged": "Merged from backup",
-
   "notifications": "Notifications",
   "notificationSettings": "Notification preferences",
   "markAllRead": "Mark all read",
@@ -476,7 +461,6 @@
   "notif_expiration": "Expiration",
   "notif_appointment_reminder": "Appointment reminders",
   "notificationsPerPatient": "Preferences apply to the current patient only.",
-
   "settings": "Settings",
   "language": "Language",
   "english": "English",
@@ -486,10 +470,10 @@
   "themeDark": "Dark",
   "themeSystem": "System",
   "expiryThreshold": "Expiring-soon warning",
-  "daysCount": "{count} days",
+  "daysCount": "{count, plural, =1{1 day} other{{count} days}}",
   "missedGrace": "Mark doses missed after",
-  "minutesCount": "{count} minutes",
-  "hoursCount": "{count} hours",
+  "minutesCount": "{count, plural, =1{1 minute} other{{count} minutes}}",
+  "hoursCount": "{count, plural, =1{1 hour} other{{count} hours}}",
   "inactivityReset": "Return to home after inactivity",
   "inactivityResetNote": "Resets the screen only. This is not a lock and needs no password.",
   "off": "Off",
@@ -497,7 +481,6 @@
   "aboutBody": "BelMiad works fully offline. Data is stored only on this device, without accounts, cloud or encryption.",
   "catalogEntries": "{count} medicines in the offline catalog",
   "version": "Version {version}",
-
   "error_nameRequired": "Please enter a name",
   "error_invalidTimezone": "Unknown timezone",
   "error_doseUnitRequired": "Please choose a dose unit",
@@ -534,5 +517,40 @@
   "error_invalidBackup": "This file is not a valid BelMiad backup",
   "error_newerBackup": "This backup was made by a newer version of the app",
   "error_backupPatientMissing": "This backup's patient does not exist here",
-  "error_filesUnsupported": "Files are not supported on this platform"
+  "error_filesUnsupported": "Files are not supported on this platform",
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@minutesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@hoursCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@expiresInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@lateBy": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  }
 }

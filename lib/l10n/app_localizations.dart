@@ -1265,8 +1265,8 @@ abstract class AppLocalizations {
   /// No description provided for @lateBy.
   ///
   /// In en, this message translates to:
-  /// **'{minutes} min late'**
-  String lateBy(Object minutes);
+  /// **'{minutes, plural, =1{1 min late} other{{minutes} min late}}'**
+  String lateBy(int minutes);
 
   /// No description provided for @onTime.
   ///
@@ -1643,8 +1643,8 @@ abstract class AppLocalizations {
   /// No description provided for @expiresInDays.
   ///
   /// In en, this message translates to:
-  /// **'Expires in {count} days'**
-  String expiresInDays(Object count);
+  /// **'{count, plural, =1{Expires in 1 day} other{Expires in {count} days}}'**
+  String expiresInDays(int count);
 
   /// No description provided for @expiresOn.
   ///
@@ -2921,8 +2921,8 @@ abstract class AppLocalizations {
   /// No description provided for @daysCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} days'**
-  String daysCount(Object count);
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String daysCount(int count);
 
   /// No description provided for @missedGrace.
   ///
@@ -2933,14 +2933,14 @@ abstract class AppLocalizations {
   /// No description provided for @minutesCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} minutes'**
-  String minutesCount(Object count);
+  /// **'{count, plural, =1{1 minute} other{{count} minutes}}'**
+  String minutesCount(int count);
 
   /// No description provided for @hoursCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} hours'**
-  String hoursCount(Object count);
+  /// **'{count, plural, =1{1 hour} other{{count} hours}}'**
+  String hoursCount(int count);
 
   /// No description provided for @inactivityReset.
   ///

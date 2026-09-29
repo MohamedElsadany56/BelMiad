@@ -40,8 +40,31 @@ String unitLabel(String code, AppLocalizations l10n) => switch (code) {
       _ => code,
     };
 
+const _englishPlurals = {
+  'tablet': 'tablets',
+  'capsule': 'capsules',
+  'drop': 'drops',
+  'puff': 'puffs',
+  'sachet': 'sachets',
+  'injection': 'injections',
+  'patch': 'patches',
+  'suppository': 'suppositories',
+  'application': 'applications',
+  'unit': 'units',
+};
+
+/// Unit label for a quantity; English units are pluralised when the
+/// quantity is not exactly one.
+String unitLabelFor(String code, int? scaled, AppLocalizations l10n) {
+  if (l10n.localeName == 'en' && scaled != quantityScale) {
+    final plural = _englishPlurals[code];
+    if (plural != null) return plural;
+  }
+  return unitLabel(code, l10n);
+}
+
 String quantityWithUnit(int? scaled, String unit, AppLocalizations l10n) =>
-    '${formatScaled(scaled)} ${unitLabel(unit, l10n)}';
+    '${formatScaled(scaled)} ${unitLabelFor(unit, scaled, l10n)}';
 
 String packagingLabel(String? code, AppLocalizations l10n) => switch (code) {
       'box' => l10n.packaging_box,

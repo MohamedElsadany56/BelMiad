@@ -43,3 +43,9 @@ flutter:
   assets:
     - assets/data/drug_catalog.sqlite
     - assets/fonts/
+  fonts:
+    - family: NotoNaskhArabic
+      fonts:
+        - asset: assets/fonts/NotoNaskhArabic-Regular.ttf
+        - asset: assets/fonts/NotoNaskhArabic-Bold.ttf
+          weight: 700

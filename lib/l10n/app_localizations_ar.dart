@@ -631,8 +631,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String lateBy(Object minutes) {
-    return 'متأخرة $minutes دقيقة';
+  String lateBy(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'متأخرة $minutes دقيقة',
+      few: 'متأخرة $minutes دقائق',
+      two: 'متأخرة دقيقتين',
+      one: 'متأخرة دقيقة',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -839,8 +847,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expiresToday => 'تنتهي اليوم';
 
   @override
-  String expiresInDays(Object count) {
-    return 'تنتهي خلال $count يوم';
+  String expiresInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تنتهي خلال $count يوماً',
+      few: 'تنتهي خلال $count أيام',
+      two: 'تنتهي خلال يومين',
+      one: 'تنتهي خلال يوم',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1512,21 +1528,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expiryThreshold => 'التنبيه بقرب انتهاء الصلاحية';
 
   @override
-  String daysCount(Object count) {
-    return '$count يوم';
+  String daysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوماً',
+      few: '$count أيام',
+      two: 'يومان',
+      one: 'يوم واحد',
+    );
+    return '$_temp0';
   }
 
   @override
   String get missedGrace => 'اعتبار الجرعة فائتة بعد';
 
   @override
-  String minutesCount(Object count) {
-    return '$count دقيقة';
+  String minutesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count دقيقة',
+      few: '$count دقائق',
+      two: 'دقيقتان',
+      one: 'دقيقة واحدة',
+    );
+    return '$_temp0';
   }
 
   @override
-  String hoursCount(Object count) {
-    return '$count ساعات';
+  String hoursCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ساعة',
+      few: '$count ساعات',
+      two: 'ساعتان',
+      one: 'ساعة واحدة',
+    );
+    return '$_temp0';
   }
 
   @override

@@ -36,13 +36,11 @@
   "errorGeneric": "حدث خطأ: {message}",
   "savedMessage": "تم الحفظ",
   "deletedMessage": "نُقل إلى سلة المحذوفات",
-
   "navToday": "اليوم",
   "navMedications": "الأدوية",
   "navInventory": "المخزون",
   "navHealth": "الصحة",
   "navMore": "المزيد",
-
   "welcomeTitle": "أهلاً بك في بالميعاد",
   "welcomeBody": "تابع الأدوية والجرعات والمخزون والسجل الصحي لك أو لمن ترعاهم. كل البيانات تبقى على هذا الهاتف وتعمل بدون إنترنت.",
   "getStarted": "ابدأ",
@@ -54,7 +52,6 @@
   "patientIsSomeoneElse": "شخص آخر",
   "relationshipLabel": "صلة القرابة (مثل: الأم)",
   "continueAction": "متابعة",
-
   "patients": "المرضى",
   "patient": "المريض",
   "addPatient": "إضافة مريض",
@@ -90,7 +87,6 @@
   "deviceCaregiver": "مقدم الرعاية على هذا الهاتف",
   "changeCaregiver": "تغيير مقدم الرعاية",
   "caregiverSwitched": "يتم التسجيل الآن باسم {name}",
-
   "medications": "الأدوية",
   "medication": "الدواء",
   "addMedication": "إضافة دواء",
@@ -134,7 +130,6 @@
   "later": "لاحقاً",
   "prnBadge": "عند اللزوم",
   "maxPerDay": "بحد أقصى {quantity} يومياً",
-
   "unit_tablet": "قرص",
   "unit_capsule": "كبسولة",
   "unit_ml": "مل",
@@ -148,7 +143,6 @@
   "unit_mg": "مجم",
   "unit_g": "جم",
   "unit_unit": "وحدة",
-
   "addSchedule": "إضافة موعد",
   "editSchedule": "تعديل الموعد",
   "scheduleType": "التوقيت",
@@ -186,7 +180,6 @@
   "scheduleBeforeMeal": "قبل {meal} بـ {minutes} دقيقة",
   "scheduleAfterMeal": "بعد {meal} بـ {minutes} دقيقة",
   "scheduleWithMeal": "مع {meal}",
-
   "todayTitle": "اليوم",
   "noDoses": "لا توجد جرعات في هذا اليوم",
   "take": "تناول",
@@ -201,7 +194,7 @@
   "skipDoseTitle": "تخطي هذه الجرعة؟",
   "skipDoseBody": "لا يمكن تناول الجرعة المتخطاة لاحقاً.",
   "takenAt": "تم التناول الساعة {time}",
-  "lateBy": "متأخرة {minutes} دقيقة",
+  "lateBy": "{minutes, plural, =1{متأخرة دقيقة} =2{متأخرة دقيقتين} few{متأخرة {minutes} دقائق} other{متأخرة {minutes} دقيقة}}",
   "onTime": "في الموعد",
   "logPrn": "تسجيل جرعة عند اللزوم",
   "howMuchTaken": "ما الكمية التي تم تناولها فعلاً؟",
@@ -230,7 +223,6 @@
   "dosesDone": "تم تناول {done} من {total} جرعة",
   "partialDose": "جزئية: {actual} من {required}",
   "prnTaken": "عند اللزوم",
-
   "inventoryTitle": "المخزون",
   "totalMedications": "الأدوية",
   "withStock": "متوفر",
@@ -265,7 +257,7 @@
   "depleted": "نفدت",
   "expired": "منتهية الصلاحية",
   "expiresToday": "تنتهي اليوم",
-  "expiresInDays": "تنتهي خلال {count} يوم",
+  "expiresInDays": "{count, plural, =1{تنتهي خلال يوم} =2{تنتهي خلال يومين} few{تنتهي خلال {count} أيام} other{تنتهي خلال {count} يوماً}}",
   "expiresOn": "تنتهي {date}",
   "noExpiry": "بدون تاريخ انتهاء",
   "adjustStock": "تعديل المخزون",
@@ -308,7 +300,6 @@
   "stockState": "حالة المخزون",
   "currentQuantity": "الكمية الحالية",
   "unit": "الوحدة",
-
   "health": "الصحة",
   "appointments": "المواعيد الطبية",
   "vitals": "القياسات الحيوية",
@@ -360,7 +351,6 @@
   "prescriptionsPrivateNote": "تُحفظ داخل التطبيق فقط ولا تُضاف أبداً إلى تقارير الطبيب.",
   "filesUnsupported": "إرفاق الملفات غير متاح على هذه المنصة",
   "noRecords": "لا توجد سجلات بعد",
-
   "meals": "الوجبات",
   "addMeal": "إضافة وجبة",
   "editMeal": "تعديل الوجبة",
@@ -373,7 +363,6 @@
   "mealTime": "وقت الوجبة",
   "mealDefaultTime": "الافتراضي {time}",
   "mealsNote": "تغيير وقت الوجبة ينقل كل الجرعات المرتبطة بها.",
-
   "reports": "التقارير",
   "doctorReport": "تقرير الطبيب",
   "summaryReport": "ملخص",
@@ -404,7 +393,6 @@
   "whatToBuy": "ما الذي يحتاج إلى شراء؟",
   "nothingToBuy": "لا يوجد ما يحتاج إلى شراء",
   "pdfArabicFontMissing": "خط PDF العربي غير مضمّن؛ قد لا يظهر النص العربي في ملف PDF.",
-
   "backup": "النسخ الاحتياطي",
   "backupTitle": "النسخ الاحتياطي والاستعادة",
   "backupNote": "النسخ الاحتياطية ملفات ZIP قابلة للنقل وغير مشفرة. احفظها في مكان آمن.",
@@ -420,7 +408,6 @@
   "invalidBackup": "هذا الملف ليس نسخة احتياطية صالحة لبالميعاد",
   "newerBackup": "هذه النسخة من إصدار أحدث من التطبيق",
   "backupPatientMissing": "مريض هذه النسخة غير موجود هنا. استوردها كمريض جديد.",
-
   "trash": "سلة المحذوفات",
   "trashEmpty": "سلة المحذوفات فارغة",
   "restored": "تمت الاستعادة",
@@ -437,7 +424,6 @@
   "entity_dietary_rule": "قاعدة غذائية",
   "entity_prescription": "روشتة",
   "entity_meal": "وجبة",
-
   "auditLog": "سجل النشاط",
   "auditEmpty": "لا يوجد نشاط بعد",
   "systemActor": "التطبيق",
@@ -464,7 +450,6 @@
   "audit_caregiver_removed": "إزالة مقدم رعاية",
   "audit_imported": "استيراد من نسخة احتياطية",
   "audit_merged": "دمج من نسخة احتياطية",
-
   "notifications": "الإشعارات",
   "notificationSettings": "تفضيلات الإشعارات",
   "markAllRead": "تحديد الكل كمقروء",
@@ -476,7 +461,6 @@
   "notif_expiration": "انتهاء الصلاحية",
   "notif_appointment_reminder": "تذكيرات المواعيد الطبية",
   "notificationsPerPatient": "تنطبق التفضيلات على المريض الحالي فقط.",
-
   "settings": "الإعدادات",
   "language": "اللغة",
   "english": "English",
@@ -486,10 +470,10 @@
   "themeDark": "داكن",
   "themeSystem": "حسب النظام",
   "expiryThreshold": "التنبيه بقرب انتهاء الصلاحية",
-  "daysCount": "{count} يوم",
+  "daysCount": "{count, plural, =1{يوم واحد} =2{يومان} few{{count} أيام} other{{count} يوماً}}",
   "missedGrace": "اعتبار الجرعة فائتة بعد",
-  "minutesCount": "{count} دقيقة",
-  "hoursCount": "{count} ساعات",
+  "minutesCount": "{count, plural, =1{دقيقة واحدة} =2{دقيقتان} few{{count} دقائق} other{{count} دقيقة}}",
+  "hoursCount": "{count, plural, =1{ساعة واحدة} =2{ساعتان} few{{count} ساعات} other{{count} ساعة}}",
   "inactivityReset": "العودة للرئيسية بعد عدم الاستخدام",
   "inactivityResetNote": "يعيد الشاشة فقط. ليس قفلاً ولا يحتاج كلمة مرور.",
   "off": "إيقاف",
@@ -497,7 +481,6 @@
   "aboutBody": "يعمل بالميعاد بالكامل بدون إنترنت. تُحفظ البيانات على هذا الجهاز فقط بدون حسابات أو سحابة أو تشفير.",
   "catalogEntries": "{count} دواء في الدليل المحلي",
   "version": "الإصدار {version}",
-
   "error_nameRequired": "من فضلك أدخل الاسم",
   "error_invalidTimezone": "منطقة زمنية غير معروفة",
   "error_doseUnitRequired": "من فضلك اختر وحدة الجرعة",

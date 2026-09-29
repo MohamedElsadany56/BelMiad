@@ -632,8 +632,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String lateBy(Object minutes) {
-    return '$minutes min late';
+  String lateBy(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes min late',
+      one: '1 min late',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -840,8 +846,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expiresToday => 'Expires today';
 
   @override
-  String expiresInDays(Object count) {
-    return 'Expires in $count days';
+  String expiresInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Expires in $count days',
+      one: 'Expires in 1 day',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1516,21 +1528,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expiryThreshold => 'Expiring-soon warning';
 
   @override
-  String daysCount(Object count) {
-    return '$count days';
+  String daysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
   }
 
   @override
   String get missedGrace => 'Mark doses missed after';
 
   @override
-  String minutesCount(Object count) {
-    return '$count minutes';
+  String minutesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
   }
 
   @override
-  String hoursCount(Object count) {
-    return '$count hours';
+  String hoursCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
   }
 
   @override
