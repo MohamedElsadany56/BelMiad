@@ -30,6 +30,48 @@ class InventoryService {
         0, (sum, batch) => sum + batch.availableQuantityScaled);
   }
 
+  Future<void> consumeForMedication({
+    required String medicationId,
+    required int quantityScaled,
+  }) async {
+    if (quantityScaled <= 0) return;
+    await database.transaction(() async {
+      final batches = await getAvailableBatches(medicationId);
+      var remaining = quantityScaled;
+      final total = batches.fold<int>(
+          0, (sum, batch) => sum + batch.availableQuantityScaled);
+      if (total < quantityScaled) {
+        throw StateError('Not enough available stock for this dose');
+      }
+      for (final batch in batches) {
+        if (remaining == 0) break;
+        final consumed = remaining < batch.availableQuantityScaled
+            ? remaining
+            : batch.availableQuantityScaled;
+        final next = batch.availableQuantityScaled - consumed;
+        await (database.update(database.inventoryBatches)
+              ..where((row) => row.id.equals(batch.id)))
+            .write(
+          InventoryBatchesCompanion(
+            availableQuantityScaled: Value(next),
+            isDepleted: Value(next == 0),
+          ),
+        );
+        await database.into(database.auditEvents).insert(
+              AuditEventsCompanion.insert(
+                id: '${DateTime.now().microsecondsSinceEpoch}-${batch.id}',
+                patientId: Value.absent(),
+                entityType: 'inventory_batch',
+                entityId: batch.id,
+                action: 'consume:$consumed',
+                occurredAt: DateTime.now(),
+              ),
+            );
+        remaining -= consumed;
+      }
+    });
+  }
+
   Future<void> adjustQuantity({
     required String batchId,
     required int deltaScaled,

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../doses/domain/dose_state_machine.dart';
+import '../../inventory/data/inventory_service.dart';
 
 class DoseRepository {
   DoseRepository(this.database);
@@ -23,13 +24,17 @@ class DoseRepository {
     String doseId, {
     required int actualQuantityScaled,
   }) async {
+    final dose = await (database.select(
+      database.doseInstances,
+    )..where((d) => d.id.equals(doseId)))
+        .getSingle();
+    final current = DoseStatus.values.byName(dose.status.toLowerCase());
+    DoseStateMachine.transition(current, DoseStatus.taken);
+    await InventoryService(database).consumeForMedication(
+      medicationId: dose.medicationId,
+      quantityScaled: actualQuantityScaled,
+    );
     await database.transaction(() async {
-      final dose = await (database.select(
-        database.doseInstances,
-      )..where((d) => d.id.equals(doseId)))
-          .getSingle();
-      final current = DoseStatus.values.byName(dose.status.toLowerCase());
-      DoseStateMachine.transition(current, DoseStatus.taken);
       await (database.update(
         database.doseInstances,
       )..where((d) => d.id.equals(doseId)))
