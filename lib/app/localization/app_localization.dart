@@ -14,8 +14,10 @@ class LocaleController extends StateNotifier<Locale> {
   Future<void> _load() async {
     final preferences = await SharedPreferences.getInstance();
     final savedLanguageCode = preferences.getString('language_code');
-    if (savedLanguageCode == 'ar' || savedLanguageCode == 'en') {
-      state = Locale(savedLanguageCode);
+    if (savedLanguageCode == 'ar') {
+      state = const Locale('ar');
+    } else if (savedLanguageCode == 'en') {
+      state = const Locale('en');
     }
   }
 
