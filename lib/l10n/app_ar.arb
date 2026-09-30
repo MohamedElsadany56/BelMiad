@@ -605,5 +605,17 @@
   "openedPacksHint": "مثلاً شريط متبقٍ فيه 9 من 14 قرصاً، أو علبة استُخدم بعض شرائطها.",
   "unitsLeft": "الوحدات المتبقية",
   "packCapacity": "السعة الكاملة",
-  "partialPackOf": "{pack} {remaining} من {capacity}"
+  "partialPackOf": "{pack} {remaining} من {capacity}",
+  "reminderSound": "صوت التذكير",
+  "reminderSoundHint": "يُشغَّل عند ظهور تذكير الجرعة أو تنبيه الجرعة الفائتة. تنتقل التذكيرات المجدولة إلى الصوت الجديد.",
+  "soundDefault": "الصوت الافتراضي للهاتف",
+  "soundChime": "رنين متصاعد",
+  "soundBell": "جرس",
+  "soundGentle": "هادئ",
+  "soundAlert": "تنبيه متكرر",
+  "soundFromPhone": "اختيار من أصوات الهاتف…",
+  "soundPhonePicked": "صوت من الهاتف",
+  "soundSilent": "صامت (اهتزاز فقط)",
+  "soundPreview": "تشغيل",
+  "soundCustomAndroidOnly": "النغمات المخصصة ونغمات الرنين متاحة على أندرويد."
 }

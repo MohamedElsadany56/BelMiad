@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/database/app_database.dart';
 import '../../core/files/app_file_store.dart';
 import '../../core/notifications/local_notifier.dart';
+import '../../core/notifications/reminder_sound.dart';
 import '../../core/session/session_context.dart';
 import '../../core/settings/settings_repository.dart';
 import '../../core/time/clock.dart';
@@ -73,6 +74,8 @@ final localNotifierProvider = Provider<LocalNotifier>(
         ref.read(notificationTapsProvider).add((actionId, payload)),
     // Buttons pressed while the app is closed run in a background isolate.
     onBackgroundResponse: notificationBackgroundHandler,
+    reminderSound: () =>
+        ReminderSound.read(ref.read(sharedPreferencesProvider)),
   ),
 );
 
@@ -375,6 +378,32 @@ class ThemeModeController extends StateNotifier<ThemeMode> {
 
 final themeModeProvider = StateNotifierProvider<ThemeModeController, ThemeMode>(
   (ref) => ThemeModeController(ref.watch(sharedPreferencesProvider)),
+);
+
+// ------------------------------------------------------------ reminder sound
+
+class ReminderSoundController extends StateNotifier<ReminderSound> {
+  ReminderSoundController(this._prefs, this._onChanged)
+      : super(ReminderSound.read(_prefs));
+
+  final SharedPreferences _prefs;
+  final VoidCallback _onChanged;
+
+  /// Saves the sound; the next sync reschedules pending reminders with it.
+  Future<void> set(ReminderSound sound) async {
+    if (sound == state && sound.title == state.title) return;
+    state = sound;
+    await sound.save(_prefs);
+    _onChanged();
+  }
+}
+
+final reminderSoundProvider =
+    StateNotifierProvider<ReminderSoundController, ReminderSound>(
+  (ref) => ReminderSoundController(
+    ref.watch(sharedPreferencesProvider),
+    () => ref.read(syncCoordinatorProvider).request(),
+  ),
 );
 
 // --------------------------------------------------------------- syncing

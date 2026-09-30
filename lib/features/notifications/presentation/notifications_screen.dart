@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/localization/labels.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../app/widgets/common.dart';
+import 'reminder_sound_picker.dart';
 import '../../../core/database/app_database.dart';
 import '../domain/notification_types.dart';
 
@@ -27,7 +28,7 @@ class NotificationsScreen extends ConsumerWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.notifications),
+          title: AppBarTitle(l10n.notifications),
           actions: [
             if (patientId != null)
               IconButton(
@@ -38,21 +39,19 @@ class NotificationsScreen extends ConsumerWidget {
                     .markAllRead(patientId),
               ),
           ],
-          bottom: TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.white,
+          bottom: AppTabBar(
             tabs: [
-              Tab(text: l10n.notifications),
-              Tab(text: l10n.notificationSettings),
+              (null, l10n.notifications),
+              (null, l10n.notificationSettings),
             ],
           ),
         ),
-        body: RequirePatient(
+        body: ReadableWidth(
+            child: RequirePatient(
           builder: (id) => TabBarView(
             children: [_Centre(patientId: id), _Preferences(patientId: id)],
           ),
-        ),
+        )),
       ),
     );
   }
@@ -123,6 +122,9 @@ class _Preferences extends ConsumerWidget {
       value: ref.watch(_preferencesProvider(patientId)),
       builder: (prefs) => ListView(
         children: [
+          // The sound applies to the whole phone, not only this patient.
+          const ReminderSoundTile(),
+          const Divider(),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(l10n.notificationsPerPatient),

@@ -1,4 +1,5 @@
 import 'package:belmiad/core/notifications/local_notifier.dart';
+import 'package:belmiad/core/notifications/reminder_sound.dart';
 import 'package:belmiad/features/doses/domain/dose_status.dart';
 import 'package:belmiad/features/inventory/data/inventory_repository.dart';
 import 'package:belmiad/features/meals/domain/meal_timing.dart';
@@ -160,6 +161,52 @@ void main() {
         notifier.details
             .containsKey(notificationIdFor('dose_reminder:$doseId')),
         isFalse);
+  });
+
+  test('changing the reminder sound reschedules pending reminders once',
+      () async {
+    await engine.sync(languageCode: 'en');
+    expect(notifier.staleChannelCleanups, 0);
+
+    notifier.sound = ReminderSound.builtIn(BuiltInTone.chime);
+    notifier.details.clear();
+    await engine.sync(languageCode: 'en');
+    expect(reminder().actions, hasLength(2));
+    expect(notifier.staleChannelCleanups, 1);
+
+    // Same sound: nothing is rescheduled again.
+    notifier.details.clear();
+    await engine.sync(languageCode: 'en');
+    expect(
+        notifier.details
+            .containsKey(notificationIdFor('dose_reminder:$doseId')),
+        isFalse);
+    expect(notifier.staleChannelCleanups, 1);
+  });
+
+  test('reminder sounds survive being saved and read back', () {
+    final sounds = [
+      const ReminderSound.systemDefault(),
+      const ReminderSound.silent(),
+      ReminderSound.builtIn(BuiltInTone.bell),
+      const ReminderSound.device(
+        uri: 'content://media/internal/audio/media/42',
+        title: 'Oxygen',
+      ),
+    ];
+    for (final sound in sounds) {
+      final decoded = ReminderSound.decode(sound.encode());
+      expect(decoded, sound);
+      expect(decoded.title, sound.title);
+    }
+    // Every sound gets its own Android channel.
+    expect(sounds.map((s) => s.key).toSet(), hasLength(sounds.length));
+    expect(
+        ReminderSound.decode('nonsense'), const ReminderSound.systemDefault());
+    expect(
+      ReminderSound.decode('{"kind":"builtIn","value":"removed_tone"}'),
+      const ReminderSound.systemDefault(),
+    );
   });
 
   test('payload round trip ignores malformed input', () {

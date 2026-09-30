@@ -2024,4 +2024,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String partialPackOf(Object pack, Object remaining, Object capacity) {
     return '$pack $remaining من $capacity';
   }
+
+  @override
+  String get reminderSound => 'صوت التذكير';
+
+  @override
+  String get reminderSoundHint =>
+      'يُشغَّل عند ظهور تذكير الجرعة أو تنبيه الجرعة الفائتة. تنتقل التذكيرات المجدولة إلى الصوت الجديد.';
+
+  @override
+  String get soundDefault => 'الصوت الافتراضي للهاتف';
+
+  @override
+  String get soundChime => 'رنين متصاعد';
+
+  @override
+  String get soundBell => 'جرس';
+
+  @override
+  String get soundGentle => 'هادئ';
+
+  @override
+  String get soundAlert => 'تنبيه متكرر';
+
+  @override
+  String get soundFromPhone => 'اختيار من أصوات الهاتف…';
+
+  @override
+  String get soundPhonePicked => 'صوت من الهاتف';
+
+  @override
+  String get soundSilent => 'صامت (اهتزاز فقط)';
+
+  @override
+  String get soundPreview => 'تشغيل';
+
+  @override
+  String get soundCustomAndroidOnly =>
+      'النغمات المخصصة ونغمات الرنين متاحة على أندرويد.';
 }

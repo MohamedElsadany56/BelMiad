@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reminder tones are referenced only by name from Dart; keep them in
+     release builds even when resources are shrunk. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/belmiad_*" />

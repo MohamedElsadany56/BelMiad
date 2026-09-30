@@ -3733,6 +3733,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{pack} {remaining} of {capacity}'**
   String partialPackOf(Object pack, Object remaining, Object capacity);
+
+  /// No description provided for @reminderSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder sound'**
+  String get reminderSound;
+
+  /// No description provided for @reminderSoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays when a dose reminder or missed-dose alert pops up. Reminders already scheduled switch to the new sound.'**
+  String get reminderSoundHint;
+
+  /// No description provided for @soundDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone default'**
+  String get soundDefault;
+
+  /// No description provided for @soundChime.
+  ///
+  /// In en, this message translates to:
+  /// **'Chime'**
+  String get soundChime;
+
+  /// No description provided for @soundBell.
+  ///
+  /// In en, this message translates to:
+  /// **'Bell'**
+  String get soundBell;
+
+  /// No description provided for @soundGentle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle'**
+  String get soundGentle;
+
+  /// No description provided for @soundAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert beeps'**
+  String get soundAlert;
+
+  /// No description provided for @soundFromPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from phone sounds…'**
+  String get soundFromPhone;
+
+  /// No description provided for @soundPhonePicked.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone sound'**
+  String get soundPhonePicked;
+
+  /// No description provided for @soundSilent.
+  ///
+  /// In en, this message translates to:
+  /// **'Silent (vibrate only)'**
+  String get soundSilent;
+
+  /// No description provided for @soundPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get soundPreview;
+
+  /// No description provided for @soundCustomAndroidOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom tones and ringtones are available on Android.'**
+  String get soundCustomAndroidOnly;
 }
 
 class _AppLocalizationsDelegate

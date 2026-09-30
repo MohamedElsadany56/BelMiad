@@ -41,6 +41,14 @@ buttons you can press without opening the app:
   shows a short confirmation. It works even when the app is closed.
 - **Snooze 10 min** reminds you again with the same buttons.
 - Tapping the notification opens *Today* for that patient.
+- **Choose the sound** in *Settings → Notifications → Reminder sound*:
+  - the phone's default sound;
+  - one of four tones bundled with the app (chime, bell, gentle, alert beeps);
+  - any ringtone or notification sound already on the phone;
+  - silent, which still pops up and vibrates.
+
+  Each choice can be previewed before you pick it. Reminders that are
+  already scheduled switch to the new sound.
 - If the dose can't be taken from the notification (for example, not
   enough stock), you're asked to open the app instead.
 
@@ -106,6 +114,10 @@ be screenshotted there.
   - Import it as a new patient, or merge it into the same patient.
 - **Trash and activity history:** everything is audited and can be restored.
 - **Arabic and English** with full right-to-left support, and a blue (`#0064F6`) and white theme: light mode by default, dark mode optional.
+- **Fits every screen**
+  - Phones use a bottom navigation bar. Tablets and landscape screens use a side rail, and content keeps a comfortable reading width.
+  - No text is cut off on small phones or with large system font sizes: titles shrink or wrap, and tabs scroll only when they don't fit.
+  - English and numbers (like "500 mg") keep their order inside Arabic text.
 
 ## Getting started
 
@@ -180,7 +192,14 @@ The tests are unit, Drift integration, widget and PDF tests. They cover:
 - PRN maximums, forecasting and expiration;
 - dose generation and timezone changes;
 - notification actions and deduplication;
-- backup and merge, catalog search, and RTL/LTR layouts.
+- backup and merge, catalog search, and RTL/LTR layouts;
+- reminder sounds, and rescheduling reminders when the sound changes.
+
+`test/layout_audit_test.dart` opens every screen on small, regular and
+large phones and on portrait and landscape tablets. It does this in English
+and Arabic, at 100%, 130% and 150% font size, using the real fonts, and it
+tries every dose-plan preset. It fails if any text is cut off or any layout
+overflows.
 
 ## Project structure
 
@@ -207,13 +226,15 @@ directly. Dose and stock operations each run in a single Drift transaction.
 │   │               └── <feature>/{presentation,application,domain,data}
 │   └── l10n/       ARB files and generated localizations
 ├── test/           unit, integration and widget tests
-└── tool/           development scripts (catalog builder)
+└── tool/           development scripts (catalog builder, reminder tones)
 ```
 
 ## Platform notes
 
 - **Android**
   - Declares permissions for notifications, exact alarms and the camera.
+  - The bundled reminder tones live in `android/app/src/main/res/raw`. They are synthesised by `py tool/generate_tones.py`, so there's no third-party audio.
+  - Picking a phone ringtone uses Android's own sound picker (`MainActivity`, channel `belmiad/sounds`). On other platforms reminders use the system sound or can be set to silent.
   - Scheduled reminders survive reboots.
   - Notification buttons are handled in a background isolate, so they work while the app is closed.
 - **Web** uses Drift WASM (`web/sqlite3.wasm`, `web/drift_worker.js`). OS notifications aren't available there, but the in-app notification centre works.
