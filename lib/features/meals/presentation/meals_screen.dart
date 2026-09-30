@@ -23,15 +23,17 @@ class MealsScreen extends ConsumerWidget {
     final patientId = ref.watch(currentPatientIdProvider);
     final today = ref.watch(patientTimeProvider).today(DateTime.now().toUtc());
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.meals)),
+      appBar: AppBar(title: AppBarTitle(l10n.meals)),
       floatingActionButton: patientId == null
           ? null
           : FloatingActionButton.extended(
+              heroTag: null,
               onPressed: () => _edit(context, ref, patientId, null),
               icon: const Icon(Icons.add),
               label: Text(l10n.addMeal),
             ),
-      body: RequirePatient(
+      body: ReadableWidth(
+          child: RequirePatient(
         builder: (id) => AsyncBody(
           value: ref.watch(patientMealsProvider(id)),
           builder: (meals) => ListView(
@@ -70,7 +72,7 @@ class MealsScreen extends ConsumerWidget {
             ],
           ),
         ),
-      ),
+      )),
     );
   }
 
@@ -122,6 +124,7 @@ class MealsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: type,
                     decoration: InputDecoration(labelText: l10n.mealType),
                     items: [

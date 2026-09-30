@@ -3,6 +3,8 @@ import 'package:flutter/painting.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import 'reminder_sound.dart';
+
 /// Channels used for offline notifications.
 ///
 /// Android channel settings are fixed once created, so the dose channel uses
@@ -24,6 +26,10 @@ enum NotificationChannel {
   final String id;
   final String label;
   final Importance importance;
+
+  /// Channels that play the reminder sound the user picked.
+  bool get usesReminderSound =>
+      this == NotificationChannel.doses || this == NotificationChannel.missed;
 }
 
 /// A button shown on a notification.
@@ -70,6 +76,12 @@ abstract class LocalNotifier {
 
   /// Payload of the notification that launched the app, if any.
   Future<String?> launchPayload();
+
+  /// Sound used for dose reminders and missed-dose alerts.
+  ReminderSound get reminderSound;
+
+  /// Removes channels left over from sounds that are no longer selected.
+  Future<void> removeStaleSoundChannels();
 }
 
 class NoopLocalNotifier implements LocalNotifier {
@@ -100,6 +112,10 @@ class NoopLocalNotifier implements LocalNotifier {
   Future<Set<int>> pendingIds() async => const {};
   @override
   Future<String?> launchPayload() async => null;
+  @override
+  ReminderSound get reminderSound => const ReminderSound.systemDefault();
+  @override
+  Future<void> removeStaleSoundChannels() async {}
 }
 
 bool get platformSupportsNotifications {
@@ -118,6 +134,7 @@ LocalNotifier createPlatformNotifier({
   NotificationResponseHandler? onResponse,
   DidReceiveBackgroundNotificationResponseCallback? onBackgroundResponse,
   bool requestPermissions = true,
+  ReminderSound Function()? reminderSound,
 }) {
   if (!platformSupportsNotifications) return NoopLocalNotifier();
   return FlutterLocalNotifier(
@@ -125,6 +142,7 @@ LocalNotifier createPlatformNotifier({
     onResponse: onResponse,
     onBackgroundResponse: onBackgroundResponse,
     requestPermissions: requestPermissions,
+    reminderSound: reminderSound,
   );
 }
 
@@ -137,13 +155,52 @@ class FlutterLocalNotifier implements LocalNotifier {
     this.onResponse,
     this.onBackgroundResponse,
     this.requestPermissions = true,
-  });
+    ReminderSound Function()? reminderSound,
+  }) : _reminderSound = reminderSound;
 
   final FlutterLocalNotificationsPlugin _plugin;
   final NotificationResponseHandler? onResponse;
   final DidReceiveBackgroundNotificationResponseCallback? onBackgroundResponse;
   final bool requestPermissions;
+  final ReminderSound Function()? _reminderSound;
   bool _ready = false;
+
+  @override
+  ReminderSound get reminderSound =>
+      _reminderSound?.call() ?? const ReminderSound.systemDefault();
+
+  /// Android channel for [channel] with the current reminder sound.
+  String _channelId(NotificationChannel channel) {
+    final key = reminderSound.key;
+    if (!channel.usesReminderSound || key == 'default') return channel.id;
+    return '${channel.id}_$key';
+  }
+
+  @override
+  Future<void> removeStaleSoundChannels() async {
+    if (!_ready) return;
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return;
+    try {
+      final current = {
+        for (final c in NotificationChannel.values) _channelId(c),
+      };
+      final soundChannels = [
+        for (final c in NotificationChannel.values)
+          if (c.usesReminderSound) c.id,
+      ];
+      for (final channel in await android.getNotificationChannels() ?? []) {
+        final id = channel.id;
+        final stale = !current.contains(id) &&
+            soundChannels
+                .any((base) => id == base || id.startsWith('${base}_'));
+        if (stale) await android.deleteNotificationChannel(channelId: id);
+      }
+    } catch (error) {
+      debugPrint('Could not clean notification channels: $error');
+    }
+  }
 
   static const _brand = Color(0xFF0064F6);
 
@@ -200,9 +257,13 @@ class FlutterLocalNotifier implements LocalNotifier {
   ) {
     final urgent = channel == NotificationChannel.doses ||
         channel == NotificationChannel.missed;
+    final sound = channel.usesReminderSound
+        ? reminderSound
+        : const ReminderSound.systemDefault();
+    final silent = sound.kind == ReminderSoundKind.silent;
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        channel.id,
+        _channelId(channel),
         channel.label,
         importance: channel.importance,
         priority: switch (channel) {
@@ -219,7 +280,13 @@ class FlutterLocalNotifier implements LocalNotifier {
         ticker: body,
         styleInformation: BigTextStyleInformation(body),
         autoCancel: true,
-        playSound: channel != NotificationChannel.confirmations,
+        playSound: channel != NotificationChannel.confirmations && !silent,
+        sound: switch (sound.kind) {
+          ReminderSoundKind.builtIn =>
+            RawResourceAndroidNotificationSound(sound.value),
+          ReminderSoundKind.device => UriAndroidNotificationSound(sound.value!),
+          _ => null,
+        },
         enableVibration: urgent,
         actions: [
           for (final action in actions)
@@ -233,6 +300,7 @@ class FlutterLocalNotifier implements LocalNotifier {
       ),
       iOS: DarwinNotificationDetails(
         categoryIdentifier: actions.isEmpty ? null : doseActionCategory,
+        presentSound: !silent,
         interruptionLevel:
             urgent ? InterruptionLevel.timeSensitive : InterruptionLevel.active,
       ),

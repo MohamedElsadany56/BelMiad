@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../core/time/local_date.dart';
 import '../../core/utilities/scaled_quantity.dart';
@@ -232,10 +232,15 @@ class StatusBadge extends StatelessWidget {
             Icon(icon, size: 14, color: fg),
             const SizedBox(width: 4),
           ],
-          Text(
-            label,
-            style:
-                TextStyle(color: fg, fontSize: 12, fontWeight: FontWeight.w600),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: fg,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -380,6 +385,9 @@ class PatientSwitcher extends ConsumerWidget {
     final patients = ref.watch(patientsProvider).valueOrNull ?? const [];
     final current = ref.watch(currentPatientProvider);
     if (current == null) return const SizedBox.shrink();
+    final compact = MediaQuery.sizeOf(context).width /
+            MediaQuery.textScalerOf(context).scale(1) <
+        340;
     return PopupMenuButton<String>(
       tooltip: context.l10n.switchPatient,
       onSelected: (id) {
@@ -423,15 +431,19 @@ class PatientSwitcher extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 6),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 110),
-              child: Text(
-                current.name,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+            // Narrow screens or large fonts: the avatar initial is enough,
+            // leaving room for the screen title.
+            if (!compact) ...[
+              const SizedBox(width: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 110),
+                child: Text(
+                  current.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
-            ),
+            ],
             const Icon(Icons.arrow_drop_down),
           ],
         ),
@@ -485,4 +497,179 @@ class FormBody extends StatelessWidget {
           ),
         ),
       );
+}
+
+/// App bar title that never hides words on narrow phones or with large
+/// system fonts: it first shrinks, then wraps onto a second line.
+class AppBarTitle extends StatelessWidget {
+  const AppBarTitle(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final base = DefaultTextStyle.of(context).style;
+          final baseSize = base.fontSize ?? 22;
+          final scaler = MediaQuery.textScalerOf(context);
+          final direction = Directionality.of(context);
+          bool fits(TextStyle style, int lines) {
+            final painter = TextPainter(
+              text: TextSpan(text: text, style: style),
+              maxLines: lines,
+              textDirection: direction,
+              textScaler: scaler,
+            )..layout(maxWidth: constraints.maxWidth);
+            final ok = !painter.didExceedMaxLines &&
+                painter.height <= constraints.maxHeight;
+            painter.dispose();
+            return ok;
+          }
+
+          const candidates = [(1.0, 1), (0.85, 1), (0.75, 2), (0.65, 2)];
+          for (final (factor, lines) in candidates) {
+            final style = base.copyWith(
+              fontSize: baseSize * factor,
+              height: lines > 1 ? 1.15 : null,
+            );
+            if (fits(style, lines)) {
+              return Text(
+                text,
+                style: style,
+                maxLines: lines,
+                softWrap: lines > 1,
+              );
+            }
+          }
+          return Text(
+            text,
+            style: base.copyWith(fontSize: baseSize * 0.65, height: 1.15),
+            maxLines: 2,
+            softWrap: true,
+            overflow: TextOverflow.ellipsis,
+          );
+        },
+      );
+}
+
+/// Screen widths used to adapt layouts from phones to tablets.
+abstract final class Breakpoints {
+  /// Side navigation instead of the bottom bar.
+  static const rail = 600.0;
+
+  /// Navigation rail with labels next to the icons.
+  static const extendedRail = 1000.0;
+
+  /// Widest a column of content gets, so lines stay easy to read.
+  static const content = 840.0;
+}
+
+/// Centers content and caps its width on tablets and landscape screens.
+class ReadableWidth extends StatelessWidget {
+  const ReadableWidth({
+    required this.child,
+    this.maxWidth = Breakpoints.content,
+    super.key,
+  });
+
+  final Widget child;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) => Align(
+        alignment: Alignment.topCenter,
+        heightFactor: 1,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: child,
+        ),
+      );
+}
+
+/// Tab bar for blue app bars: tabs share the width evenly when every label
+/// fits, and scroll (starting at the edge) when they would be cut off.
+class AppTabBar extends StatelessWidget implements PreferredSizeWidget {
+  const AppTabBar({required this.tabs, this.controller, super.key});
+
+  /// Icon (optional) and label of each tab.
+  final List<(IconData?, String)> tabs;
+  final TabController? controller;
+
+  bool get _hasIcons => tabs.any((t) => t.$1 != null);
+
+  @override
+  Size get preferredSize => Size.fromHeight(_hasIcons ? 72 : 46);
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final theme = Theme.of(context);
+          final style = theme.tabBarTheme.labelStyle ??
+              theme.textTheme.titleSmall ??
+              const TextStyle(fontSize: 14);
+          final scaler = MediaQuery.textScalerOf(context);
+          var widest = 0.0;
+          for (final (_, label) in tabs) {
+            final painter = TextPainter(
+              text: TextSpan(text: label, style: style),
+              textDirection: Directionality.of(context),
+              textScaler: scaler,
+              maxLines: 1,
+            )..layout();
+            if (painter.width > widest) widest = painter.width;
+            painter.dispose();
+          }
+          // 16 px label padding on each side of every tab.
+          final fits = widest + 32 <= constraints.maxWidth / tabs.length;
+          return TabBar(
+            controller: controller,
+            isScrollable: !fits,
+            tabAlignment: fits ? TabAlignment.fill : TabAlignment.start,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
+            tabs: [
+              for (final (icon, label) in tabs)
+                Tab(icon: icon == null ? null : Icon(icon), text: label),
+            ],
+          );
+        },
+      );
+}
+
+/// Direction of [text] from its first letter, so English (or "500 mg") shown
+/// inside the Arabic interface keeps its word order and punctuation.
+TextDirection? contentDirection(String text) {
+  for (final rune in text.runes) {
+    final isArabic = (rune >= 0x0600 && rune <= 0x06FF) ||
+        (rune >= 0x0750 && rune <= 0x077F) ||
+        (rune >= 0xFB50 && rune <= 0xFDFF) ||
+        (rune >= 0xFE70 && rune <= 0xFEFF);
+    if (isArabic) return TextDirection.rtl;
+    final isLatin = (rune >= 0x41 && rune <= 0x5A) ||
+        (rune >= 0x61 && rune <= 0x7A) ||
+        (rune >= 0xC0 && rune <= 0x24F);
+    if (isLatin) return TextDirection.ltr;
+  }
+  return null;
+}
+
+/// Text that keeps its own reading direction but lines up with the rest of
+/// the screen (right in Arabic, left in English).
+class MixedText extends StatelessWidget {
+  const MixedText(this.text, {this.style, super.key});
+
+  final String text;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final screen = Directionality.of(context);
+    return Text(
+      text,
+      style: style,
+      textDirection: contentDirection(text) ?? screen,
+      textAlign: screen == TextDirection.rtl ? TextAlign.right : TextAlign.left,
+    );
+  }
 }

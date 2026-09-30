@@ -23,7 +23,7 @@ class InventoryScreen extends ConsumerWidget {
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.inventoryTitle),
+        title: AppBarTitle(l10n.inventoryTitle),
         actions: [
           IconButton(
             tooltip: l10n.storageReport,
@@ -36,16 +36,18 @@ class InventoryScreen extends ConsumerWidget {
       floatingActionButton: ref.watch(currentPatientIdProvider) == null
           ? null
           : FloatingActionButton.extended(
+              heroTag: null,
               onPressed: () => context.push('/inventory/add'),
               icon: const Icon(Icons.add),
               label: Text(l10n.addStock),
             ),
-      body: RequirePatient(
+      body: ReadableWidth(
+          child: RequirePatient(
         builder: (patientId) => AsyncBody(
           value: ref.watch(inventoryDashboardProvider(patientId)),
           builder: (data) => _Dashboard(data: data),
         ),
-      ),
+      )),
     );
   }
 }
@@ -71,7 +73,11 @@ class _Dashboard extends StatelessWidget {
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
-            final columns = constraints.maxWidth > 600 ? 5 : 3;
+            // Fewer, wider tiles when the screen is narrow or the font large.
+            final minTile = 104 * MediaQuery.textScalerOf(context).scale(1);
+            final columns = ((constraints.maxWidth + 8) / (minTile + 8))
+                .floor()
+                .clamp(2, 5);
             final width = (constraints.maxWidth - (columns - 1) * 8) / columns;
             return Wrap(
               spacing: 8,
@@ -99,7 +105,6 @@ class _Dashboard extends StatelessWidget {
                             ),
                             Text(
                               label,
-                              maxLines: 2,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -186,7 +191,7 @@ class InventoryReportScreen extends ConsumerWidget {
         ref.watch(_inventoryReportProvider((patient.id, context.isArabic)));
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.storageReport),
+        title: AppBarTitle(l10n.storageReport),
         actions: [
           IconButton(
             tooltip: l10n.exportPdf,
@@ -197,7 +202,8 @@ class InventoryReportScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: AsyncBody(
+      body: ReadableWidth(
+          child: AsyncBody(
         value: report,
         builder: (data) => ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -209,7 +215,7 @@ class InventoryReportScreen extends ConsumerWidget {
             for (final row in data.rows) _ReportRow(row: row),
           ],
         ),
-      ),
+      )),
     );
   }
 

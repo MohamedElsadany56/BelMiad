@@ -20,8 +20,9 @@ class TrashScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final patientId = ref.watch(currentPatientIdProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.trash)),
-      body: AsyncBody(
+      appBar: AppBar(title: AppBarTitle(l10n.trash)),
+      body: ReadableWidth(
+          child: AsyncBody(
         value: ref.watch(_trashProvider(patientId)),
         builder: (items) => items.isEmpty
             ? EmptyState(icon: Icons.delete_outline, message: l10n.trashEmpty)
@@ -88,7 +89,7 @@ class TrashScreen extends ConsumerWidget {
                   );
                 },
               ),
-      ),
+      )),
     );
   }
 }

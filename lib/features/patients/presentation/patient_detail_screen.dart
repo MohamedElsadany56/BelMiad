@@ -35,8 +35,9 @@ class PatientDetailScreen extends ConsumerWidget {
         if (profile == null || profile.patient.deletedAt != null) {
           return Scaffold(
             appBar: AppBar(),
-            body: EmptyState(
-                icon: Icons.person_off, message: l10n.error_notFound),
+            body: ReadableWidth(
+                child: EmptyState(
+                    icon: Icons.person_off, message: l10n.error_notFound)),
           );
         }
         final p = profile.patient;
@@ -63,7 +64,7 @@ class PatientDetailScreen extends ConsumerWidget {
         ];
         return Scaffold(
           appBar: AppBar(
-            title: Text(profile.name),
+            title: AppBarTitle(profile.name),
             actions: [
               IconButton(
                 tooltip: l10n.edit,
@@ -77,7 +78,8 @@ class PatientDetailScreen extends ConsumerWidget {
               ),
             ],
           ),
-          body: ListView(
+          body: ReadableWidth(
+              child: ListView(
             padding: const EdgeInsets.only(bottom: 32),
             children: [
               if (ref.watch(currentPatientIdProvider) != patientId)
@@ -128,7 +130,7 @@ class PatientDetailScreen extends ConsumerWidget {
                     orElse: () => const [],
                   ),
             ],
-          ),
+          )),
         );
       },
     );

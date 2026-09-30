@@ -55,10 +55,11 @@ class MedicationDetailScreen extends ConsumerWidget {
         if (m == null || m.deletedAt != null) {
           return Scaffold(
             appBar: AppBar(),
-            body: EmptyState(
+            body: ReadableWidth(
+                child: EmptyState(
               icon: Icons.medication_outlined,
               message: l10n.error_notFound,
-            ),
+            )),
           );
         }
         return DefaultTabController(
@@ -66,7 +67,8 @@ class MedicationDetailScreen extends ConsumerWidget {
           initialIndex: initialTab.clamp(0, 3),
           child: Scaffold(
             appBar: AppBar(
-              title: Text(medicationDisplayName(m, arabic: context.isArabic)),
+              title: AppBarTitle(
+                  medicationDisplayName(m, arabic: context.isArabic)),
               actions: [
                 IconButton(
                   tooltip: l10n.edit,
@@ -76,27 +78,24 @@ class MedicationDetailScreen extends ConsumerWidget {
                 ),
                 _MenuButton(medication: m),
               ],
-              bottom: TabBar(
-                isScrollable: true,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white70,
-                indicatorColor: Colors.white,
+              bottom: AppTabBar(
                 tabs: [
-                  Tab(text: l10n.overview),
-                  Tab(text: l10n.schedules),
-                  Tab(text: l10n.inventory),
-                  Tab(text: l10n.doseHistory),
+                  (null, l10n.overview),
+                  (null, l10n.schedules),
+                  (null, l10n.inventory),
+                  (null, l10n.doseHistory),
                 ],
               ),
             ),
-            body: TabBarView(
+            body: ReadableWidth(
+                child: TabBarView(
               children: [
                 _Overview(medication: m),
                 _Schedules(medication: m),
                 MedicationStockTab(medication: m),
                 _History(medication: m),
               ],
-            ),
+            )),
           ),
         );
       },
@@ -195,7 +194,8 @@ class _Overview extends ConsumerWidget {
         : ListTile(
             dense: true,
             title: Text(label, style: Theme.of(context).textTheme.bodySmall),
-            subtitle: Text(value, style: Theme.of(context).textTheme.bodyLarge),
+            subtitle:
+                MixedText(value, style: Theme.of(context).textTheme.bodyLarge),
           );
     return ListView(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 96),
@@ -223,7 +223,7 @@ class _Overview extends ConsumerWidget {
             margin: const EdgeInsets.all(8),
             child: ListTile(
               leading: const Icon(Icons.info_outline),
-              title: Text(primaryInstructions),
+              title: MixedText(primaryInstructions),
             ),
           ),
         row(l10n.nameEn, m.nameEn),

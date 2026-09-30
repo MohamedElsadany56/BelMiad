@@ -96,8 +96,23 @@ class NotificationEngine {
   static const formatVersion = '2';
   static const _formatKey = 'notification_format_version';
 
+  static const _soundKey = 'notification_sound_key';
+
   Future<void> _upgradeFormat() async {
-    if (await _settings.get(_formatKey) == formatVersion) return;
+    final soundKey = _notifier.reminderSound.key;
+    final formatChanged = await _settings.get(_formatKey) != formatVersion;
+    final soundChanged =
+        (await _settings.get(_soundKey) ?? 'default') != soundKey;
+    if (!formatChanged && !soundChanged) return;
+    // Scheduled alerts keep the channel (and so the sound) they were created
+    // with: reschedule them in the new format or with the new sound.
+    await _resetScheduledDoseAlerts();
+    if (soundChanged) await _notifier.removeStaleSoundChannels();
+    await _settings.set(_formatKey, formatVersion);
+    await _settings.set(_soundKey, soundKey);
+  }
+
+  Future<void> _resetScheduledDoseAlerts() async {
     final pending = await (_db.select(_db.notifications)
           ..where(
             (n) =>
@@ -119,7 +134,6 @@ class NotificationEngine {
             ))
           .go();
     }
-    await _settings.set(_formatKey, formatVersion);
   }
 
   Future<Map<String, bool>> _preferences(String patientId) async {

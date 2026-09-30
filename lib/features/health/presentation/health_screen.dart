@@ -71,39 +71,29 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
     ];
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.health),
+        title: AppBarTitle(l10n.health),
         actions: const [PatientSwitcher()],
-        bottom: TabBar(
+        bottom: AppTabBar(
           controller: _tabs,
-          isScrollable: true,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
           tabs: [
-            Tab(
-                icon: const Icon(Icons.event_outlined),
-                text: l10n.appointments),
-            Tab(
-                icon: const Icon(Icons.monitor_heart_outlined),
-                text: l10n.vitals),
-            Tab(icon: const Icon(Icons.healing_outlined), text: l10n.illnesses),
-            Tab(
-                icon: const Icon(Icons.no_food_outlined),
-                text: l10n.dietaryRules),
-            Tab(
-                icon: const Icon(Icons.description_outlined),
-                text: l10n.prescriptions),
+            (Icons.event_outlined, l10n.appointments),
+            (Icons.monitor_heart_outlined, l10n.vitals),
+            (Icons.healing_outlined, l10n.illnesses),
+            (Icons.no_food_outlined, l10n.dietaryRules),
+            (Icons.description_outlined, l10n.prescriptions),
           ],
         ),
       ),
       floatingActionButton: patientId == null
           ? null
           : FloatingActionButton.extended(
+              heroTag: null,
               onPressed: () => openHealthForm(context, _tabs.index, patientId),
               icon: const Icon(Icons.add),
               label: Text(addLabels[_tabs.index]),
             ),
-      body: RequirePatient(
+      body: ReadableWidth(
+          child: RequirePatient(
         builder: (id) => TabBarView(
           controller: _tabs,
           children: [
@@ -114,7 +104,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
             _PrescriptionsTab(patientId: id),
           ],
         ),
-      ),
+      )),
     );
   }
 }

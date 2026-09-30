@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../app/widgets/common.dart';
 import '../../../core/settings/settings_repository.dart';
+import '../../notifications/presentation/reminder_sound_picker.dart';
 
 final _catalogCountProvider = FutureProvider<int>(
   (ref) => ref.watch(catalogRepositoryProvider).count(),
@@ -29,8 +30,9 @@ class SettingsScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settings)),
-      body: ListView(
+      appBar: AppBar(title: AppBarTitle(l10n.settings)),
+      body: ReadableWidth(
+          child: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [
           SectionHeader(l10n.language),
@@ -72,10 +74,13 @@ class SettingsScreen extends ConsumerWidget {
                   ref.read(themeModeProvider.notifier).set(v.first),
             ),
           ),
+          SectionHeader(l10n.notifications),
+          const ReminderSoundTile(),
           SectionHeader(l10n.deviceCaregiver),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue:
                   persons.any((p) => p.personId == settings.devicePersonId)
                       ? settings.devicePersonId
@@ -83,7 +88,6 @@ class SettingsScreen extends ConsumerWidget {
               decoration: InputDecoration(
                 labelText: l10n.changeCaregiver,
                 helperText: l10n.whoAreYouHint,
-                helperMaxLines: 3,
               ),
               items: [
                 for (final p in persons)
@@ -151,7 +155,7 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.version('1.0.0')),
           ),
         ],
-      ),
+      )),
     );
   }
 

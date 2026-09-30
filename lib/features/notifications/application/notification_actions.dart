@@ -9,6 +9,7 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 import '../../../core/database/app_database.dart';
 import '../../../core/errors/domain_exceptions.dart';
 import '../../../core/notifications/local_notifier.dart';
+import '../../../core/notifications/reminder_sound.dart';
 import '../../../core/session/session_context.dart';
 import '../../../core/settings/settings_repository.dart';
 import '../../../core/time/clock.dart';
@@ -264,7 +265,10 @@ Future<void> notificationBackgroundHandler(
   try {
     final settings = await SettingsRepository(db).load();
     final session = SessionContext()..actorPersonId = settings.devicePersonId;
-    final notifier = createPlatformNotifier(requestPermissions: false);
+    final notifier = createPlatformNotifier(
+      requestPermissions: false,
+      reminderSound: () => ReminderSound.read(prefs),
+    );
     await notifier.initialize();
     await DoseNotificationActions.headless(
       db,

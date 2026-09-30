@@ -1,4 +1,5 @@
 import 'package:belmiad/core/notifications/local_notifier.dart';
+import 'package:belmiad/core/notifications/reminder_sound.dart';
 
 class RecordedNotification {
   const RecordedNotification({
@@ -79,4 +80,13 @@ class FakeNotifier implements LocalNotifier {
 
   @override
   Future<String?> launchPayload() async => null;
+
+  ReminderSound sound = const ReminderSound.systemDefault();
+  int staleChannelCleanups = 0;
+
+  @override
+  ReminderSound get reminderSound => sound;
+
+  @override
+  Future<void> removeStaleSoundChannels() async => staleChannelCleanups++;
 }

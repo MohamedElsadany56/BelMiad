@@ -2021,4 +2021,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String partialPackOf(Object pack, Object remaining, Object capacity) {
     return '$pack $remaining of $capacity';
   }
+
+  @override
+  String get reminderSound => 'Reminder sound';
+
+  @override
+  String get reminderSoundHint =>
+      'Plays when a dose reminder or missed-dose alert pops up. Reminders already scheduled switch to the new sound.';
+
+  @override
+  String get soundDefault => 'Phone default';
+
+  @override
+  String get soundChime => 'Chime';
+
+  @override
+  String get soundBell => 'Bell';
+
+  @override
+  String get soundGentle => 'Gentle';
+
+  @override
+  String get soundAlert => 'Alert beeps';
+
+  @override
+  String get soundFromPhone => 'Choose from phone sounds…';
+
+  @override
+  String get soundPhonePicked => 'Phone sound';
+
+  @override
+  String get soundSilent => 'Silent (vibrate only)';
+
+  @override
+  String get soundPreview => 'Play';
+
+  @override
+  String get soundCustomAndroidOnly =>
+      'Custom tones and ringtones are available on Android.';
 }

@@ -22,8 +22,9 @@ class AuditScreen extends ConsumerWidget {
     final names = ref.watch(personNamesProvider).valueOrNull ?? const {};
     final time = ref.watch(patientTimeProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.auditLog)),
-      body: RequirePatient(
+      appBar: AppBar(title: AppBarTitle(l10n.auditLog)),
+      body: ReadableWidth(
+          child: RequirePatient(
         builder: (patientId) => AsyncBody(
           value: ref.watch(_auditProvider(patientId)),
           builder: (events) => events.isEmpty
@@ -52,7 +53,7 @@ class AuditScreen extends ConsumerWidget {
                   },
                 ),
         ),
-      ),
+      )),
     );
   }
 

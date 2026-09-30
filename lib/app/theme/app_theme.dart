@@ -223,6 +223,10 @@ abstract final class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
+        // Long hints and help texts wrap instead of being cut off.
+        hintMaxLines: 3,
+        helperMaxLines: 6,
+        errorMaxLines: 4,
         fillColor: scheme.surfaceContainerLow,
         border: OutlineInputBorder(
           borderRadius: radius,

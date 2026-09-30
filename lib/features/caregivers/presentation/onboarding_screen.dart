@@ -88,7 +88,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final locale = ref.watch(localeProvider);
 
     return Scaffold(
-      body: SafeArea(
+      body: ReadableWidth(
+          child: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
@@ -138,7 +139,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 

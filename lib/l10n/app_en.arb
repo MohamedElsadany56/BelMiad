@@ -770,5 +770,17 @@
       "remaining": {},
       "capacity": {}
     }
-  }
+  },
+  "reminderSound": "Reminder sound",
+  "reminderSoundHint": "Plays when a dose reminder or missed-dose alert pops up. Reminders already scheduled switch to the new sound.",
+  "soundDefault": "Phone default",
+  "soundChime": "Chime",
+  "soundBell": "Bell",
+  "soundGentle": "Gentle",
+  "soundAlert": "Alert beeps",
+  "soundFromPhone": "Choose from phone sounds…",
+  "soundPhonePicked": "Phone sound",
+  "soundSilent": "Silent (vibrate only)",
+  "soundPreview": "Play",
+  "soundCustomAndroidOnly": "Custom tones and ringtones are available on Android."
 }

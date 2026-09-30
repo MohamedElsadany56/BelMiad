@@ -84,8 +84,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final l10n = context.l10n;
     final patient = ref.watch(currentPatientProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.backupTitle)),
-      body: AbsorbPointer(
+      appBar: AppBar(title: AppBarTitle(l10n.backupTitle)),
+      body: ReadableWidth(
+          child: AbsorbPointer(
         absorbing: _busy,
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -123,7 +124,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

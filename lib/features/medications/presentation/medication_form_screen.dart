@@ -175,23 +175,25 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_editing ? l10n.editMedication : l10n.addMedication),
+        title: AppBarTitle(_editing ? l10n.editMedication : l10n.addMedication),
       ),
       floatingActionButton: _showForm
           ? FloatingActionButton.extended(
+              heroTag: null,
               onPressed: _busy ? null : _save,
               icon: const Icon(Icons.check),
               label: Text(l10n.save),
             )
           : null,
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : !_showForm
-              ? CatalogSearch(
-                  onSelected: _selectCatalog,
-                  onCustom: () => setState(() => _showForm = true),
-                )
-              : Form(key: _form, child: _fields(context)),
+      body: ReadableWidth(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : !_showForm
+                  ? CatalogSearch(
+                      onSelected: _selectCatalog,
+                      onCustom: () => setState(() => _showForm = true),
+                    )
+                  : Form(key: _form, child: _fields(context))),
     );
   }
 
@@ -237,6 +239,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
           decoration: InputDecoration(labelText: l10n.strength),
         ),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: doseUnits.contains(_unit) ? _unit : 'unit',
           decoration: InputDecoration(labelText: l10n.doseUnit),
           items: [

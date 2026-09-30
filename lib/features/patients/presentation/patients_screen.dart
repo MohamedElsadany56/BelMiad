@@ -15,13 +15,15 @@ class PatientsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final current = ref.watch(currentPatientIdProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.patients)),
+      appBar: AppBar(title: AppBarTitle(l10n.patients)),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () => context.push('/more/patients/new'),
         icon: const Icon(Icons.person_add_alt_1),
         label: Text(l10n.addPatient),
       ),
-      body: AsyncBody(
+      body: ReadableWidth(
+          child: AsyncBody(
         value: ref.watch(patientsProvider),
         builder: (patients) => patients.isEmpty
             ? EmptyState(icon: Icons.group_outlined, message: l10n.noPatients)
@@ -57,7 +59,7 @@ class PatientsScreen extends ConsumerWidget {
                     ),
                 ],
               ),
-      ),
+      )),
     );
   }
 }

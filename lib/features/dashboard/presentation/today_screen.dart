@@ -68,7 +68,7 @@ class TodayScreen extends ConsumerWidget {
         : ref.watch(_prnMedicationsProvider(patientId)).valueOrNull ?? const [];
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.todayTitle),
+        title: AppBarTitle(l10n.todayTitle),
         actions: [
           IconButton(
             tooltip: l10n.notifications,
@@ -85,11 +85,13 @@ class TodayScreen extends ConsumerWidget {
       floatingActionButton: prn.isEmpty
           ? null
           : FloatingActionButton.extended(
+              heroTag: null,
               onPressed: () => _logPrn(context, ref, prn),
               icon: const Icon(Icons.add_task),
               label: Text(l10n.logPrn),
             ),
-      body: RequirePatient(builder: (id) => _TodayBody(patientId: id)),
+      body: ReadableWidth(
+          child: RequirePatient(builder: (id) => _TodayBody(patientId: id))),
     );
   }
 
