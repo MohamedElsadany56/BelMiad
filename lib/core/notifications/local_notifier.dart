@@ -95,7 +95,7 @@ class FlutterLocalNotifier implements LocalNotifier {
       linux: LinuxInitializationSettings(defaultActionName: 'Open'),
     );
     try {
-      await _plugin.initialize(settings);
+      await _plugin.initialize(settings: settings);
       final android = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
       await android?.requestNotificationsPermission();
@@ -138,27 +138,23 @@ class FlutterLocalNotifier implements LocalNotifier {
     if (!_ready) return;
     try {
       await _plugin.zonedSchedule(
-        id,
-        title,
-        body,
-        tz.TZDateTime.from(at.toUtc(), tz.UTC),
-        _details(channel),
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tz.TZDateTime.from(at.toUtc(), tz.UTC),
+        notificationDetails: _details(channel),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
       );
     } catch (_) {
       // Exact alarms may be denied; fall back to inexact scheduling.
       try {
         await _plugin.zonedSchedule(
-          id,
-          title,
-          body,
-          tz.TZDateTime.from(at.toUtc(), tz.UTC),
-          _details(channel),
+          id: id,
+          title: title,
+          body: body,
+          scheduledDate: tz.TZDateTime.from(at.toUtc(), tz.UTC),
+          notificationDetails: _details(channel),
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
         );
       } catch (error) {
         debugPrint('Failed to schedule notification: $error');
@@ -175,7 +171,12 @@ class FlutterLocalNotifier implements LocalNotifier {
   }) async {
     if (!_ready) return;
     try {
-      await _plugin.show(id, title, body, _details(channel));
+      await _plugin.show(
+        id: id,
+        title: title,
+        body: body,
+        notificationDetails: _details(channel),
+      );
     } catch (error) {
       debugPrint('Failed to show notification: $error');
     }
@@ -185,7 +186,7 @@ class FlutterLocalNotifier implements LocalNotifier {
   Future<void> cancel(int id) async {
     if (!_ready) return;
     try {
-      await _plugin.cancel(id);
+      await _plugin.cancel(id: id);
     } catch (_) {}
   }
 
