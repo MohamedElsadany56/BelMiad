@@ -6,8 +6,10 @@ plugins {
 
 android {
     namespace = "com.example.belmiad"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // permission_handler_android (and future plugins) compile against API 37;
+    // compiling higher than the target is backward compatible.
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
+    ndkVersion = "30.0.16248370"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

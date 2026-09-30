@@ -62,6 +62,21 @@ dart run build_runner build --delete-conflicting-outputs
 flutter gen-l10n
 ```
 
+### Android APK
+
+Requires the Android SDK (API 37 platform) and JDK 17+ (Android Studio's
+bundled JBR works). Point Flutter at them once, then build:
+
+```bash
+flutter config --android-sdk <path-to-sdk> --jdk-dir <path-to-jdk>
+flutter build apk --release
+```
+
+The APK is written to `build/app/outputs/flutter-apk/app-release.apk`. Use
+`--split-per-abi` for smaller per-device APKs. Release builds are currently
+signed with the debug key, which is fine for installing on your own devices
+but not for store publishing.
+
 ### Drug catalog asset
 
 `assets/data/drug_catalog.sqlite` is generated from
