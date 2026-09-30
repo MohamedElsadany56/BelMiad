@@ -1,11 +1,11 @@
 {
-    "name": "belmiad",
-    "short_name": "belmiad",
+    "name": "BelMiad — بالميعاد",
+    "short_name": "BelMiad",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0064F6",
+    "theme_color": "#0064F6",
+    "description": "Offline medicine and dose management for patients and caregivers.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

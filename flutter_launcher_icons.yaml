@@ -1,0 +1,30 @@
+# App icon for every platform. Sources are built from assets/icon/source.webp
+# by tool/build_icon_sources.py; regenerate with:
+#   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+
+  android: "ic_launcher"
+  image_path_android: "assets/icon/app_icon_rounded.png"
+  adaptive_icon_background: "#0064F6"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  adaptive_icon_monochrome: "assets/icon/app_icon_foreground.png"
+  min_sdk_android: 21
+
+  ios: true
+  remove_alpha_ios: true
+
+  web:
+    generate: true
+    image_path: "assets/icon/app_icon.png"
+    background_color: "#0064F6"
+    theme_color: "#0064F6"
+
+  windows:
+    generate: true
+    image_path: "assets/icon/app_icon_rounded.png"
+    icon_size: 256
+
+  macos:
+    generate: true
+    image_path: "assets/icon/app_icon_rounded.png"
