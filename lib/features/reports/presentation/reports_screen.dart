@@ -82,7 +82,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     ref.listen(currentPatientIdProvider, (_, __) => _refresh());
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.reports),
+        title: AppBarTitle(l10n.reports),
         actions: [
           IconButton(
             tooltip: l10n.storageReport,
@@ -91,7 +91,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<DoctorReport>(
+      body: ReadableWidth(
+          child: FutureBuilder<DoctorReport>(
         future: _report,
         builder: (context, snapshot) {
           final report = snapshot.data;
@@ -161,7 +162,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             ],
           );
         },
-      ),
+      )),
     );
   }
 

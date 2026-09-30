@@ -439,6 +439,7 @@ class _AdjustStockSheetState extends ConsumerState<_AdjustStockSheet> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _reason,
                 decoration: InputDecoration(labelText: l10n.reason),
                 items: [

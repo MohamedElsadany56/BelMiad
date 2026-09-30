@@ -209,6 +209,7 @@ Future<void> showAppointmentForm(
           decoration: InputDecoration(labelText: l10n.location),
         ),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: status,
           decoration: InputDecoration(labelText: l10n.status),
           items: [
@@ -278,6 +279,7 @@ Future<void> showVitalForm(
             ),
       fields: (setState) => [
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: type,
           decoration: InputDecoration(labelText: l10n.vitalType),
           items: [
@@ -326,6 +328,7 @@ Future<void> showVitalForm(
         ),
         if (VitalContexts.appliesTo(type)) ...[
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: context_,
             decoration: InputDecoration(labelText: l10n.measurementContext),
             items: [
@@ -342,6 +345,7 @@ Future<void> showVitalForm(
                     ref.watch(patientMealsProvider(patientId)).valueOrNull ??
                         const <Meal>[];
                 return DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue:
                       meals.any((m) => m.mealId == mealId) ? mealId : null,
                   decoration: InputDecoration(labelText: l10n.relatedMeal),
@@ -523,6 +527,7 @@ Future<void> showDietRuleForm(
           decoration: InputDecoration(labelText: l10n.foodItemAr),
         ),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: rule,
           decoration: InputDecoration(labelText: l10n.ruleType),
           items: [

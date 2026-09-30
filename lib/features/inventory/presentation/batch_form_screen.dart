@@ -259,13 +259,16 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
         packagingLabel(_innerApplies ? _innerType : _packaging, l10n);
 
     return Scaffold(
-      appBar: AppBar(title: Text(_editing ? l10n.editBatch : l10n.addStock)),
+      appBar:
+          AppBar(title: AppBarTitle(_editing ? l10n.editBatch : l10n.addStock)),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: _busy ? null : _save,
         icon: const Icon(Icons.check),
         label: Text(l10n.save),
       ),
-      body: Form(
+      body: ReadableWidth(
+          child: Form(
         key: _form,
         child: FormBody(
           children: [
@@ -331,6 +334,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                   : (v) => setState(() => _byPackages = v.first),
             ),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: _packaging,
               decoration: InputDecoration(labelText: l10n.packagingType),
               items: [
@@ -379,6 +383,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
+                          isExpanded: true,
                           initialValue: _innerType,
                           decoration:
                               InputDecoration(labelText: l10n.innerPackType),
@@ -599,7 +604,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }
@@ -670,56 +675,59 @@ class _StorageMedicineScreenState extends ConsumerState<StorageMedicineScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.newStorageMedicine)),
+      appBar: AppBar(title: AppBarTitle(l10n.newStorageMedicine)),
       floatingActionButton: _showForm
           ? FloatingActionButton.extended(
+              heroTag: null,
               onPressed: _busy ? null : _save,
               icon: const Icon(Icons.check),
               label: Text(l10n.save),
             )
           : null,
-      body: !_showForm
-          ? CatalogSearch(
-              onSelected: _selected,
-              onCustom: () => setState(() => _showForm = true),
-            )
-          : Form(
-              key: _form,
-              child: FormBody(
-                children: [
-                  Text(l10n.storageOnlyHint),
-                  TextFormField(
-                    controller: _nameEn,
-                    decoration: InputDecoration(labelText: l10n.nameEn),
-                    validator: (v) => (v?.trim().isEmpty ?? true) &&
-                            _nameAr.text.trim().isEmpty
-                        ? l10n.error_nameRequired
-                        : null,
-                  ),
-                  TextFormField(
-                    controller: _nameAr,
-                    textDirection: TextDirection.rtl,
-                    decoration: InputDecoration(labelText: l10n.nameAr),
-                  ),
-                  TextFormField(
-                    controller: _strength,
-                    decoration: InputDecoration(labelText: l10n.strength),
-                  ),
-                  DropdownButtonFormField<String>(
-                    initialValue: _unit,
-                    decoration: InputDecoration(labelText: l10n.doseUnit),
-                    items: [
-                      for (final unit in doseUnits)
-                        DropdownMenuItem(
-                          value: unit,
-                          child: Text(unitLabel(unit, l10n)),
-                        ),
+      body: ReadableWidth(
+          child: !_showForm
+              ? CatalogSearch(
+                  onSelected: _selected,
+                  onCustom: () => setState(() => _showForm = true),
+                )
+              : Form(
+                  key: _form,
+                  child: FormBody(
+                    children: [
+                      Text(l10n.storageOnlyHint),
+                      TextFormField(
+                        controller: _nameEn,
+                        decoration: InputDecoration(labelText: l10n.nameEn),
+                        validator: (v) => (v?.trim().isEmpty ?? true) &&
+                                _nameAr.text.trim().isEmpty
+                            ? l10n.error_nameRequired
+                            : null,
+                      ),
+                      TextFormField(
+                        controller: _nameAr,
+                        textDirection: TextDirection.rtl,
+                        decoration: InputDecoration(labelText: l10n.nameAr),
+                      ),
+                      TextFormField(
+                        controller: _strength,
+                        decoration: InputDecoration(labelText: l10n.strength),
+                      ),
+                      DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        initialValue: _unit,
+                        decoration: InputDecoration(labelText: l10n.doseUnit),
+                        items: [
+                          for (final unit in doseUnits)
+                            DropdownMenuItem(
+                              value: unit,
+                              child: Text(unitLabel(unit, l10n)),
+                            ),
+                        ],
+                        onChanged: (v) => setState(() => _unit = v ?? 'tablet'),
+                      ),
                     ],
-                    onChanged: (v) => setState(() => _unit = v ?? 'tablet'),
                   ),
-                ],
-              ),
-            ),
+                )),
     );
   }
 }

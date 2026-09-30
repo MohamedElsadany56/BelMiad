@@ -29,19 +29,21 @@ class MedicationsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.medications),
+        title: AppBarTitle(l10n.medications),
         actions: const [PatientSwitcher()],
       ),
       floatingActionButton: ref.watch(currentPatientIdProvider) == null
           ? null
           : FloatingActionButton.extended(
+              heroTag: null,
               onPressed: () => context.push('/medications/new'),
               icon: const Icon(Icons.add),
               label: Text(l10n.addMedication),
             ),
-      body: RequirePatient(
+      body: ReadableWidth(
+          child: RequirePatient(
         builder: (patientId) => _MedicationList(patientId: patientId),
-      ),
+      )),
     );
   }
 }

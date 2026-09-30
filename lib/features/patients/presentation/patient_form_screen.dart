@@ -134,101 +134,106 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar:
-          AppBar(title: Text(_editing ? l10n.editPatient : l10n.addPatient)),
+      appBar: AppBar(
+          title: AppBarTitle(_editing ? l10n.editPatient : l10n.addPatient)),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: _busy || _loading ? null : _save,
         icon: const Icon(Icons.check),
         label: Text(l10n.save),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _form,
-              child: FormBody(
-                children: [
-                  TextFormField(
-                    controller: _name,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(labelText: l10n.fullName),
-                    validator: (v) => requiredText(v, l10n),
-                  ),
-                  if (!_editing)
-                    TextFormField(
-                      controller: _relationship,
-                      decoration:
-                          InputDecoration(labelText: l10n.relationshipLabel),
-                    ),
-                  DateField(
-                    label: l10n.dateOfBirth,
-                    value: _dob,
-                    lastDate: DateTime.now(),
-                    onChanged: (v) => setState(() => _dob = v),
-                  ),
-                  DropdownButtonFormField<String?>(
-                    initialValue: _sex,
-                    decoration: InputDecoration(labelText: l10n.sex),
-                    items: [
-                      DropdownMenuItem(value: null, child: Text(l10n.notSet)),
-                      DropdownMenuItem(
-                          value: 'male', child: Text(l10n.sexMale)),
-                      DropdownMenuItem(
-                          value: 'female', child: Text(l10n.sexFemale)),
-                    ],
-                    onChanged: (v) => setState(() => _sex = v),
-                  ),
-                  DropdownButtonFormField<String?>(
-                    initialValue: _bloodType,
-                    decoration: InputDecoration(labelText: l10n.bloodType),
-                    items: [
-                      DropdownMenuItem(value: null, child: Text(l10n.notSet)),
-                      for (final b in _bloodTypes)
-                        DropdownMenuItem(value: b, child: Text(b)),
-                    ],
-                    onChanged: (v) => setState(() => _bloodType = v),
-                  ),
-                  TextFormField(
-                    controller: _phone,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(labelText: l10n.phone),
-                  ),
-                  TextFormField(
-                    controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(labelText: l10n.email),
-                  ),
-                  TextFormField(
-                    controller: _emergencyName,
-                    decoration:
-                        InputDecoration(labelText: l10n.emergencyContactName),
-                  ),
-                  TextFormField(
-                    controller: _emergencyPhone,
-                    keyboardType: TextInputType.phone,
-                    decoration:
-                        InputDecoration(labelText: l10n.emergencyContactPhone),
-                  ),
-                  InkWell(
-                    onTap: _pickTimezone,
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: l10n.timezone,
-                        helperText: l10n.timezoneHint,
-                        helperMaxLines: 2,
-                        prefixIcon: const Icon(Icons.public),
+      body: ReadableWidth(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : Form(
+                  key: _form,
+                  child: FormBody(
+                    children: [
+                      TextFormField(
+                        controller: _name,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: InputDecoration(labelText: l10n.fullName),
+                        validator: (v) => requiredText(v, l10n),
                       ),
-                      child: Text(_timezone),
-                    ),
+                      if (!_editing)
+                        TextFormField(
+                          controller: _relationship,
+                          decoration: InputDecoration(
+                              labelText: l10n.relationshipLabel),
+                        ),
+                      DateField(
+                        label: l10n.dateOfBirth,
+                        value: _dob,
+                        lastDate: DateTime.now(),
+                        onChanged: (v) => setState(() => _dob = v),
+                      ),
+                      DropdownButtonFormField<String?>(
+                        isExpanded: true,
+                        initialValue: _sex,
+                        decoration: InputDecoration(labelText: l10n.sex),
+                        items: [
+                          DropdownMenuItem(
+                              value: null, child: Text(l10n.notSet)),
+                          DropdownMenuItem(
+                              value: 'male', child: Text(l10n.sexMale)),
+                          DropdownMenuItem(
+                              value: 'female', child: Text(l10n.sexFemale)),
+                        ],
+                        onChanged: (v) => setState(() => _sex = v),
+                      ),
+                      DropdownButtonFormField<String?>(
+                        isExpanded: true,
+                        initialValue: _bloodType,
+                        decoration: InputDecoration(labelText: l10n.bloodType),
+                        items: [
+                          DropdownMenuItem(
+                              value: null, child: Text(l10n.notSet)),
+                          for (final b in _bloodTypes)
+                            DropdownMenuItem(value: b, child: Text(b)),
+                        ],
+                        onChanged: (v) => setState(() => _bloodType = v),
+                      ),
+                      TextFormField(
+                        controller: _phone,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(labelText: l10n.phone),
+                      ),
+                      TextFormField(
+                        controller: _email,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(labelText: l10n.email),
+                      ),
+                      TextFormField(
+                        controller: _emergencyName,
+                        decoration: InputDecoration(
+                            labelText: l10n.emergencyContactName),
+                      ),
+                      TextFormField(
+                        controller: _emergencyPhone,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                            labelText: l10n.emergencyContactPhone),
+                      ),
+                      InkWell(
+                        onTap: _pickTimezone,
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: l10n.timezone,
+                            helperText: l10n.timezoneHint,
+                            prefixIcon: const Icon(Icons.public),
+                          ),
+                          child: Text(_timezone),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _notes,
+                        maxLines: 4,
+                        minLines: 2,
+                        decoration: InputDecoration(labelText: l10n.notes),
+                      ),
+                    ],
                   ),
-                  TextFormField(
-                    controller: _notes,
-                    maxLines: 4,
-                    minLines: 2,
-                    decoration: InputDecoration(labelText: l10n.notes),
-                  ),
-                ],
-              ),
-            ),
+                )),
     );
   }
 }

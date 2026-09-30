@@ -323,7 +323,7 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
     final unit = unitLabelFor(medication.doseUnit, null, l10n);
     return Scaffold(
       appBar: AppBar(
-        title: Text(_editing ? l10n.editSchedule : l10n.dosePlan),
+        title: AppBarTitle(_editing ? l10n.editSchedule : l10n.dosePlan),
         actions: [
           if (_editing && _groupId != null)
             IconButton(
@@ -334,11 +334,13 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: _busy ? null : () => _save(medication),
         icon: const Icon(Icons.check),
         label: Text(l10n.save),
       ),
-      body: Form(
+      body: ReadableWidth(
+          child: Form(
         key: _form,
         child: FormBody(
           children: [
@@ -392,6 +394,7 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
             ),
             SectionHeader(l10n.sharedSettings),
             DropdownButtonFormField<RecurrenceType>(
+              isExpanded: true,
               initialValue: _recurrence,
               decoration: InputDecoration(labelText: l10n.recurrence),
               items: [
@@ -525,7 +528,7 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }
@@ -612,6 +615,7 @@ class _SlotCard extends StatelessWidget {
               )
             else ...[
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue:
                     mealIds.contains(slot.mealId) ? slot.mealId : null,
                 decoration: InputDecoration(labelText: l10n.meal),

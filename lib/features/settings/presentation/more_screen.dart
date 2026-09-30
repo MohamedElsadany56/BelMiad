@@ -24,10 +24,11 @@ class MoreScreen extends ConsumerWidget {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.navMore),
+        title: AppBarTitle(l10n.navMore),
         actions: const [PatientSwitcher()],
       ),
-      body: ListView(
+      body: ReadableWidth(
+          child: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
           if (device != null)
@@ -35,9 +36,10 @@ class MoreScreen extends ConsumerWidget {
               leading: const CircleAvatar(child: Icon(Icons.badge_outlined)),
               title: Text(device.fullName),
               subtitle: Text(l10n.deviceCaregiver),
-              trailing: TextButton(
+              trailing: IconButton(
+                tooltip: l10n.changeCaregiver,
+                icon: const Icon(Icons.edit_outlined),
                 onPressed: () => context.push('/more/settings'),
-                child: Text(l10n.changeCaregiver),
               ),
             ),
           const Divider(),
@@ -49,7 +51,7 @@ class MoreScreen extends ConsumerWidget {
               onTap: () => context.push(path),
             ),
         ],
-      ),
+      )),
     );
   }
 }

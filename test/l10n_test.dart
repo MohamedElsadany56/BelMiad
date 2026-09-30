@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:belmiad/app/widgets/common.dart';
 import 'package:belmiad/l10n/app_localizations.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -41,5 +42,12 @@ void main() {
         reason: '${entry.key} needs placeholder metadata to fix its order',
       );
     }
+  });
+
+  test('English and numbers keep their order inside Arabic text', () {
+    expect(contentDirection('Take after meals.'), TextDirection.ltr);
+    expect(contentDirection('500 mg'), TextDirection.ltr);
+    expect(contentDirection('يؤخذ بعد الأكل'), TextDirection.rtl);
+    expect(contentDirection('12:30'), isNull);
   });
 }
