@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/icon/app_icon_rounded.png" width="112" alt="BelMiad icon">
+
 # BelMiad — بالميعاد
 
 **Offline medicine and dose management for patients, family caregivers and
@@ -162,6 +164,24 @@ flutter build web --dart-define=BELMIAD_DEMO=true -o build/web_demo
 ```
 
 Normal builds never include the demo data.
+
+### App icon
+
+The icon artwork is `assets/icon/source.webp`. To change it, replace that
+file and run:
+
+```bash
+py tool/build_icon_sources.py
+dart run flutter_launcher_icons
+```
+
+The first command extracts the white symbol and builds three sources:
+
+- a full square for iOS, web and desktop;
+- a rounded square for older Android versions;
+- an adaptive-icon foreground on `#0064F6`, sized to fit round, squircle and square Android launchers.
+
+The second command generates every platform's icon sizes.
 
 ### Drug catalog asset
 
