@@ -1,51 +1,111 @@
+<div align="center">
+
 # BelMiad — بالميعاد
 
-Offline-first patient health and medication management app for patients,
-family caregivers and private nurses, built with Flutter. Everything is
-stored on the device in SQLite; there is no backend, account, cloud or
-encryption (by design, see the specification).
+**Offline medicine and dose management for patients, family caregivers and
+private nurses.**
+
+Flutter · Riverpod · Drift/SQLite · Arabic & English · Light & dark
+
+</div>
+
+Everything is stored on the phone in SQLite. There is no backend, no account
+and no cloud: the app works fully offline, by design (see the
+[specification](docs/specification.md)).
+
+<p align="center">
+  <img src="docs/screenshots/today.jpg" width="220" alt="Today dashboard">
+  <img src="docs/screenshots/today-dark.jpg" width="220" alt="Today in dark mode">
+  <img src="docs/screenshots/today-arabic.jpg" width="220" alt="Today in Arabic (RTL)">
+</p>
+
+## Highlights
+
+### Reminders you can answer from the notification
+
+Dose reminders pop up at the top of the screen like a chat message, with
+buttons you can press without opening the app:
+
+```text
+┌──────────────────────────────────────────────┐
+│ 💊 BelMiad · now                              │
+│ Breakfast dose — Mother                       │
+│ Take 1 tablet of Glucophage 500 mg at 08:30   │
+│ (after breakfast)                             │
+│                                               │
+│   ✓ TAKE              SNOOZE 10 MIN           │
+└──────────────────────────────────────────────┘
+```
+
+- **✓ Take** records the dose, deducts stock (first expiring first) and
+  shows a short confirmation. It works even when the app is closed.
+- **Snooze 10 min** reminds you again with the same buttons.
+- Tapping the notification opens *Today* for that patient.
+- If the dose can't be taken from the notification (for example, not
+  enough stock), you're asked to open the app instead.
+
+Reminders use a high-priority channel so Android shows them as heads-up
+banners. OS notifications don't exist on the web build, so this part can't
+be screenshotted there.
+
+### Screenshots
+
+| Dose plan set once | Record a dose taken earlier | Medicines |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/dose-plan.jpg" width="220"> | <img src="docs/screenshots/record-earlier.jpg" width="220"> | <img src="docs/screenshots/medicines.jpg" width="220"> |
+| **Stock overview** | **Box, strips and an opened strip** | **Vitals with context** |
+| <img src="docs/screenshots/stock.jpg" width="220"> | <img src="docs/screenshots/stock-batch.jpg" width="220"> | <img src="docs/screenshots/vitals.jpg" width="220"> |
+| **Doctor report** | | |
+| <img src="docs/screenshots/reports.jpg" width="220"> | | |
 
 ## Features
 
-- **Patients and caregivers** — multiple patients on one phone, a current
-  patient switcher, device caregiver identity (attribution only, no login),
-  caregiver assignments that keep historical actors after removal.
-- **Medicines** — offline Egyptian drug catalog (25,065 entries, English and
-  Arabic FTS5 search) or custom medicines, separate English/Arabic
-  instructions, PRN, maximum daily quantity, archive/restore, trash.
-- **Dose plans** — set several times of day once (quick presets such as
-  "3 times a day after meals" or "every 8 hours"), each at a fixed time or
-  relative to a meal, with its own quantity; daily, selected weekdays every
-  N weeks, every N days, custom on/off cycles, per-weekday quantities,
-  start/end dates, patient timezone.
-- **Meals** — the same time every day or a different time per weekday
-  (e.g. breakfast 08:00 on Saturday, 09:00 on Friday); meal-relative doses
-  move automatically.
-- **Doses** — SCHEDULED/TAKEN/MISSED/SKIPPED with calculated late minutes,
-  a grace window before doses become missed, undo, partial and zero
-  quantities, PRN logging and the daily-maximum warning.
-- **Inventory** — batch ledger with nested packaging (boxes of strips of
-  tablets, bottles in ml, tubes, ampoules, loose units), storage-only
-  medicines that are stocked without being part of the treatment, purchase
-  date and price, expiration, FEFO or manual multi-batch consumption stored per dose,
-  exact-batch undo, audited adjustments, forecast-based low stock (next 3
-  days), remaining days simulated from real schedules, expiration states.
-- **Health records** — appointments, vitals (blood pressure and sugar can be
-  marked fasting, before/after a meal or after a medicine), illnesses,
-  dietary rules, and prescriptions captured with the camera (after asking
-  for permission) or picked from files, saved as a photo or a multi-page
-  PDF in app-private storage and grouped by doctor, date or file type.
-- **Today** — live clock in the patient's timezone and the day's doses.
-- **Notifications** — offline dose reminders, missed doses, low/empty stock,
-  expiring/expired batches and appointment reminders, per-patient
-  preferences, deduplicated across launches, plus an in-app centre.
-- **Reports** — summary and detailed doctor reports and a storage report,
-  in-app and as PDF (Arabic and English).
-- **Backup** — versioned `backup.zip` export per patient, import as a new
-  patient, merge into the same patient, legacy v1 migration.
-- **Trash and audit** — restore or permanently delete; full activity history.
-- **Arabic/English** with RTL/LTR, blue (`#0064F6`) and white theme, light
-  mode by default and dark mode.
+- **Patients and caregivers**
+  - Several patients on one phone, with a switcher for the current patient.
+  - A caregiver identity on the device, used for attribution only (no login).
+  - Past actions keep their caregiver even after that caregiver is removed.
+- **Medicines**
+  - An offline Egyptian drug catalog: 25,065 entries with English and Arabic search.
+  - Custom medicines, separate English and Arabic instructions.
+  - As-needed (PRN) medicines with a maximum daily quantity.
+  - Archive, restore and trash.
+- **Dose plans**
+  - Set every time of day once, for example "3 times a day after meals" or "every 8 hours".
+  - Each time is either fixed or relative to a meal, with its own quantity.
+  - Repeat daily, on chosen weekdays every N weeks, every N days, or on a custom on/off cycle.
+  - Per-weekday quantities, start and end dates, and the patient's own timezone.
+- **Meals**
+  - The same time every day, or a different time per weekday (for example, breakfast at 08:00 on Saturday and 09:00 on Friday).
+  - Doses tied to a meal move with it.
+- **Doses**
+  - Taken, missed and skipped, with late minutes calculated.
+  - A grace window before a dose counts as missed, plus undo.
+  - Partial and zero quantities.
+  - **Recorded later:** when the patient took a dose alone, the caregiver can record the real time afterwards. A dose already marked missed is corrected too.
+- **Inventory**
+  - Nested packaging: boxes of strips of tablets, bottles in ml, tubes, ampoules and loose units.
+  - Opened or incomplete packs, such as a strip with 9 of 14 tablets left.
+  - Storage-only medicines that are stocked without being part of the treatment.
+  - Purchase date, price and expiration date for each batch.
+  - Stock is used first-expiring-first or from chosen batches, and undo returns it to the exact batch.
+  - Audited stock adjustments.
+  - Low-stock and remaining-days forecasts based on the real schedules.
+- **Health records**
+  - Appointments, illnesses and dietary rules.
+  - Blood pressure and blood sugar can be marked fasting, before or after a meal, or after a medicine.
+  - Prescriptions are captured with the camera (permission is requested first) or picked from files.
+  - They're stored as photos or PDFs and grouped by doctor, date or file type.
+- **Today:** a live clock in the patient's timezone, the day's progress, alerts, the next appointment and every dose.
+- **Notifications**
+  - Actionable dose reminders (see above).
+  - Alerts for missed doses, low or empty stock, expiring batches and appointments.
+  - Per-patient preferences and an in-app notification centre.
+- **Reports:** a summary and a detailed doctor report plus a storage report, viewable in the app or exported as PDF, in Arabic or English.
+- **Backup**
+  - A versioned `backup.zip` for each patient.
+  - Import it as a new patient, or merge it into the same patient.
+- **Trash and activity history:** everything is audited and can be restored.
+- **Arabic and English** with full right-to-left support, and a blue (`#0064F6`) and white theme: light mode by default, dark mode optional.
 
 ## Getting started
 
@@ -54,8 +114,8 @@ flutter pub get
 flutter run
 ```
 
-Code generation (Drift, Freezed, json_serializable) and localizations are
-committed; regenerate after changing tables, freezed models or ARB files:
+Generated code (Drift, Freezed, json_serializable) and localizations are
+committed. Regenerate them after changing tables, models or ARB files:
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
@@ -64,31 +124,47 @@ flutter gen-l10n
 
 ### Android APK
 
-Requires the Android SDK (API 37 platform) and JDK 17+ (Android Studio's
-bundled JBR works). Point Flutter at them once, then build:
+This needs the Android SDK (API 37 platform) and JDK 17 or later; Android
+Studio's bundled JBR works.
 
 ```bash
 flutter config --android-sdk <path-to-sdk> --jdk-dir <path-to-jdk>
 flutter build apk --release
 ```
 
-The APK is written to `build/app/outputs/flutter-apk/app-release.apk`. Use
-`--split-per-abi` for smaller per-device APKs. Release builds are currently
-signed with the debug key, which is fine for installing on your own devices
-but not for store publishing.
+The APK is written to `build/app/outputs/flutter-apk/app-release.apk`. Add
+`--split-per-abi` for smaller per-device APKs. Release builds are signed
+with the debug key, which is fine for your own devices but not for store
+publishing.
+
+On first launch, allow notifications. On Android 12 and later, also allow
+alarms & reminders so doses fire on time.
+
+### Demo data
+
+A demo build seeds two patients, four medicines, stock, vitals and an
+appointment. It was used for the screenshots above:
+
+```bash
+flutter build web --dart-define=BELMIAD_DEMO=true -o build/web_demo
+```
+
+Normal builds never include the demo data.
 
 ### Drug catalog asset
 
 `assets/data/drug_catalog.sqlite` is generated from
-`assets/data/egyptian-drugs.csv` at development time (never at app start):
+`assets/data/egyptian-drugs.csv` at development time, never when the app
+starts:
 
 ```bash
 dart run tool/build_catalog.dart
 ```
 
 After regenerating, bump `catalogAssetVersion` in
-`lib/features/catalog/data/drug_catalog_database.dart` so devices copy the
-new catalog. Patient data lives in a separate database and is never touched.
+`lib/features/catalog/data/drug_catalog_database.dart` so that devices copy
+the new catalog. Patient data lives in a separate database and isn't
+touched.
 
 ### Tests
 
@@ -96,37 +172,53 @@ new catalog. Patient data lives in a separate database and is never touched.
 flutter test
 ```
 
-Unit, Drift integration, widget and PDF tests cover scaled quantities,
-recurrence, meal timing, FEFO, multi-batch consumption, partial/zero doses,
-undo, rollback on failure, PRN maximums, forecasting, expiration, dose
-generation, timezone changes, notification deduplication, backup/merge,
-catalog search, RTL/LTR and dose confirmation.
+The tests are unit, Drift integration, widget and PDF tests. They cover:
 
-## Architecture
+- scaled quantities, recurrence and meal timing;
+- first-expiring-first and multi-batch stock use, and opened packs;
+- partial, zero and recorded-later doses, undo, and rollback on failure;
+- PRN maximums, forecasting and expiration;
+- dose generation and timezone changes;
+- notification actions and deduplication;
+- backup and merge, catalog search, and RTL/LTR layouts.
 
-Feature-first layers: `presentation → application → domain → data → database`.
-Business rules live in domain/application services; widgets never mutate
-tables directly. Critical dose/inventory operations run in single Drift
-transactions.
+## Project structure
+
+The code is organised by feature, with these layers:
+`presentation → application → domain → data → database`. Business rules
+live in domain and application services, and widgets never write to tables
+directly. Dose and stock operations each run in a single Drift transaction.
 
 ```text
-lib/
-├── app/          theme, router, providers, localization labels, widgets
-├── core/         database, time, files, notifications, settings, errors
-├── features/     patients, caregivers, medications, catalog, schedules,
-│                 doses, inventory, meals, health, notifications, reports,
-│                 backup, trash, audit, dashboard, settings
-└── l10n/         ARB files and generated localizations
+.
+├── android/ ios/ web/ …   platform runners
+├── assets/                drug catalog, fonts
+├── docs/
+│   ├── specification.md         product specification
+│   ├── implementation-phases.md delivery plan
+│   └── screenshots/             images used in this README
+├── lib/
+│   ├── app/        theme, router, providers, shared widgets, demo seed
+│   ├── core/       database, time, files, notifications, permissions,
+│   │               settings, errors, utilities
+│   ├── features/   audit, backup, caregivers, catalog, dashboard, doses,
+│   │               health, inventory, meals, medications, notifications,
+│   │               patients, reports, schedules, settings, trash
+│   │               └── <feature>/{presentation,application,domain,data}
+│   └── l10n/       ARB files and generated localizations
+├── test/           unit, integration and widget tests
+└── tool/           development scripts (catalog builder)
 ```
 
 ## Platform notes
 
-- Android needs notification and exact-alarm permissions (declared in the
-  manifest); scheduled notifications survive reboots.
-- The web build uses Drift WASM (`web/sqlite3.wasm`, `web/drift_worker.js`);
-  OS notifications are not available there, but the in-app centre works.
-- Fonts: Noto Naskh Arabic (SIL OFL, `assets/fonts/OFL.txt`) is bundled so
-  Arabic renders offline in the UI and PDFs.
+- **Android**
+  - Declares permissions for notifications, exact alarms and the camera.
+  - Scheduled reminders survive reboots.
+  - Notification buttons are handled in a background isolate, so they work while the app is closed.
+- **Web** uses Drift WASM (`web/sqlite3.wasm`, `web/drift_worker.js`). OS notifications aren't available there, but the in-app notification centre works.
+- **Fonts:** Noto Naskh Arabic (SIL OFL, `assets/fonts/OFL.txt`) is bundled, so Arabic renders offline in the app and in PDFs.
 
-`index.html`, `app.js` and `styles.css` in the repository root are the
-earlier browser prototype and are not part of the Flutter app.
+## License
+
+See [LICENSE](LICENSE).
