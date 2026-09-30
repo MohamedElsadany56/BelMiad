@@ -2988,6 +2988,12 @@ class $MedicationInventoryBatchesTable extends MedicationInventoryBatches
   late final GeneratedColumn<int> looseQuantityScaled = GeneratedColumn<int>(
       'loose_quantity_scaled', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _partialPacksJsonMeta =
+      const VerificationMeta('partialPacksJson');
+  @override
+  late final GeneratedColumn<String> partialPacksJson = GeneratedColumn<String>(
+      'partial_packs_json', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _initialQuantityScaledMeta =
       const VerificationMeta('initialQuantityScaled');
   @override
@@ -3054,6 +3060,7 @@ class $MedicationInventoryBatchesTable extends MedicationInventoryBatches
         subPackagingType,
         subPackagesPerPackage,
         looseQuantityScaled,
+        partialPacksJson,
         initialQuantityScaled,
         availableQuantityScaled,
         quantityScale,
@@ -3143,6 +3150,12 @@ class $MedicationInventoryBatchesTable extends MedicationInventoryBatches
           looseQuantityScaled.isAcceptableOrUnknown(
               data['loose_quantity_scaled']!, _looseQuantityScaledMeta));
     }
+    if (data.containsKey('partial_packs_json')) {
+      context.handle(
+          _partialPacksJsonMeta,
+          partialPacksJson.isAcceptableOrUnknown(
+              data['partial_packs_json']!, _partialPacksJsonMeta));
+    }
     if (data.containsKey('initial_quantity_scaled')) {
       context.handle(
           _initialQuantityScaledMeta,
@@ -3223,6 +3236,8 @@ class $MedicationInventoryBatchesTable extends MedicationInventoryBatches
           DriftSqlType.int, data['${effectivePrefix}sub_packages_per_package']),
       looseQuantityScaled: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}loose_quantity_scaled']),
+      partialPacksJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}partial_packs_json']),
       initialQuantityScaled: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}initial_quantity_scaled'])!,
       availableQuantityScaled: attachedDatabase.typeMapping.read(
@@ -3267,6 +3282,10 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
 
   /// Extra loose units added to the packaged quantity.
   final int? looseQuantityScaled;
+
+  /// JSON list of opened/incomplete packs, e.g. a strip with 9 of 14
+  /// tablets left: `[{"type":"strip","remaining":9000,"capacity":14}]`.
+  final String? partialPacksJson;
   final int initialQuantityScaled;
   final int availableQuantityScaled;
   final int quantityScale;
@@ -3287,6 +3306,7 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       this.subPackagingType,
       this.subPackagesPerPackage,
       this.looseQuantityScaled,
+      this.partialPacksJson,
       required this.initialQuantityScaled,
       required this.availableQuantityScaled,
       required this.quantityScale,
@@ -3326,6 +3346,9 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
     }
     if (!nullToAbsent || looseQuantityScaled != null) {
       map['loose_quantity_scaled'] = Variable<int>(looseQuantityScaled);
+    }
+    if (!nullToAbsent || partialPacksJson != null) {
+      map['partial_packs_json'] = Variable<String>(partialPacksJson);
     }
     map['initial_quantity_scaled'] = Variable<int>(initialQuantityScaled);
     map['available_quantity_scaled'] = Variable<int>(availableQuantityScaled);
@@ -3373,6 +3396,9 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       looseQuantityScaled: looseQuantityScaled == null && nullToAbsent
           ? const Value.absent()
           : Value(looseQuantityScaled),
+      partialPacksJson: partialPacksJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partialPacksJson),
       initialQuantityScaled: Value(initialQuantityScaled),
       availableQuantityScaled: Value(availableQuantityScaled),
       quantityScale: Value(quantityScale),
@@ -3404,6 +3430,7 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
           serializer.fromJson<int?>(json['subPackagesPerPackage']),
       looseQuantityScaled:
           serializer.fromJson<int?>(json['looseQuantityScaled']),
+      partialPacksJson: serializer.fromJson<String?>(json['partialPacksJson']),
       initialQuantityScaled:
           serializer.fromJson<int>(json['initialQuantityScaled']),
       availableQuantityScaled:
@@ -3431,6 +3458,7 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       'subPackagingType': serializer.toJson<String?>(subPackagingType),
       'subPackagesPerPackage': serializer.toJson<int?>(subPackagesPerPackage),
       'looseQuantityScaled': serializer.toJson<int?>(looseQuantityScaled),
+      'partialPacksJson': serializer.toJson<String?>(partialPacksJson),
       'initialQuantityScaled': serializer.toJson<int>(initialQuantityScaled),
       'availableQuantityScaled':
           serializer.toJson<int>(availableQuantityScaled),
@@ -3455,6 +3483,7 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
           Value<String?> subPackagingType = const Value.absent(),
           Value<int?> subPackagesPerPackage = const Value.absent(),
           Value<int?> looseQuantityScaled = const Value.absent(),
+          Value<String?> partialPacksJson = const Value.absent(),
           int? initialQuantityScaled,
           int? availableQuantityScaled,
           int? quantityScale,
@@ -3488,6 +3517,9 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
         looseQuantityScaled: looseQuantityScaled.present
             ? looseQuantityScaled.value
             : this.looseQuantityScaled,
+        partialPacksJson: partialPacksJson.present
+            ? partialPacksJson.value
+            : this.partialPacksJson,
         initialQuantityScaled:
             initialQuantityScaled ?? this.initialQuantityScaled,
         availableQuantityScaled:
@@ -3534,6 +3566,9 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       looseQuantityScaled: data.looseQuantityScaled.present
           ? data.looseQuantityScaled.value
           : this.looseQuantityScaled,
+      partialPacksJson: data.partialPacksJson.present
+          ? data.partialPacksJson.value
+          : this.partialPacksJson,
       initialQuantityScaled: data.initialQuantityScaled.present
           ? data.initialQuantityScaled.value
           : this.initialQuantityScaled,
@@ -3566,6 +3601,7 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
           ..write('subPackagingType: $subPackagingType, ')
           ..write('subPackagesPerPackage: $subPackagesPerPackage, ')
           ..write('looseQuantityScaled: $looseQuantityScaled, ')
+          ..write('partialPacksJson: $partialPacksJson, ')
           ..write('initialQuantityScaled: $initialQuantityScaled, ')
           ..write('availableQuantityScaled: $availableQuantityScaled, ')
           ..write('quantityScale: $quantityScale, ')
@@ -3591,6 +3627,7 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
       subPackagingType,
       subPackagesPerPackage,
       looseQuantityScaled,
+      partialPacksJson,
       initialQuantityScaled,
       availableQuantityScaled,
       quantityScale,
@@ -3614,6 +3651,7 @@ class InventoryBatch extends DataClass implements Insertable<InventoryBatch> {
           other.subPackagingType == this.subPackagingType &&
           other.subPackagesPerPackage == this.subPackagesPerPackage &&
           other.looseQuantityScaled == this.looseQuantityScaled &&
+          other.partialPacksJson == this.partialPacksJson &&
           other.initialQuantityScaled == this.initialQuantityScaled &&
           other.availableQuantityScaled == this.availableQuantityScaled &&
           other.quantityScale == this.quantityScale &&
@@ -3637,6 +3675,7 @@ class MedicationInventoryBatchesCompanion
   final Value<String?> subPackagingType;
   final Value<int?> subPackagesPerPackage;
   final Value<int?> looseQuantityScaled;
+  final Value<String?> partialPacksJson;
   final Value<int> initialQuantityScaled;
   final Value<int> availableQuantityScaled;
   final Value<int> quantityScale;
@@ -3658,6 +3697,7 @@ class MedicationInventoryBatchesCompanion
     this.subPackagingType = const Value.absent(),
     this.subPackagesPerPackage = const Value.absent(),
     this.looseQuantityScaled = const Value.absent(),
+    this.partialPacksJson = const Value.absent(),
     this.initialQuantityScaled = const Value.absent(),
     this.availableQuantityScaled = const Value.absent(),
     this.quantityScale = const Value.absent(),
@@ -3680,6 +3720,7 @@ class MedicationInventoryBatchesCompanion
     this.subPackagingType = const Value.absent(),
     this.subPackagesPerPackage = const Value.absent(),
     this.looseQuantityScaled = const Value.absent(),
+    this.partialPacksJson = const Value.absent(),
     required int initialQuantityScaled,
     required int availableQuantityScaled,
     this.quantityScale = const Value.absent(),
@@ -3707,6 +3748,7 @@ class MedicationInventoryBatchesCompanion
     Expression<String>? subPackagingType,
     Expression<int>? subPackagesPerPackage,
     Expression<int>? looseQuantityScaled,
+    Expression<String>? partialPacksJson,
     Expression<int>? initialQuantityScaled,
     Expression<int>? availableQuantityScaled,
     Expression<int>? quantityScale,
@@ -3731,6 +3773,7 @@ class MedicationInventoryBatchesCompanion
         'sub_packages_per_package': subPackagesPerPackage,
       if (looseQuantityScaled != null)
         'loose_quantity_scaled': looseQuantityScaled,
+      if (partialPacksJson != null) 'partial_packs_json': partialPacksJson,
       if (initialQuantityScaled != null)
         'initial_quantity_scaled': initialQuantityScaled,
       if (availableQuantityScaled != null)
@@ -3757,6 +3800,7 @@ class MedicationInventoryBatchesCompanion
       Value<String?>? subPackagingType,
       Value<int?>? subPackagesPerPackage,
       Value<int?>? looseQuantityScaled,
+      Value<String?>? partialPacksJson,
       Value<int>? initialQuantityScaled,
       Value<int>? availableQuantityScaled,
       Value<int>? quantityScale,
@@ -3779,6 +3823,7 @@ class MedicationInventoryBatchesCompanion
       subPackagesPerPackage:
           subPackagesPerPackage ?? this.subPackagesPerPackage,
       looseQuantityScaled: looseQuantityScaled ?? this.looseQuantityScaled,
+      partialPacksJson: partialPacksJson ?? this.partialPacksJson,
       initialQuantityScaled:
           initialQuantityScaled ?? this.initialQuantityScaled,
       availableQuantityScaled:
@@ -3830,6 +3875,9 @@ class MedicationInventoryBatchesCompanion
     if (looseQuantityScaled.present) {
       map['loose_quantity_scaled'] = Variable<int>(looseQuantityScaled.value);
     }
+    if (partialPacksJson.present) {
+      map['partial_packs_json'] = Variable<String>(partialPacksJson.value);
+    }
     if (initialQuantityScaled.present) {
       map['initial_quantity_scaled'] =
           Variable<int>(initialQuantityScaled.value);
@@ -3876,6 +3924,7 @@ class MedicationInventoryBatchesCompanion
           ..write('subPackagingType: $subPackagingType, ')
           ..write('subPackagesPerPackage: $subPackagesPerPackage, ')
           ..write('looseQuantityScaled: $looseQuantityScaled, ')
+          ..write('partialPacksJson: $partialPacksJson, ')
           ..write('initialQuantityScaled: $initialQuantityScaled, ')
           ..write('availableQuantityScaled: $availableQuantityScaled, ')
           ..write('quantityScale: $quantityScale, ')
@@ -6044,6 +6093,12 @@ class $DoseInstancesTable extends DoseInstances
   late final GeneratedColumn<String> loggedByPersonId = GeneratedColumn<String>(
       'logged_by_person_id', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _loggedAtMeta =
+      const VerificationMeta('loggedAt');
+  @override
+  late final GeneratedColumn<DateTime> loggedAt = GeneratedColumn<DateTime>(
+      'logged_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -6079,6 +6134,7 @@ class $DoseInstancesTable extends DoseInstances
         lateMinutes,
         isPrn,
         loggedByPersonId,
+        loggedAt,
         notes,
         createdAt,
         updatedAt
@@ -6189,6 +6245,10 @@ class $DoseInstancesTable extends DoseInstances
           loggedByPersonId.isAcceptableOrUnknown(
               data['logged_by_person_id']!, _loggedByPersonIdMeta));
     }
+    if (data.containsKey('logged_at')) {
+      context.handle(_loggedAtMeta,
+          loggedAt.isAcceptableOrUnknown(data['logged_at']!, _loggedAtMeta));
+    }
     if (data.containsKey('notes')) {
       context.handle(
           _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
@@ -6247,6 +6307,8 @@ class $DoseInstancesTable extends DoseInstances
           .read(DriftSqlType.bool, data['${effectivePrefix}is_prn'])!,
       loggedByPersonId: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}logged_by_person_id']),
+      loggedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}logged_at']),
       notes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notes']),
       createdAt: attachedDatabase.typeMapping
@@ -6283,6 +6345,10 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
   final int? lateMinutes;
   final bool isPrn;
   final String? loggedByPersonId;
+
+  /// When the intake was recorded in the app. Differs from [takenAt] when a
+  /// caregiver records a dose the patient took earlier on their own.
+  final DateTime? loggedAt;
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -6303,6 +6369,7 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
       this.lateMinutes,
       required this.isPrn,
       this.loggedByPersonId,
+      this.loggedAt,
       this.notes,
       required this.createdAt,
       required this.updatedAt});
@@ -6338,6 +6405,9 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
     map['is_prn'] = Variable<bool>(isPrn);
     if (!nullToAbsent || loggedByPersonId != null) {
       map['logged_by_person_id'] = Variable<String>(loggedByPersonId);
+    }
+    if (!nullToAbsent || loggedAt != null) {
+      map['logged_at'] = Variable<DateTime>(loggedAt);
     }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
@@ -6379,6 +6449,9 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
       loggedByPersonId: loggedByPersonId == null && nullToAbsent
           ? const Value.absent()
           : Value(loggedByPersonId),
+      loggedAt: loggedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(loggedAt),
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
       createdAt: Value(createdAt),
@@ -6408,6 +6481,7 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
       lateMinutes: serializer.fromJson<int?>(json['lateMinutes']),
       isPrn: serializer.fromJson<bool>(json['isPrn']),
       loggedByPersonId: serializer.fromJson<String?>(json['loggedByPersonId']),
+      loggedAt: serializer.fromJson<DateTime?>(json['loggedAt']),
       notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -6433,6 +6507,7 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
       'lateMinutes': serializer.toJson<int?>(lateMinutes),
       'isPrn': serializer.toJson<bool>(isPrn),
       'loggedByPersonId': serializer.toJson<String?>(loggedByPersonId),
+      'loggedAt': serializer.toJson<DateTime?>(loggedAt),
       'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -6456,6 +6531,7 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
           Value<int?> lateMinutes = const Value.absent(),
           bool? isPrn,
           Value<String?> loggedByPersonId = const Value.absent(),
+          Value<DateTime?> loggedAt = const Value.absent(),
           Value<String?> notes = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
@@ -6481,6 +6557,7 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
         loggedByPersonId: loggedByPersonId.present
             ? loggedByPersonId.value
             : this.loggedByPersonId,
+        loggedAt: loggedAt.present ? loggedAt.value : this.loggedAt,
         notes: notes.present ? notes.value : this.notes,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -6518,6 +6595,7 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
       loggedByPersonId: data.loggedByPersonId.present
           ? data.loggedByPersonId.value
           : this.loggedByPersonId,
+      loggedAt: data.loggedAt.present ? data.loggedAt.value : this.loggedAt,
       notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -6543,6 +6621,7 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
           ..write('lateMinutes: $lateMinutes, ')
           ..write('isPrn: $isPrn, ')
           ..write('loggedByPersonId: $loggedByPersonId, ')
+          ..write('loggedAt: $loggedAt, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -6568,6 +6647,7 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
       lateMinutes,
       isPrn,
       loggedByPersonId,
+      loggedAt,
       notes,
       createdAt,
       updatedAt);
@@ -6591,6 +6671,7 @@ class DoseInstance extends DataClass implements Insertable<DoseInstance> {
           other.lateMinutes == this.lateMinutes &&
           other.isPrn == this.isPrn &&
           other.loggedByPersonId == this.loggedByPersonId &&
+          other.loggedAt == this.loggedAt &&
           other.notes == this.notes &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -6613,6 +6694,7 @@ class DoseInstancesCompanion extends UpdateCompanion<DoseInstance> {
   final Value<int?> lateMinutes;
   final Value<bool> isPrn;
   final Value<String?> loggedByPersonId;
+  final Value<DateTime?> loggedAt;
   final Value<String?> notes;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -6634,6 +6716,7 @@ class DoseInstancesCompanion extends UpdateCompanion<DoseInstance> {
     this.lateMinutes = const Value.absent(),
     this.isPrn = const Value.absent(),
     this.loggedByPersonId = const Value.absent(),
+    this.loggedAt = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -6656,6 +6739,7 @@ class DoseInstancesCompanion extends UpdateCompanion<DoseInstance> {
     this.lateMinutes = const Value.absent(),
     this.isPrn = const Value.absent(),
     this.loggedByPersonId = const Value.absent(),
+    this.loggedAt = const Value.absent(),
     this.notes = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -6686,6 +6770,7 @@ class DoseInstancesCompanion extends UpdateCompanion<DoseInstance> {
     Expression<int>? lateMinutes,
     Expression<bool>? isPrn,
     Expression<String>? loggedByPersonId,
+    Expression<DateTime>? loggedAt,
     Expression<String>? notes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -6710,6 +6795,7 @@ class DoseInstancesCompanion extends UpdateCompanion<DoseInstance> {
       if (lateMinutes != null) 'late_minutes': lateMinutes,
       if (isPrn != null) 'is_prn': isPrn,
       if (loggedByPersonId != null) 'logged_by_person_id': loggedByPersonId,
+      if (loggedAt != null) 'logged_at': loggedAt,
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -6734,6 +6820,7 @@ class DoseInstancesCompanion extends UpdateCompanion<DoseInstance> {
       Value<int?>? lateMinutes,
       Value<bool>? isPrn,
       Value<String?>? loggedByPersonId,
+      Value<DateTime?>? loggedAt,
       Value<String?>? notes,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -6756,6 +6843,7 @@ class DoseInstancesCompanion extends UpdateCompanion<DoseInstance> {
       lateMinutes: lateMinutes ?? this.lateMinutes,
       isPrn: isPrn ?? this.isPrn,
       loggedByPersonId: loggedByPersonId ?? this.loggedByPersonId,
+      loggedAt: loggedAt ?? this.loggedAt,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -6815,6 +6903,9 @@ class DoseInstancesCompanion extends UpdateCompanion<DoseInstance> {
     if (loggedByPersonId.present) {
       map['logged_by_person_id'] = Variable<String>(loggedByPersonId.value);
     }
+    if (loggedAt.present) {
+      map['logged_at'] = Variable<DateTime>(loggedAt.value);
+    }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
@@ -6849,6 +6940,7 @@ class DoseInstancesCompanion extends UpdateCompanion<DoseInstance> {
           ..write('lateMinutes: $lateMinutes, ')
           ..write('isPrn: $isPrn, ')
           ..write('loggedByPersonId: $loggedByPersonId, ')
+          ..write('loggedAt: $loggedAt, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -13447,6 +13539,7 @@ typedef $$MedicationInventoryBatchesTableCreateCompanionBuilder
   Value<String?> subPackagingType,
   Value<int?> subPackagesPerPackage,
   Value<int?> looseQuantityScaled,
+  Value<String?> partialPacksJson,
   required int initialQuantityScaled,
   required int availableQuantityScaled,
   Value<int> quantityScale,
@@ -13470,6 +13563,7 @@ typedef $$MedicationInventoryBatchesTableUpdateCompanionBuilder
   Value<String?> subPackagingType,
   Value<int?> subPackagesPerPackage,
   Value<int?> looseQuantityScaled,
+  Value<String?> partialPacksJson,
   Value<int> initialQuantityScaled,
   Value<int> availableQuantityScaled,
   Value<int> quantityScale,
@@ -13527,6 +13621,10 @@ class $$MedicationInventoryBatchesTableFilterComposer
 
   ColumnFilters<int> get looseQuantityScaled => $composableBuilder(
       column: $table.looseQuantityScaled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get partialPacksJson => $composableBuilder(
+      column: $table.partialPacksJson,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get initialQuantityScaled => $composableBuilder(
@@ -13609,6 +13707,10 @@ class $$MedicationInventoryBatchesTableOrderingComposer
       column: $table.looseQuantityScaled,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get partialPacksJson => $composableBuilder(
+      column: $table.partialPacksJson,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get initialQuantityScaled => $composableBuilder(
       column: $table.initialQuantityScaled,
       builder: (column) => ColumnOrderings(column));
@@ -13679,6 +13781,9 @@ class $$MedicationInventoryBatchesTableAnnotationComposer
   GeneratedColumn<int> get looseQuantityScaled => $composableBuilder(
       column: $table.looseQuantityScaled, builder: (column) => column);
 
+  GeneratedColumn<String> get partialPacksJson => $composableBuilder(
+      column: $table.partialPacksJson, builder: (column) => column);
+
   GeneratedColumn<int> get initialQuantityScaled => $composableBuilder(
       column: $table.initialQuantityScaled, builder: (column) => column);
 
@@ -13746,6 +13851,7 @@ class $$MedicationInventoryBatchesTableTableManager extends RootTableManager<
             Value<String?> subPackagingType = const Value.absent(),
             Value<int?> subPackagesPerPackage = const Value.absent(),
             Value<int?> looseQuantityScaled = const Value.absent(),
+            Value<String?> partialPacksJson = const Value.absent(),
             Value<int> initialQuantityScaled = const Value.absent(),
             Value<int> availableQuantityScaled = const Value.absent(),
             Value<int> quantityScale = const Value.absent(),
@@ -13768,6 +13874,7 @@ class $$MedicationInventoryBatchesTableTableManager extends RootTableManager<
             subPackagingType: subPackagingType,
             subPackagesPerPackage: subPackagesPerPackage,
             looseQuantityScaled: looseQuantityScaled,
+            partialPacksJson: partialPacksJson,
             initialQuantityScaled: initialQuantityScaled,
             availableQuantityScaled: availableQuantityScaled,
             quantityScale: quantityScale,
@@ -13790,6 +13897,7 @@ class $$MedicationInventoryBatchesTableTableManager extends RootTableManager<
             Value<String?> subPackagingType = const Value.absent(),
             Value<int?> subPackagesPerPackage = const Value.absent(),
             Value<int?> looseQuantityScaled = const Value.absent(),
+            Value<String?> partialPacksJson = const Value.absent(),
             required int initialQuantityScaled,
             required int availableQuantityScaled,
             Value<int> quantityScale = const Value.absent(),
@@ -13812,6 +13920,7 @@ class $$MedicationInventoryBatchesTableTableManager extends RootTableManager<
             subPackagingType: subPackagingType,
             subPackagesPerPackage: subPackagesPerPackage,
             looseQuantityScaled: looseQuantityScaled,
+            partialPacksJson: partialPacksJson,
             initialQuantityScaled: initialQuantityScaled,
             availableQuantityScaled: availableQuantityScaled,
             quantityScale: quantityScale,
@@ -14781,6 +14890,7 @@ typedef $$DoseInstancesTableCreateCompanionBuilder = DoseInstancesCompanion
   Value<int?> lateMinutes,
   Value<bool> isPrn,
   Value<String?> loggedByPersonId,
+  Value<DateTime?> loggedAt,
   Value<String?> notes,
   required DateTime createdAt,
   required DateTime updatedAt,
@@ -14804,6 +14914,7 @@ typedef $$DoseInstancesTableUpdateCompanionBuilder = DoseInstancesCompanion
   Value<int?> lateMinutes,
   Value<bool> isPrn,
   Value<String?> loggedByPersonId,
+  Value<DateTime?> loggedAt,
   Value<String?> notes,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -14870,6 +14981,9 @@ class $$DoseInstancesTableFilterComposer
   ColumnFilters<String> get loggedByPersonId => $composableBuilder(
       column: $table.loggedByPersonId,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get loggedAt => $composableBuilder(
+      column: $table.loggedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnFilters(column));
@@ -14944,6 +15058,9 @@ class $$DoseInstancesTableOrderingComposer
       column: $table.loggedByPersonId,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get loggedAt => $composableBuilder(
+      column: $table.loggedAt, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnOrderings(column));
 
@@ -15011,6 +15128,9 @@ class $$DoseInstancesTableAnnotationComposer
   GeneratedColumn<String> get loggedByPersonId => $composableBuilder(
       column: $table.loggedByPersonId, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get loggedAt =>
+      $composableBuilder(column: $table.loggedAt, builder: (column) => column);
+
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
 
@@ -15063,6 +15183,7 @@ class $$DoseInstancesTableTableManager extends RootTableManager<
             Value<int?> lateMinutes = const Value.absent(),
             Value<bool> isPrn = const Value.absent(),
             Value<String?> loggedByPersonId = const Value.absent(),
+            Value<DateTime?> loggedAt = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -15085,6 +15206,7 @@ class $$DoseInstancesTableTableManager extends RootTableManager<
             lateMinutes: lateMinutes,
             isPrn: isPrn,
             loggedByPersonId: loggedByPersonId,
+            loggedAt: loggedAt,
             notes: notes,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -15107,6 +15229,7 @@ class $$DoseInstancesTableTableManager extends RootTableManager<
             Value<int?> lateMinutes = const Value.absent(),
             Value<bool> isPrn = const Value.absent(),
             Value<String?> loggedByPersonId = const Value.absent(),
+            Value<DateTime?> loggedAt = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
@@ -15129,6 +15252,7 @@ class $$DoseInstancesTableTableManager extends RootTableManager<
             lateMinutes: lateMinutes,
             isPrn: isPrn,
             loggedByPersonId: loggedByPersonId,
+            loggedAt: loggedAt,
             notes: notes,
             createdAt: createdAt,
             updatedAt: updatedAt,

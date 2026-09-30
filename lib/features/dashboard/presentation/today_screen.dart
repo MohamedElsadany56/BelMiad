@@ -411,10 +411,27 @@ class _DoseTile extends ConsumerWidget {
                           if (status == DoseStatus.taken &&
                               dose.takenAt != null)
                             Text(
-                              l10n.takenAt(
-                                formatClock(
-                                    context, time.toLocal(dose.takenAt!)),
-                              ),
+                              dose.loggedAt != null &&
+                                      isRecordedLater(
+                                        dose.takenAt!,
+                                        dose.loggedAt!,
+                                      )
+                                  ? l10n.recordedLaterAt(
+                                      formatClock(
+                                        context,
+                                        time.toLocal(dose.takenAt!),
+                                      ),
+                                      formatClock(
+                                        context,
+                                        time.toLocal(dose.loggedAt!),
+                                      ),
+                                    )
+                                  : l10n.takenAt(
+                                      formatClock(
+                                        context,
+                                        time.toLocal(dose.takenAt!),
+                                      ),
+                                    ),
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                         ],
@@ -424,6 +441,25 @@ class _DoseTile extends ConsumerWidget {
                   StatusBadge(badge, tone: tone, icon: icon),
                 ],
               ),
+              if (status == DoseStatus.missed &&
+                  DateTime.now()
+                          .toUtc()
+                          .difference(dose.scheduledAt.toUtc())
+                          .inDays <
+                      7)
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton.icon(
+                    onPressed: () => showTakeDoseSheet(
+                      context,
+                      ref,
+                      doseInstanceId: dose.doseInstanceId,
+                      recordEarlier: true,
+                    ),
+                    icon: const Icon(Icons.history),
+                    label: Text(l10n.recordAsTaken),
+                  ),
+                ),
               if (status == DoseStatus.scheduled || status == DoseStatus.taken)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,

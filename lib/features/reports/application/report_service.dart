@@ -107,6 +107,9 @@ class ReportService {
           takenAt: dose.takenAt,
           lateMinutes: dose.lateMinutes,
           isPrn: dose.isPrn,
+          recordedLater: dose.takenAt != null &&
+              dose.loggedAt != null &&
+              isRecordedLater(dose.takenAt!, dose.loggedAt!),
         ));
       }
     }

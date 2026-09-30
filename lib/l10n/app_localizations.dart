@@ -3619,6 +3619,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Camera access was denied'**
   String get error_cameraDenied;
+
+  /// No description provided for @whenTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'When was it taken?'**
+  String get whenTaken;
+
+  /// No description provided for @takenNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get takenNow;
+
+  /// No description provided for @takenEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get takenEarlier;
+
+  /// No description provided for @intakeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time the patient took it'**
+  String get intakeTime;
+
+  /// No description provided for @recordLaterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this when the patient took the dose alone and you are recording it afterwards.'**
+  String get recordLaterHint;
+
+  /// No description provided for @recordAsTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Record as taken'**
+  String get recordAsTaken;
+
+  /// No description provided for @recordedLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded later'**
+  String get recordedLater;
+
+  /// No description provided for @recordedLaterAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken at {taken} · recorded at {recorded}'**
+  String recordedLaterAt(Object taken, Object recorded);
+
+  /// No description provided for @missedCorrectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken but not recorded? Enter the time the patient took it.'**
+  String get missedCorrectionHint;
+
+  /// No description provided for @audit_dose_recorded_late.
+  ///
+  /// In en, this message translates to:
+  /// **'Dose recorded later'**
+  String get audit_dose_recorded_late;
+
+  /// No description provided for @error_takenInFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'The intake time can\'t be in the future'**
+  String get error_takenInFuture;
+
+  /// No description provided for @error_takenTooEarly.
+  ///
+  /// In en, this message translates to:
+  /// **'That time is too long before the scheduled dose'**
+  String get error_takenTooEarly;
+
+  /// No description provided for @error_invalidPartialPack.
+  ///
+  /// In en, this message translates to:
+  /// **'Units left in an opened pack can\'t be more than it holds'**
+  String get error_invalidPartialPack;
+
+  /// No description provided for @openedPacks.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened or incomplete packs'**
+  String get openedPacks;
+
+  /// No description provided for @addOpenedPack.
+  ///
+  /// In en, this message translates to:
+  /// **'Add opened pack'**
+  String get addOpenedPack;
+
+  /// No description provided for @openedPacksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example a strip with 9 of 14 tablets left, or a box with some strips used.'**
+  String get openedPacksHint;
+
+  /// No description provided for @unitsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Units left'**
+  String get unitsLeft;
+
+  /// No description provided for @packCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Holds when full'**
+  String get packCapacity;
+
+  /// No description provided for @partialPackOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{pack} {remaining} of {capacity}'**
+  String partialPackOf(Object pack, Object remaining, Object capacity);
 }
 
 class _AppLocalizationsDelegate

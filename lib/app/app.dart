@@ -5,6 +5,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
+import '../core/settings/settings_repository.dart';
+import '../features/notifications/application/notification_actions.dart';
+import 'demo/demo_seed.dart';
 import 'providers/app_providers.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
@@ -20,14 +23,45 @@ class _BelMiadAppState extends ConsumerState<BelMiadApp>
     with WidgetsBindingObserver {
   Timer? _periodicSync;
   Timer? _inactivity;
+  StreamSubscription<(String?, String?)>? _notificationTaps;
+
+  /// "Take"/"Snooze" run in place; tapping the notification opens Today
+  /// for that patient.
+  Future<void> _onNotification((String?, String?) event) async {
+    final (actionId, payload) = event;
+    if (actionId == NotificationActionIds.take ||
+        actionId == NotificationActionIds.snooze) {
+      await ref.read(doseNotificationActionsProvider).handle(actionId, payload);
+      ref.read(syncCoordinatorProvider).request();
+      return;
+    }
+    _openFromNotification(payload);
+  }
+
+  void _openFromNotification(String? payload) {
+    final patientId = NotificationPayload.decode(payload)?.patientId;
+    if (patientId != null) {
+      ref
+          .read(settingsRepositoryProvider)
+          .set(SettingKeys.currentPatientId, patientId);
+    }
+    ref.read(routerProvider).go('/today');
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _notificationTaps =
+        ref.read(notificationTapsProvider).stream.listen(_onNotification);
     Future.microtask(() async {
-      await ref.read(localNotifierProvider).initialize();
+      if (demoMode) await ref.read(demoSeedProvider.future);
+      final notifier = ref.read(localNotifierProvider);
+      await notifier.initialize();
       ref.read(syncCoordinatorProvider).request();
+      // The app was opened by tapping a notification.
+      final launch = await notifier.launchPayload();
+      if (launch != null) _openFromNotification(launch);
     });
     // Keeps missed-dose marking and notifications current while open.
     _periodicSync = Timer.periodic(
@@ -38,6 +72,7 @@ class _BelMiadAppState extends ConsumerState<BelMiadApp>
 
   @override
   void dispose() {
+    _notificationTaps?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _periodicSync?.cancel();
     _inactivity?.cancel();

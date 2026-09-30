@@ -35,7 +35,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -74,6 +74,13 @@ class AppDatabase extends _$AppDatabase {
               vitalsMeasurements,
               vitalsMeasurements.minutesAfter,
             );
+          }
+          if (from < 3) {
+            await m.addColumn(
+              medicationInventoryBatches,
+              medicationInventoryBatches.partialPacksJson,
+            );
+            await m.addColumn(doseInstances, doseInstances.loggedAt);
           }
         },
         beforeOpen: (details) async {

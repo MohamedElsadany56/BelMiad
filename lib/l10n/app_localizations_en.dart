@@ -1955,4 +1955,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get error_cameraDenied => 'Camera access was denied';
+
+  @override
+  String get whenTaken => 'When was it taken?';
+
+  @override
+  String get takenNow => 'Now';
+
+  @override
+  String get takenEarlier => 'Earlier';
+
+  @override
+  String get intakeTime => 'Time the patient took it';
+
+  @override
+  String get recordLaterHint =>
+      'Use this when the patient took the dose alone and you are recording it afterwards.';
+
+  @override
+  String get recordAsTaken => 'Record as taken';
+
+  @override
+  String get recordedLater => 'Recorded later';
+
+  @override
+  String recordedLaterAt(Object taken, Object recorded) {
+    return 'Taken at $taken · recorded at $recorded';
+  }
+
+  @override
+  String get missedCorrectionHint =>
+      'Taken but not recorded? Enter the time the patient took it.';
+
+  @override
+  String get audit_dose_recorded_late => 'Dose recorded later';
+
+  @override
+  String get error_takenInFuture => 'The intake time can\'t be in the future';
+
+  @override
+  String get error_takenTooEarly =>
+      'That time is too long before the scheduled dose';
+
+  @override
+  String get error_invalidPartialPack =>
+      'Units left in an opened pack can\'t be more than it holds';
+
+  @override
+  String get openedPacks => 'Opened or incomplete packs';
+
+  @override
+  String get addOpenedPack => 'Add opened pack';
+
+  @override
+  String get openedPacksHint =>
+      'For example a strip with 9 of 14 tablets left, or a box with some strips used.';
+
+  @override
+  String get unitsLeft => 'Units left';
+
+  @override
+  String get packCapacity => 'Holds when full';
+
+  @override
+  String partialPackOf(Object pack, Object remaining, Object capacity) {
+    return '$pack $remaining of $capacity';
+  }
 }

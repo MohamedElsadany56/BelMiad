@@ -60,3 +60,40 @@ const onTimeToleranceMinutes = 30;
 
 bool isTakenLate(int? lateMinutes) =>
     (lateMinutes ?? 0) > onTimeToleranceMinutes;
+
+/// How far before the scheduled time an intake may be recorded (e.g. a dose
+/// taken early with breakfast).
+const earlyIntakeWindow = Duration(hours: 12);
+
+/// A dose counts as "recorded later" when it was logged more than this long
+/// after the actual intake.
+const recordedLaterThreshold = Duration(minutes: 5);
+
+bool isRecordedLater(DateTime takenAt, DateTime loggedAt) =>
+    loggedAt.toUtc().difference(takenAt.toUtc()) > recordedLaterThreshold;
+
+/// Validates an intake time recorded after the fact. The intake must not be
+/// in the future, not unreasonably early, and — for scheduled doses — within
+/// the grace window, so a truly missed dose can never become "taken".
+void validateIntakeTime({
+  required DateTime scheduledAt,
+  required DateTime takenAt,
+  required DateTime now,
+  required int? graceMinutes,
+}) {
+  final intake = takenAt.toUtc();
+  if (intake.isAfter(now.toUtc().add(const Duration(minutes: 1)))) {
+    throw const ValidationException('takenInFuture');
+  }
+  if (intake.isBefore(scheduledAt.toUtc().subtract(earlyIntakeWindow))) {
+    throw const ValidationException('takenTooEarly');
+  }
+  if (graceMinutes != null &&
+      isPastGraceWindow(
+        scheduledAt: scheduledAt,
+        now: intake,
+        graceMinutes: graceMinutes,
+      )) {
+    throw const DoseWindowClosedException();
+  }
+}

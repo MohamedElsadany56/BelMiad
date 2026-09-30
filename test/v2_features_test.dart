@@ -345,7 +345,9 @@ void main() {
         'sub_packaging_type',
         'sub_packages_per_package',
         'loose_quantity_scaled',
+        'partial_packs_json',
       ],
+      'dose_instances': ['logged_at'],
       'meals': ['time_mode', 'weekday_times'],
       'medication_schedules': ['group_id'],
       'vitals_measurements': [

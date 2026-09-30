@@ -12,6 +12,7 @@ import '../../audit/data/audit_log.dart';
 import '../../medications/presentation/medications_screen.dart';
 import '../../reports/application/pdf_report_service.dart';
 import '../data/inventory_repository.dart';
+import '../domain/partial_pack.dart';
 import '../domain/stock_forecast.dart';
 
 final _adjustmentsProvider =
@@ -242,7 +243,9 @@ class _BatchCard extends ConsumerWidget {
         '${l10n.purchaseDate}: ${formatIsoDate(context, batch.purchaseDate)}',
       if (batch.purchasePrice != null)
         '${l10n.purchasePrice}: ${batch.purchasePrice!.toStringAsFixed(2)}',
-      if (batch.packagesCount != null && batch.unitsPerPackage != null)
+      if (batch.packagesCount != null &&
+          batch.packagesCount! > 0 &&
+          batch.unitsPerPackage != null)
         [
               '${batch.packagesCount} ${packagingLabel(batch.packagingType, l10n)}',
               if (batch.subPackagesPerPackage != null)
@@ -252,6 +255,12 @@ class _BatchCard extends ConsumerWidget {
             (batch.looseQuantityScaled == null
                 ? ''
                 : ' + ${formatScaled(batch.looseQuantityScaled)}'),
+      for (final pack in decodePartialPacks(batch.partialPacksJson))
+        l10n.partialPackOf(
+          packagingLabel(pack.type, l10n),
+          formatScaled(pack.remainingScaled),
+          pack.capacity ?? '?',
+        ),
     ].join('\n');
     return Card(
       child: ListTile(

@@ -120,6 +120,10 @@ class MedicationInventoryBatches extends Table {
 
   /// Extra loose units added to the packaged quantity.
   IntColumn get looseQuantityScaled => integer().nullable()();
+
+  /// JSON list of opened/incomplete packs, e.g. a strip with 9 of 14
+  /// tablets left: `[{"type":"strip","remaining":9000,"capacity":14}]`.
+  TextColumn get partialPacksJson => text().nullable()();
   IntColumn get initialQuantityScaled => integer()();
   IntColumn get availableQuantityScaled => integer()();
   IntColumn get quantityScale => integer().withDefault(const Constant(1000))();
@@ -229,6 +233,10 @@ class DoseInstances extends Table {
   IntColumn get lateMinutes => integer().nullable()();
   BoolColumn get isPrn => boolean().withDefault(const Constant(false))();
   TextColumn get loggedByPersonId => text().nullable()();
+
+  /// When the intake was recorded in the app. Differs from [takenAt] when a
+  /// caregiver records a dose the patient took earlier on their own.
+  DateTimeColumn get loggedAt => dateTime().nullable()();
   TextColumn get notes => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();

@@ -13,15 +13,12 @@ class PickedFile {
 }
 
 Future<PickedFile?> pickFile({List<String>? extensions}) async {
-  final result = await FilePicker.pickFiles(
+  final file = await FilePicker.pickFile(
     type: extensions == null ? FileType.any : FileType.custom,
     allowedExtensions: extensions,
-    withData: true,
   );
-  final file = result?.files.singleOrNull;
-  final bytes = file?.bytes;
-  if (file == null || bytes == null) return null;
-  return PickedFile(file.name, bytes);
+  if (file == null) return null;
+  return PickedFile(file.name, await file.readAsBytes());
 }
 
 /// Lets the user save a generated file to the device or share it with
@@ -60,17 +57,19 @@ Future<void> saveOrShareFile(
   if (choice == null || !context.mounted) return;
   try {
     if (choice == 'share') {
-      await Share.shareXFiles([
-        XFile.fromData(bytes, name: fileName, mimeType: mimeType),
-      ], fileNameOverrides: [
-        fileName
-      ]);
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile.fromData(bytes, name: fileName, mimeType: mimeType)],
+          fileNameOverrides: [fileName],
+        ),
+      );
     } else {
-      final path = await FilePicker.saveFile(
+      final saved = await FilePicker.saveFile(
         fileName: fileName,
         bytes: bytes,
+        mimeType: mimeType,
       );
-      if (path != null && context.mounted) {
+      if (saved != null && context.mounted) {
         showMessage(context, l10n.savedMessage);
       }
     }

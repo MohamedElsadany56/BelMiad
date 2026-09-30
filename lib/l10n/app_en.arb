@@ -738,5 +738,37 @@
   "fileType_image": "Photos",
   "fileType_pdf": "PDF documents",
   "fileType_other": "Other files",
-  "error_cameraDenied": "Camera access was denied"
+  "error_cameraDenied": "Camera access was denied",
+  "whenTaken": "When was it taken?",
+  "takenNow": "Now",
+  "takenEarlier": "Earlier",
+  "intakeTime": "Time the patient took it",
+  "recordLaterHint": "Use this when the patient took the dose alone and you are recording it afterwards.",
+  "recordAsTaken": "Record as taken",
+  "recordedLater": "Recorded later",
+  "recordedLaterAt": "Taken at {taken} · recorded at {recorded}",
+  "@recordedLaterAt": {
+    "placeholders": {
+      "taken": {},
+      "recorded": {}
+    }
+  },
+  "missedCorrectionHint": "Taken but not recorded? Enter the time the patient took it.",
+  "audit_dose_recorded_late": "Dose recorded later",
+  "error_takenInFuture": "The intake time can't be in the future",
+  "error_takenTooEarly": "That time is too long before the scheduled dose",
+  "error_invalidPartialPack": "Units left in an opened pack can't be more than it holds",
+  "openedPacks": "Opened or incomplete packs",
+  "addOpenedPack": "Add opened pack",
+  "openedPacksHint": "For example a strip with 9 of 14 tablets left, or a box with some strips used.",
+  "unitsLeft": "Units left",
+  "packCapacity": "Holds when full",
+  "partialPackOf": "{pack} {remaining} of {capacity}",
+  "@partialPackOf": {
+    "placeholders": {
+      "pack": {},
+      "remaining": {},
+      "capacity": {}
+    }
+  }
 }
