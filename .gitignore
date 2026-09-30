@@ -2,3 +2,15 @@
 build/
 .flutter-plugins-dependencies
 *.log
+
+# IDE and local tool settings
+.idea/
+*.iml
+.vscode/
+.claude/
+
+# Flutter/Dart tooling
+.flutter-plugins
+.pub-cache/
+.pub/
+coverage/

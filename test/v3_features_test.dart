@@ -217,7 +217,8 @@ void main() {
     await db.customStatement(
       'ALTER TABLE medication_inventory_batches DROP COLUMN partial_packs_json',
     );
-    await db.customStatement('ALTER TABLE dose_instances DROP COLUMN logged_at');
+    await db
+        .customStatement('ALTER TABLE dose_instances DROP COLUMN logged_at');
     await db.customStatement('PRAGMA user_version = 2');
     await db.close();
 

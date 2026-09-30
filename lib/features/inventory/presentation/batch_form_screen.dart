@@ -10,7 +10,7 @@ import '../../../core/time/local_date.dart';
 import '../../../core/utilities/scaled_quantity.dart';
 import '../../catalog/data/drug_catalog_repository.dart';
 import '../../medications/data/medication_repository.dart';
-import '../../medications/presentation/medication_form_screen.dart';
+import '../../catalog/presentation/catalog_search.dart';
 import '../../medications/presentation/medications_screen.dart';
 import '../data/inventory_repository.dart';
 import '../domain/partial_pack.dart';
