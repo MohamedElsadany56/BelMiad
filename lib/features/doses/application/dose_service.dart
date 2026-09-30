@@ -126,18 +126,35 @@ class DoseService {
   /// daily check, batch selection, consumption, stock decrement, status,
   /// late minutes, audit and notification state (spec §18). Any failure rolls
   /// back everything.
+  ///
+  /// [takenAt] records an intake that happened earlier, e.g. the patient took
+  /// the dose alone and the caregiver records it on arrival. The grace window
+  /// is checked against the actual intake time, so a dose the app already
+  /// marked MISSED only because nobody logged it can be corrected — but a
+  /// dose that really was missed can still never be taken late.
   Future<void> takeDose({
     required String doseInstanceId,
     required int actualQuantityScaled,
     List<BatchAllocation>? manualAllocations,
     bool overrideMaximum = false,
     int graceMinutes = 180,
+    DateTime? takenAt,
   }) async {
     await _db.transaction(() async {
       final now = _clock();
       final dose = await _dose(doseInstanceId);
-      DoseStatus.fromCode(dose.status).ensureCanTransitionTo(DoseStatus.taken);
-      if (!dose.isPrn &&
+      final status = DoseStatus.fromCode(dose.status);
+      final intake = takenAt?.toUtc() ?? now;
+      final correctingMissed = status == DoseStatus.missed && takenAt != null;
+      if (!correctingMissed) status.ensureCanTransitionTo(DoseStatus.taken);
+      if (takenAt != null) {
+        validateIntakeTime(
+          scheduledAt: dose.scheduledAt,
+          takenAt: intake,
+          now: now,
+          graceMinutes: dose.isPrn ? null : graceMinutes,
+        );
+      } else if (!dose.isPrn &&
           isPastGraceWindow(
             scheduledAt: dose.scheduledAt,
             now: now,
@@ -151,7 +168,11 @@ class DoseService {
         manualAllocations: manualAllocations,
         overrideMaximum: overrideMaximum,
         now: now,
-        auditAction: AuditActions.doseTaken,
+        takenAt: intake,
+        auditAction: isRecordedLater(intake, now)
+            ? AuditActions.doseRecordedLate
+            : AuditActions.doseTaken,
+        correctedMissed: correctingMissed,
       );
     });
   }
@@ -164,10 +185,15 @@ class DoseService {
     List<BatchAllocation>? manualAllocations,
     bool overrideMaximum = false,
     String? notes,
+    DateTime? takenAt,
   }) async {
     final id = newId();
     await _db.transaction(() async {
       final now = _clock();
+      final intake = takenAt?.toUtc() ?? now;
+      if (intake.isAfter(now.add(const Duration(minutes: 1)))) {
+        throw const ValidationException('takenInFuture');
+      }
       final medication = await _medication(medicationId);
       final time = await _patientTime(medication.patientId);
       await _db.into(_db.doseInstances).insert(
@@ -175,8 +201,8 @@ class DoseService {
               doseInstanceId: id,
               patientId: medication.patientId,
               medicationId: medicationId,
-              localDate: time.localDateOf(now).toIso(),
-              scheduledAt: now,
+              localDate: time.localDateOf(intake).toIso(),
+              scheduledAt: intake,
               requiredQuantityScaled: actualQuantityScaled,
               status: DoseStatus.scheduled.code,
               isPrn: const Value(true),
@@ -192,6 +218,7 @@ class DoseService {
         manualAllocations: manualAllocations,
         overrideMaximum: overrideMaximum,
         now: now,
+        takenAt: intake,
         auditAction: AuditActions.prnLogged,
       );
     });
@@ -204,7 +231,9 @@ class DoseService {
     required List<BatchAllocation>? manualAllocations,
     required bool overrideMaximum,
     required DateTime now,
+    required DateTime takenAt,
     required String auditAction,
+    bool correctedMissed = false,
   }) async {
     // 2. Actual quantity: zero is never TAKEN and never consumes stock.
     if (actualQuantityScaled <= 0) {
@@ -212,7 +241,8 @@ class DoseService {
     }
     final medication = await _medication(dose.medicationId);
     final time = await _patientTime(medication.patientId);
-    final today = time.today(now);
+    // Stock usability (expiry) is judged on the day of the actual intake.
+    final today = time.today(takenAt);
 
     // 3. Maximum daily quantity.
     final maximum = medication.maximumDailyQuantityScaled;
@@ -259,13 +289,15 @@ class DoseService {
 
     // 7–8. Status and late minutes.
     final lateMinutes =
-        dose.isPrn ? 0 : calculateLateMinutes(dose.scheduledAt, now);
+        dose.isPrn ? 0 : calculateLateMinutes(dose.scheduledAt, takenAt);
     await (_db.update(_db.doseInstances)
           ..where((d) => d.doseInstanceId.equals(dose.doseInstanceId)))
         .write(DoseInstancesCompanion(
       status: Value(DoseStatus.taken.code),
       actualQuantityScaled: Value(actualQuantityScaled),
-      takenAt: Value(now),
+      takenAt: Value(takenAt),
+      loggedAt: Value(now),
+      missedAt: const Value(null),
       lateMinutes: Value(lateMinutes),
       loggedByPersonId: Value(_session.actorPersonId),
       updatedAt: Value(now),
@@ -282,6 +314,9 @@ class DoseService {
         'required_scaled': dose.requiredQuantityScaled,
         'actual_scaled': actualQuantityScaled,
         'late_minutes': lateMinutes,
+        'taken_at': takenAt.toUtc().toIso8601String(),
+        'recorded_at': now.toUtc().toIso8601String(),
+        if (correctedMissed) 'corrected_missed': true,
         'batches': [
           for (final a in allocations)
             {'batch_id': a.batchId, 'quantity_scaled': a.quantityScaled},
@@ -323,6 +358,7 @@ class DoseService {
           .write(DoseInstancesCompanion(
         status: Value(DoseStatus.scheduled.code),
         takenAt: const Value(null),
+        loggedAt: const Value(null),
         actualQuantityScaled: const Value(null),
         lateMinutes: const Value(null),
         updatedAt: Value(now),

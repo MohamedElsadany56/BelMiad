@@ -10,12 +10,15 @@ import '../../../core/utilities/scaled_quantity.dart';
 import '../../inventory/domain/batch_selection.dart';
 import '../../medications/data/medication_repository.dart';
 import '../application/dose_service.dart';
+import '../domain/dose_status.dart';
+import '../../../core/time/local_date.dart';
 
 /// Opens the dose confirmation flow for a scheduled dose.
 Future<void> showTakeDoseSheet(
   BuildContext context,
   WidgetRef ref, {
   required String doseInstanceId,
+  bool recordEarlier = false,
 }) async {
   final dose = ref.read(doseServiceProvider);
   final TakeDoseContext data;
@@ -31,7 +34,7 @@ Future<void> showTakeDoseSheet(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => TakeDoseSheet(data: data),
+    builder: (_) => TakeDoseSheet(data: data, recordEarlier: recordEarlier),
   );
 }
 
@@ -61,9 +64,16 @@ Future<void> showPrnSheet(
 }
 
 class TakeDoseSheet extends ConsumerStatefulWidget {
-  const TakeDoseSheet({required this.data, super.key});
+  const TakeDoseSheet({
+    required this.data,
+    this.recordEarlier = false,
+    super.key,
+  });
 
   final TakeDoseContext data;
+
+  /// Start in "taken earlier" mode, e.g. when correcting a missed dose.
+  final bool recordEarlier;
 
   @override
   ConsumerState<TakeDoseSheet> createState() => _TakeDoseSheetState();
@@ -75,13 +85,25 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
   bool _manualMode = false;
   bool _busy = false;
   String? _quantityError;
+  late bool _earlier;
+  late DateTime _intakeUtc;
 
   TakeDoseContext get data => widget.data;
   bool get isPrn => data.dose == null;
 
+  /// A dose the app marked missed can only be corrected with the real
+  /// (earlier) intake time, never taken "now".
+  bool get _isMissed => data.dose?.status == DoseStatus.missed.code;
+
   @override
   void initState() {
     super.initState();
+    _earlier = widget.recordEarlier || _isMissed;
+    final now = DateTime.now().toUtc();
+    final scheduled = data.dose?.scheduledAt.toUtc();
+    _intakeUtc = scheduled != null && scheduled.isBefore(now)
+        ? scheduled
+        : now.subtract(const Duration(minutes: 30));
     final initial = data.isInsufficient
         ? ScaledQuantity.min(
             ScaledQuantity(data.usableScaled),
@@ -117,6 +139,24 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
     });
   }
 
+  /// The picker shows the patient's wall clock; convert it back to UTC in
+  /// the patient's timezone.
+  Future<void> _pickIntake() async {
+    final time = ref.read(patientTimeProvider);
+    final local = time.toLocal(_intakeUtc);
+    final picked = await pickDateTime(
+      context,
+      DateTime(local.year, local.month, local.day, local.hour, local.minute),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _intakeUtc = time.toUtc(
+        LocalDate(picked.year, picked.month, picked.day),
+        picked.hour * 60 + picked.minute,
+      );
+    });
+  }
+
   Future<void> _submit({bool overrideMaximum = false}) async {
     final l10n = context.l10n;
     final actual = _actualScaled;
@@ -149,6 +189,7 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
           actualQuantityScaled: actual,
           manualAllocations: manual,
           overrideMaximum: overrideMaximum,
+          takenAt: _earlier ? _intakeUtc : null,
         );
       } else {
         await service.takeDose(
@@ -157,6 +198,7 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
           manualAllocations: manual,
           overrideMaximum: overrideMaximum,
           graceMinutes: settings.missedGraceMinutes,
+          takenAt: _earlier ? _intakeUtc : null,
         );
       }
       ref.read(syncCoordinatorProvider).request();
@@ -273,6 +315,51 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
                   quantityWithUnit(
                       data.maximumScaled, data.medication.doseUnit, l10n),
                 )),
+              const SizedBox(height: 12),
+              Text(l10n.whenTaken,
+                  style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 8),
+              if (!_isMissed)
+                SegmentedButton<bool>(
+                  segments: [
+                    ButtonSegment(
+                      value: false,
+                      icon: const Icon(Icons.bolt),
+                      label: Text(l10n.takenNow),
+                    ),
+                    ButtonSegment(
+                      value: true,
+                      icon: const Icon(Icons.history),
+                      label: Text(l10n.takenEarlier),
+                    ),
+                  ],
+                  selected: {_earlier},
+                  onSelectionChanged: (v) => setState(() => _earlier = v.first),
+                ),
+              if (_earlier) ...[
+                const SizedBox(height: 8),
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: _pickIntake,
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: l10n.intakeTime,
+                      prefixIcon: const Icon(Icons.schedule),
+                    ),
+                    child: Text(
+                      formatDateTime(
+                        context,
+                        ref.read(patientTimeProvider).toLocal(_intakeUtc),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _isMissed ? l10n.missedCorrectionHint : l10n.recordLaterHint,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
               const SizedBox(height: 12),
               if (!data.stockRecorded)
                 _Note(icon: Icons.info_outline, text: l10n.stockNotRecordedNote)

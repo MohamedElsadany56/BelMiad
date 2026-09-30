@@ -366,15 +366,17 @@ String adherenceLine(AdherenceStats stats, AppLocalizations l10n) {
 }
 
 String doseOutcomeText(ReportDose dose, AppLocalizations l10n) {
-  if (dose.isPrn) return l10n.prnTaken;
-  return switch (dose.outcome) {
-    DoseOutcome.takenOnTime => l10n.takenOnTime,
-    DoseOutcome.takenLate =>
-      '${l10n.takenLate} (${l10n.lateBy(dose.lateMinutes ?? 0)})',
-    DoseOutcome.missed => l10n.missed,
-    DoseOutcome.skipped => l10n.skipped,
-    DoseOutcome.pending => l10n.pending,
-  };
+  final text = dose.isPrn
+      ? l10n.prnTaken
+      : switch (dose.outcome) {
+          DoseOutcome.takenOnTime => l10n.takenOnTime,
+          DoseOutcome.takenLate =>
+            '${l10n.takenLate} (${l10n.lateBy(dose.lateMinutes ?? 0)})',
+          DoseOutcome.missed => l10n.missed,
+          DoseOutcome.skipped => l10n.skipped,
+          DoseOutcome.pending => l10n.pending,
+        };
+  return dose.recordedLater ? '$text · ${l10n.recordedLater}' : text;
 }
 
 String remainingDaysText(StockSummary summary, AppLocalizations l10n) {

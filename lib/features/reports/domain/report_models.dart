@@ -49,6 +49,7 @@ class ReportDose {
     this.takenAt,
     this.lateMinutes,
     this.isPrn = false,
+    this.recordedLater = false,
   });
 
   final String medicationName;
@@ -59,6 +60,9 @@ class ReportDose {
   final DateTime? takenAt;
   final int? lateMinutes;
   final bool isPrn;
+
+  /// Logged by a caregiver after the patient took it on their own.
+  final bool recordedLater;
 }
 
 class ReportMedication {

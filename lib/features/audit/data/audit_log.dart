@@ -20,6 +20,7 @@ abstract final class AuditActions {
   static const inventoryAdjusted = 'inventory_adjusted';
   static const inventoryDeleted = 'inventory_deleted';
   static const doseTaken = 'dose_taken';
+  static const doseRecordedLate = 'dose_recorded_late';
   static const doseUndone = 'dose_undone';
   static const doseSkipped = 'dose_skipped';
   static const doseMissed = 'dose_missed';
