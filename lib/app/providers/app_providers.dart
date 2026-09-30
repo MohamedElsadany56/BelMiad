@@ -25,6 +25,7 @@ import '../../features/inventory/application/stock_forecast_service.dart';
 import '../../features/inventory/data/inventory_repository.dart';
 import '../../features/meals/data/meal_repository.dart';
 import '../../features/medications/data/medication_repository.dart';
+import '../../features/notifications/application/notification_actions.dart';
 import '../../features/notifications/application/notification_engine.dart';
 import '../../features/notifications/data/notification_repository.dart';
 import '../../features/patients/data/patient_repository.dart';
@@ -58,8 +59,34 @@ final catalogDatabaseProvider = Provider<DrugCatalogDatabase>((ref) {
 
 final fileStoreProvider = Provider<AppFileStore>((ref) => AppFileStore());
 
-final localNotifierProvider =
-    Provider<LocalNotifier>((ref) => createPlatformNotifier());
+/// Taps on notifications (and their buttons) while the app is running.
+final notificationTapsProvider =
+    Provider<StreamController<(String?, String?)>>((ref) {
+  final controller = StreamController<(String?, String?)>.broadcast();
+  ref.onDispose(controller.close);
+  return controller;
+});
+
+final localNotifierProvider = Provider<LocalNotifier>(
+  (ref) => createPlatformNotifier(
+    onResponse: (actionId, payload) =>
+        ref.read(notificationTapsProvider).add((actionId, payload)),
+    // Buttons pressed while the app is closed run in a background isolate.
+    onBackgroundResponse: notificationBackgroundHandler,
+  ),
+);
+
+/// Handles notification buttons with the running app's services.
+final doseNotificationActionsProvider = Provider(
+  (ref) => DoseNotificationActions(
+    db: ref.watch(databaseProvider),
+    doses: ref.watch(doseServiceProvider),
+    settings: ref.watch(settingsRepositoryProvider),
+    notifier: ref.watch(localNotifierProvider),
+    arabic: ref.watch(localeProvider).languageCode == 'ar',
+    clock: ref.watch(clockProvider),
+  ),
+);
 
 final settingsRepositoryProvider =
     Provider((ref) => SettingsRepository(ref.watch(databaseProvider)));

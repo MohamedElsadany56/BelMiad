@@ -23,44 +23,8 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'helpers/fake_notifier.dart';
 import 'helpers/test_harness.dart';
-
-class FakeNotifier implements LocalNotifier {
-  final scheduled = <int, DateTime>{};
-  final shown = <int>[];
-  final cancelled = <int>[];
-
-  @override
-  Future<void> initialize() async {}
-
-  @override
-  Future<void> schedule({
-    required int id,
-    required String title,
-    required String body,
-    required DateTime at,
-    required NotificationChannel channel,
-  }) async =>
-      scheduled[id] = at;
-
-  @override
-  Future<void> show({
-    required int id,
-    required String title,
-    required String body,
-    required NotificationChannel channel,
-  }) async =>
-      shown.add(id);
-
-  @override
-  Future<void> cancel(int id) async {
-    cancelled.add(id);
-    scheduled.remove(id);
-  }
-
-  @override
-  Future<Set<int>> pendingIds() async => scheduled.keys.toSet();
-}
 
 void main() {
   late TestHarness h;

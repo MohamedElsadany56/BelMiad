@@ -13,6 +13,7 @@ import '../../health/data/health_repositories.dart';
 import '../../inventory/application/stock_forecast_service.dart';
 import '../../inventory/domain/stock_forecast.dart';
 import '../domain/notification_types.dart';
+import 'notification_actions.dart';
 
 abstract final class NotificationStatus {
   static const scheduled = 'scheduled';
@@ -63,6 +64,7 @@ class NotificationEngine {
     _running = true;
     try {
       final arabic = languageCode == 'ar';
+      await _upgradeFormat();
       final settings = await _settings.load();
       final patients = await (_db.select(_db.patients).join([
         innerJoin(
@@ -87,6 +89,37 @@ class NotificationEngine {
     } finally {
       _running = false;
     }
+  }
+
+  /// Version of the scheduled-notification format. Bumping it reschedules
+  /// pending dose alerts once (e.g. to add action buttons).
+  static const formatVersion = '2';
+  static const _formatKey = 'notification_format_version';
+
+  Future<void> _upgradeFormat() async {
+    if (await _settings.get(_formatKey) == formatVersion) return;
+    final pending = await (_db.select(_db.notifications)
+          ..where(
+            (n) =>
+                n.status.equals(NotificationStatus.scheduled) &
+                n.notificationType.isIn([
+                  NotificationTypes.doseReminder,
+                  NotificationTypes.missedDose,
+                ]),
+          ))
+        .get();
+    for (final row in pending) {
+      await _notifier.cancel(notificationIdFor(row.dedupKey));
+    }
+    if (pending.isNotEmpty) {
+      await (_db.delete(_db.notifications)
+            ..where(
+              (n) =>
+                  n.notificationId.isIn(pending.map((r) => r.notificationId)),
+            ))
+          .go();
+    }
+    await _settings.set(_formatKey, formatVersion);
   }
 
   Future<Map<String, bool>> _preferences(String patientId) async {
@@ -114,6 +147,8 @@ class NotificationEngine {
     required bool arabic,
     String? doseId,
     String? appointmentId,
+    String? payload,
+    List<NotifierAction> actions = const [],
   }) async {
     final existing = await _byKey(key);
     final now = _clock();
@@ -154,6 +189,8 @@ class NotificationEngine {
       body: arabic ? message.bodyAr : message.bodyEn,
       at: at,
       channel: channel,
+      payload: payload,
+      actions: actions,
     );
   }
 
@@ -248,6 +285,15 @@ class NotificationEngine {
         _db.medications,
         _db.medications.medicationId.equalsExp(_db.doseInstances.medicationId),
       ),
+      leftOuterJoin(
+        _db.medicationSchedules,
+        _db.medicationSchedules.scheduleId
+            .equalsExp(_db.doseInstances.scheduleId),
+      ),
+      leftOuterJoin(
+        _db.meals,
+        _db.meals.mealId.equalsExp(_db.medicationSchedules.mealId),
+      ),
     ])
           ..where(
             _db.doseInstances.patientId.equals(patient.patientId) &
@@ -263,6 +309,15 @@ class NotificationEngine {
     for (final row in rows) {
       final dose = row.readTable(_db.doseInstances);
       final medication = row.readTable(_db.medications);
+      final schedule = row.readTableOrNull(_db.medicationSchedules);
+      final meal = schedule?.scheduleType == 'meal_relative'
+          ? row.readTableOrNull(_db.meals)
+          : null;
+      final payload = NotificationPayload(
+        kind: NotificationPayload.dose,
+        doseId: dose.doseInstanceId,
+        patientId: patient.patientId,
+      ).encode();
       final nameEn = medication.nameEn;
       final nameAr = medication.nameAr ?? medication.nameEn;
       final qty = ScaledQuantity(dose.requiredQuantityScaled).format();
@@ -279,11 +334,17 @@ class NotificationEngine {
           doseId: dose.doseInstanceId,
           channel: NotificationChannel.doses,
           arabic: arabic,
-          message: _Message(
-            'Time for $nameEn — $patientName',
-            'موعد $nameAr — $patientName',
-            '$patientName: take $qty ${medication.doseUnit} of $nameEn at $clock.',
-            '$patientName: تناول $qty من $nameAr الساعة $clock.',
+          payload: payload,
+          actions: doseReminderActions(arabic: arabic),
+          message: _doseReminderMessage(
+            patientName: patientName,
+            nameEn: nameEn,
+            nameAr: nameAr,
+            quantity: qty,
+            unit: medication.doseUnit,
+            clock: clock,
+            meal: meal,
+            relation: schedule?.timingRelation,
           ),
         );
       }
@@ -300,6 +361,7 @@ class NotificationEngine {
           doseId: dose.doseInstanceId,
           channel: NotificationChannel.missed,
           arabic: arabic,
+          payload: payload,
           message: _Message(
             'Dose not taken — $patientName',
             'جرعة لم تُؤخذ — $patientName',
@@ -556,10 +618,19 @@ class NotificationEngine {
     for (final row in rows) {
       final id = notificationIdFor(row.dedupKey);
       if (pendingIds.contains(id)) continue;
+      final isReminder = row.notificationType == NotificationTypes.doseReminder;
       await _notifier.schedule(
         id: id,
         title: (arabic ? row.titleAr : row.titleEn) ?? '',
         body: (arabic ? row.bodyAr : row.bodyEn) ?? '',
+        payload: row.doseInstanceId == null
+            ? null
+            : NotificationPayload(
+                kind: NotificationPayload.dose,
+                doseId: row.doseInstanceId,
+                patientId: row.patientId,
+              ).encode(),
+        actions: isReminder ? doseReminderActions(arabic: arabic) : const [],
         at: row.scheduledAt,
         channel: switch (row.notificationType) {
           NotificationTypes.missedDose => NotificationChannel.missed,
@@ -569,5 +640,40 @@ class NotificationEngine {
         },
       );
     }
+  }
+
+  /// "Breakfast dose — Mother: take 1 tablet of Panadol at 08:30 (after
+  /// breakfast)".
+  _Message _doseReminderMessage({
+    required String patientName,
+    required String nameEn,
+    required String nameAr,
+    required String quantity,
+    required String unit,
+    required String clock,
+    Meal? meal,
+    String? relation,
+  }) {
+    if (meal == null) {
+      return _Message(
+        'Time for $nameEn — $patientName',
+        'موعد $nameAr — $patientName',
+        '$patientName: take $quantity $unit of $nameEn at $clock.',
+        '$patientName: تناول $quantity من $nameAr الساعة $clock.',
+      );
+    }
+    final mealEn = meal.nameEn;
+    final mealAr = meal.nameAr.isEmpty ? meal.nameEn : meal.nameAr;
+    final (relationEn, relationAr) = switch (relation) {
+      'before' => ('before', 'قبل'),
+      'after' => ('after', 'بعد'),
+      _ => ('with', 'مع'),
+    };
+    return _Message(
+      '$mealEn dose — $patientName',
+      'جرعة $mealAr — $patientName',
+      'Take $quantity $unit of $nameEn at $clock ($relationEn ${mealEn.toLowerCase()}).',
+      'تناول $quantity من $nameAr الساعة $clock ($relationAr $mealAr).',
+    );
   }
 }
