@@ -28,16 +28,9 @@ and no cloud: the app works fully offline, by design (see the
 Dose reminders pop up at the top of the screen like a chat message, with
 buttons you can press without opening the app:
 
-```text
-┌──────────────────────────────────────────────┐
-│ 💊 BelMiad · now                              │
-│ Breakfast dose — Mother                       │
-│ Take 1 tablet of Glucophage 500 mg at 08:30   │
-│ (after breakfast)                             │
-│                                               │
-│   ✓ TAKE              SNOOZE 10 MIN           │
-└──────────────────────────────────────────────┘
-```
+<p align="left">
+  <img src="docs/screenshots/pop-up-message.jpg" width="220" alt="pop-up-message">
+</p>
 
 - **✓ Take** records the dose, deducts stock (first expiring first) and
   shows a short confirmation. It works even when the app is closed.
