@@ -3,6 +3,7 @@
 <img src="assets/icon/app_icon_rounded.png" width="112" alt="BelMiad icon">
 
 # BelMiad — بالميعاد
+[![Download](https://img.shields.io/badge/Download-App-blue?style=for-the-badge&logo=google-drive)](https://drive.google.com/file/d/1kz8rLjDxRHb2dd6iuDIqykR5PJgbHyle/view?usp=sharing) 
 
 **Offline medicine and dose management for patients, family caregivers and
 private nurses.**
@@ -256,3 +257,6 @@ directly. Dose and stock operations each run in a single Drift transaction.
 ## License
 
 See [LICENSE](LICENSE).
+
+[![Download](https://img.shields.io/badge/Download-App-blue?style=for-the-badge&logo=google-drive)](https://drive.google.com/file/d/1kz8rLjDxRHb2dd6iuDIqykR5PJgbHyle/view?usp=sharing) 
+
