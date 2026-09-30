@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../core/settings/settings_repository.dart';
 import '../features/notifications/application/notification_actions.dart';
+import 'demo/demo_seed.dart';
 import 'providers/app_providers.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
@@ -54,6 +55,7 @@ class _BelMiadAppState extends ConsumerState<BelMiadApp>
     _notificationTaps =
         ref.read(notificationTapsProvider).stream.listen(_onNotification);
     Future.microtask(() async {
+      if (demoMode) await ref.read(demoSeedProvider.future);
       final notifier = ref.read(localNotifierProvider);
       await notifier.initialize();
       ref.read(syncCoordinatorProvider).request();
