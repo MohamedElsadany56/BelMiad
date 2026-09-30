@@ -9,6 +9,7 @@ import '../../../core/utilities/ids.dart';
 import '../../../core/utilities/scaled_quantity.dart';
 import '../../audit/data/audit_log.dart';
 import '../domain/batch_selection.dart';
+import '../domain/partial_pack.dart';
 
 abstract final class PackagingTypes {
   static const all = [
@@ -49,6 +50,7 @@ class BatchInput {
     this.subPackagingType,
     this.subPackagesPerPackage,
     this.looseQuantityScaled,
+    this.partialPacks = const [],
     this.notes,
   });
 
@@ -61,6 +63,7 @@ class BatchInput {
     int? subPackagesPerPackage,
     String? subPackagingType,
     int looseQuantityScaled = 0,
+    List<PartialPack> partialPacks = const [],
     String? packagingType,
     String? purchaseDate,
     double? purchasePrice,
@@ -73,7 +76,9 @@ class BatchInput {
           packages: packagesCount,
           unitsPerPackage: unitsPerPackage,
           subPackagesPerPackage: subPackagesPerPackage,
-          loose: ScaledQuantity(looseQuantityScaled),
+          loose: ScaledQuantity(
+            looseQuantityScaled + partialPacksTotal(partialPacks),
+          ),
         ).scaled,
         packagesCount: packagesCount,
         unitsPerPackage: unitsPerPackage,
@@ -82,6 +87,7 @@ class BatchInput {
             subPackagesPerPackage == null ? null : subPackagingType,
         looseQuantityScaled:
             looseQuantityScaled == 0 ? null : looseQuantityScaled,
+        partialPacks: partialPacks,
         packagingType: packagingType,
         purchaseDate: purchaseDate,
         purchasePrice: purchasePrice,
@@ -100,6 +106,9 @@ class BatchInput {
   final String? subPackagingType;
   final int? subPackagesPerPackage;
   final int? looseQuantityScaled;
+
+  /// Opened or incomplete packs (e.g. a strip with 9 of 14 tablets left).
+  final List<PartialPack> partialPacks;
   final String? notes;
 }
 
@@ -186,6 +195,7 @@ class InventoryRepository {
               subPackagingType: Value(input.subPackagingType),
               subPackagesPerPackage: Value(input.subPackagesPerPackage),
               looseQuantityScaled: Value(input.looseQuantityScaled),
+              partialPacksJson: Value(encodePartialPacks(input.partialPacks)),
               initialQuantityScaled: input.quantityScaled,
               availableQuantityScaled: input.quantityScaled,
               isDepleted: Value(input.quantityScaled == 0),
@@ -236,6 +246,7 @@ class InventoryRepository {
         subPackagingType: Value(input.subPackagingType),
         subPackagesPerPackage: Value(input.subPackagesPerPackage),
         looseQuantityScaled: Value(input.looseQuantityScaled),
+        partialPacksJson: Value(encodePartialPacks(input.partialPacks)),
         notes: Value(input.notes),
         initialQuantityScaled:
             hasHistory ? const Value.absent() : Value(input.quantityScaled),
@@ -407,6 +418,9 @@ class InventoryRepository {
     }
     if (input.looseQuantityScaled != null && input.looseQuantityScaled! < 0) {
       throw const ValidationException('invalidPackages');
+    }
+    if (input.partialPacks.any((p) => !p.isValid)) {
+      throw const ValidationException('invalidPartialPack');
     }
     if (input.purchasePrice != null && input.purchasePrice! < 0) {
       throw const ValidationException('invalidPrice');

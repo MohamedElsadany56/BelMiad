@@ -1959,4 +1959,69 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get error_cameraDenied => 'تم رفض الوصول للكاميرا';
+
+  @override
+  String get whenTaken => 'متى تم التناول؟';
+
+  @override
+  String get takenNow => 'الآن';
+
+  @override
+  String get takenEarlier => 'في وقت سابق';
+
+  @override
+  String get intakeTime => 'وقت تناول المريض للدواء';
+
+  @override
+  String get recordLaterHint =>
+      'استخدم هذا عندما يتناول المريض الجرعة بمفرده وتسجلها أنت لاحقاً.';
+
+  @override
+  String get recordAsTaken => 'تسجيل كمتناولة';
+
+  @override
+  String get recordedLater => 'سُجلت لاحقاً';
+
+  @override
+  String recordedLaterAt(Object taken, Object recorded) {
+    return 'تم التناول $taken · سُجلت $recorded';
+  }
+
+  @override
+  String get missedCorrectionHint =>
+      'تم تناولها ولم تُسجَّل؟ أدخل الوقت الذي تناولها فيه المريض.';
+
+  @override
+  String get audit_dose_recorded_late => 'تسجيل جرعة لاحقاً';
+
+  @override
+  String get error_takenInFuture => 'لا يمكن أن يكون وقت التناول في المستقبل';
+
+  @override
+  String get error_takenTooEarly => 'هذا الوقت مبكر جداً عن موعد الجرعة';
+
+  @override
+  String get error_invalidPartialPack =>
+      'لا يمكن أن تزيد الوحدات المتبقية في العبوة المفتوحة عن سعتها';
+
+  @override
+  String get openedPacks => 'عبوات مفتوحة أو غير مكتملة';
+
+  @override
+  String get addOpenedPack => 'إضافة عبوة مفتوحة';
+
+  @override
+  String get openedPacksHint =>
+      'مثلاً شريط متبقٍ فيه 9 من 14 قرصاً، أو علبة استُخدم بعض شرائطها.';
+
+  @override
+  String get unitsLeft => 'الوحدات المتبقية';
+
+  @override
+  String get packCapacity => 'السعة الكاملة';
+
+  @override
+  String partialPackOf(Object pack, Object remaining, Object capacity) {
+    return '$pack $remaining من $capacity';
+  }
 }

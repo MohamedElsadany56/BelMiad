@@ -13,6 +13,7 @@ import '../../medications/data/medication_repository.dart';
 import '../../medications/presentation/medication_form_screen.dart';
 import '../../medications/presentation/medications_screen.dart';
 import '../data/inventory_repository.dart';
+import '../domain/partial_pack.dart';
 
 /// Outer packages that commonly contain inner packs (box → strips).
 const _outerWithInner = {'box', 'container'};
@@ -39,6 +40,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   final _innerPerPackage = TextEditingController(text: '2');
   final _unitsPerPack = TextEditingController();
   final _loose = TextEditingController();
+  final List<_OpenedPack> _opened = [];
   final _price = TextEditingController();
   final _notes = TextEditingController();
   String? _medicationId;
@@ -80,6 +82,14 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
         _loose.text = batch.looseQuantityScaled == null
             ? ''
             : formatScaled(batch.looseQuantityScaled);
+        _opened.addAll([
+          for (final pack in decodePartialPacks(batch.partialPacksJson))
+            _OpenedPack(
+              type: pack.type,
+              remaining: formatScaled(pack.remainingScaled),
+              capacity: pack.capacity == null ? '' : '${pack.capacity}',
+            ),
+        ]);
         _quantity.text = formatScaled(batch.initialQuantityScaled);
         _packaging = batch.packagingType ?? 'box';
         _purchaseDate = batch.purchaseDate;
@@ -104,14 +114,38 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
     ]) {
       c.dispose();
     }
+    for (final pack in _opened) {
+      pack.dispose();
+    }
     super.dispose();
   }
+
+  List<PartialPack> get _openedPacks => [
+        for (final pack in _opened)
+          if (ScaledQuantity.tryParse(pack.remaining.text) != null)
+            PartialPack(
+              type: pack.type,
+              remainingScaled:
+                  ScaledQuantity.tryParse(pack.remaining.text)!.scaled,
+              capacity: int.tryParse(pack.capacity.text),
+            ),
+      ];
+
+  void _addOpenedPack() => setState(
+        () => _opened.add(
+          _OpenedPack(
+            type: _innerApplies ? _innerType : _packaging,
+            capacity: _unitsPerPack.text,
+          ),
+        ),
+      );
 
   int get _looseScaled => ScaledQuantity.tryParse(_loose.text)?.scaled ?? 0;
 
   int? get _packageTotal {
     final packages = int.tryParse(_packages.text);
-    final units = int.tryParse(_unitsPerPack.text);
+    final units =
+        int.tryParse(_unitsPerPack.text) ?? (packages == 0 ? 0 : null);
     final inner = _innerApplies ? int.tryParse(_innerPerPackage.text) : null;
     if (packages == null || units == null) return null;
     if (_innerApplies && inner == null) return null;
@@ -119,7 +153,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
       packages: packages,
       unitsPerPackage: units,
       subPackagesPerPackage: inner,
-      loose: ScaledQuantity(_looseScaled),
+      loose: ScaledQuantity(_looseScaled + partialPacksTotal(_openedPacks)),
     ).scaled;
   }
 
@@ -131,8 +165,17 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
         '${_innerPerPackage.text} ${packagingLabel(_innerType, l10n)}',
       '${_unitsPerPack.text} ${unitLabelFor(unitCode, null, l10n)}',
     ];
-    final loose = _looseScaled > 0 ? ' + ${formatScaled(_looseScaled)}' : '';
-    return '${parts.join(' × ')}$loose';
+    final full = int.tryParse(_packages.text) == 0 ? '' : parts.join(' × ');
+    final extras = [
+      for (final pack in _openedPacks)
+        l10n.partialPackOf(
+          packagingLabel(pack.type, l10n),
+          formatScaled(pack.remainingScaled),
+          pack.capacity ?? '?',
+        ),
+      if (_looseScaled > 0) formatScaled(_looseScaled),
+    ];
+    return [if (full.isNotEmpty) full, ...extras].join(' + ');
   }
 
   Future<void> _save() async {
@@ -143,11 +186,12 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
         ? BatchInput.fromPackages(
             medicationId: _medicationId!,
             packagesCount: int.parse(_packages.text),
-            unitsPerPackage: int.parse(_unitsPerPack.text),
+            unitsPerPackage: int.tryParse(_unitsPerPack.text) ?? 0,
             subPackagesPerPackage:
                 _innerApplies ? int.parse(_innerPerPackage.text) : null,
             subPackagingType: _innerApplies ? _innerType : null,
             looseQuantityScaled: _looseScaled,
+            partialPacks: _openedPacks,
             packagingType: _packaging,
             purchaseDate: _purchaseDate,
             purchasePrice: price,
@@ -310,9 +354,16 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                       '${l10n.packagesCount} (${packagingLabel(_packaging, l10n)})',
                 ),
                 onChanged: (_) => setState(() {}),
-                validator: (v) => (int.tryParse(v ?? '') ?? 0) < 1
-                    ? l10n.error_invalidPackages
-                    : null,
+                validator: (v) {
+                  final count = int.tryParse(v ?? '');
+                  if (count == null || count < 0) {
+                    return l10n.error_invalidPackages;
+                  }
+                  if (count == 0 && _opened.isEmpty) {
+                    return l10n.error_invalidPackages;
+                  }
+                  return null;
+                },
               ),
               if (_outerWithInner.contains(_packaging)) ...[
                 SwitchListTile(
@@ -374,7 +425,9 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                   suffixText: unit,
                 ),
                 onChanged: (_) => setState(() {}),
-                validator: (v) => (int.tryParse(v ?? '') ?? 0) < 1
+                // Not needed when the batch is only opened packs.
+                validator: (v) => int.tryParse(_packages.text) != 0 &&
+                        (int.tryParse(v ?? '') ?? 0) < 1
                     ? l10n.error_quantityRequired
                     : null,
               ),
@@ -395,6 +448,97 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                   allowZero: true,
                 ),
               ),
+              SectionHeader(
+                l10n.openedPacks,
+                trailing: quantityLocked
+                    ? null
+                    : TextButton.icon(
+                        onPressed: _addOpenedPack,
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.addOpenedPack),
+                      ),
+              ),
+              Text(
+                l10n.openedPacksHint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              for (final pack in _opened)
+                Padding(
+                  key: ObjectKey(pack),
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: DropdownButtonFormField<String>(
+                          initialValue: PackagingTypes.all.contains(pack.type)
+                              ? pack.type
+                              : 'other',
+                          isExpanded: true,
+                          decoration:
+                              InputDecoration(labelText: l10n.packagingType),
+                          items: [
+                            for (final t in PackagingTypes.all)
+                              DropdownMenuItem(
+                                value: t,
+                                child: Text(packagingLabel(t, l10n)),
+                              ),
+                          ],
+                          onChanged: quantityLocked
+                              ? null
+                              : (v) => setState(() => pack.type = v ?? 'other'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 3,
+                        child: TextFormField(
+                          controller: pack.remaining,
+                          enabled: !quantityLocked,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration:
+                              InputDecoration(labelText: l10n.unitsLeft),
+                          onChanged: (_) => setState(() {}),
+                          validator: (v) {
+                            final error = validateQuantity(v, l10n);
+                            if (error != null) return error;
+                            final capacity = int.tryParse(pack.capacity.text);
+                            final left = ScaledQuantity.tryParse(v)!;
+                            if (capacity != null &&
+                                left > ScaledQuantity.units(capacity)) {
+                              return l10n.error_invalidPartialPack;
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 3,
+                        child: TextFormField(
+                          controller: pack.capacity,
+                          enabled: !quantityLocked,
+                          keyboardType: TextInputType.number,
+                          decoration:
+                              InputDecoration(labelText: l10n.packCapacity),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ),
+                      if (!quantityLocked)
+                        IconButton(
+                          tooltip: l10n.delete,
+                          icon: const Icon(Icons.close),
+                          onPressed: () => setState(() {
+                            _opened.remove(pack);
+                            pack.dispose();
+                          }),
+                        ),
+                    ],
+                  ),
+                ),
               if (_packageTotal != null)
                 Card(
                   color: Theme.of(context).colorScheme.primaryContainer,
@@ -577,5 +721,21 @@ class _StorageMedicineScreenState extends ConsumerState<StorageMedicineScreen> {
               ),
             ),
     );
+  }
+}
+
+/// Editable row for an opened pack ("strip with 9 of 14 left").
+class _OpenedPack {
+  _OpenedPack({required this.type, String remaining = '', String capacity = ''})
+      : remaining = TextEditingController(text: remaining),
+        capacity = TextEditingController(text: capacity);
+
+  String type;
+  final TextEditingController remaining;
+  final TextEditingController capacity;
+
+  void dispose() {
+    remaining.dispose();
+    capacity.dispose();
   }
 }
