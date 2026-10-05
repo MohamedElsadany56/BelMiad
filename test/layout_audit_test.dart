@@ -211,10 +211,21 @@ void main() {
   });
 
   for (final language in ['en', 'ar']) {
-    for (final scale in [1.0, 1.3, 1.5]) {
-      testWidgets('no text is cut off ($language, text x$scale)',
+    // System text size x in-app "Font size" setting (Settings → Font size).
+    for (final (scale, fontSize) in <(double, String?)>[
+      (1.0, null),
+      (1.3, null),
+      (1.5, null),
+      (1.0, 'maximum'),
+    ]) {
+      testWidgets(
+          'no text is cut off ($language, text x$scale'
+          '${fontSize == null ? '' : ', font size $fontSize'})',
           timeout: const Timeout(Duration(minutes: 5)), (tester) async {
-        SharedPreferences.setMockInitialValues({'language_code': language});
+        SharedPreferences.setMockInitialValues({
+          'language_code': language,
+          if (fontSize != null) 'font_size': fontSize,
+        });
         final prefs = await SharedPreferences.getInstance();
         final db = AppDatabase(NativeDatabase.memory());
         final seed = (await tester.runAsync(() => _seed(db)))!;

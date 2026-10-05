@@ -11,6 +11,7 @@ import 'demo/demo_seed.dart';
 import 'providers/app_providers.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
+import 'theme/typography.dart';
 
 class BelMiadApp extends ConsumerStatefulWidget {
   const BelMiadApp({super.key});
@@ -104,6 +105,7 @@ class _BelMiadAppState extends ConsumerState<BelMiadApp>
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final fontSize = ref.watch(fontSizeProvider);
     final router = ref.watch(routerProvider);
     ref.listen(localeProvider, (_, __) {
       ref.read(syncCoordinatorProvider).request();
@@ -123,10 +125,14 @@ class _BelMiadAppState extends ConsumerState<BelMiadApp>
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
       routerConfig: router,
-      builder: (context, child) => Listener(
-        behavior: HitTestBehavior.translucent,
-        onPointerDown: (_) => _resetInactivityTimer(),
-        child: child ?? const SizedBox.shrink(),
+      builder: (context, child) => MediaQuery(
+        // One central text scale for the whole app (Settings → Font size).
+        data: AppTypography.apply(MediaQuery.of(context), fontSize),
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (_) => _resetInactivityTimer(),
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
     );
   }
