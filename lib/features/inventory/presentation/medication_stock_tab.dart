@@ -13,6 +13,8 @@ import '../../medications/presentation/medications_screen.dart';
 import '../../reports/application/pdf_report_service.dart';
 import '../data/inventory_repository.dart';
 import '../domain/partial_pack.dart';
+import '../domain/strip_model.dart';
+import 'med_strip.dart';
 import '../domain/stock_forecast.dart';
 
 final _adjustmentsProvider =
@@ -114,6 +116,7 @@ class MedicationStockTab extends ConsumerWidget {
                 medication: medication,
                 today: today,
                 expiringWithinDays: settings?.expiringWithinDays ?? 30,
+                lowStock: summary.isLowStock,
               ),
             SectionHeader(l10n.adjustmentHistory),
             ...ref
@@ -202,12 +205,14 @@ class _BatchCard extends ConsumerWidget {
     required this.medication,
     required this.today,
     required this.expiringWithinDays,
+    this.lowStock = false,
   });
 
   final InventoryBatch batch;
   final Medication medication;
   final LocalDate today;
   final int expiringWithinDays;
+  final bool lowStock;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -262,62 +267,145 @@ class _BatchCard extends ConsumerWidget {
           pack.capacity ?? '?',
         ),
     ].join('\n');
+    final strip = stripStateFor(
+      unitsPerPackage: batch.unitsPerPackage,
+      availableScaled: batch.availableQuantityScaled,
+      scale: batch.quantityScale,
+    );
     return Card(
-      child: ListTile(
-        title: Text(
-          quantityWithUnit(
-              batch.availableQuantityScaled, medication.doseUnit, l10n),
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            StatusBadge(label, tone: tone),
-            if (purchase.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(purchase),
-            ],
-          ],
-        ),
-        isThreeLine: purchase.isNotEmpty,
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) async {
-            switch (value) {
-              case 'adjust':
-                await showAdjustStockSheet(context, batch, medication);
-              case 'edit':
-                context.push('/inventory/batches/${batch.inventoryBatchId}');
-              case 'delete':
-                final ok = await confirmDialog(
-                  context,
-                  title: l10n.deleteBatchTitle,
-                  body: l10n.deleteBatchBody,
-                  confirmLabel: l10n.delete,
-                  destructive: true,
-                );
-                if (!ok || !context.mounted) return;
-                await runGuarded(
-                  context,
-                  () => ref.read(trashRepositoryProvider).moveToTrash(
-                        entityType: EntityTypes.inventoryBatch,
-                        entityId: batch.inventoryBatchId,
-                        patientId: medication.patientId,
-                        label:
-                            '${medication.nameEn} · ${formatScaled(batch.availableQuantityScaled)}',
-                      ),
-                  success: l10n.deletedMessage,
-                );
-                ref.read(syncCoordinatorProvider).request();
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(value: 'adjust', child: Text(l10n.adjustStock)),
-            PopupMenuItem(value: 'edit', child: Text(l10n.editBatch)),
-            PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            title: Text(
+              quantityWithUnit(
+                  batch.availableQuantityScaled, medication.doseUnit, l10n),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                StatusBadge(label, tone: tone),
+                if (purchase.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(purchase),
+                ],
+              ],
+            ),
+            isThreeLine: purchase.isNotEmpty,
+            trailing: PopupMenuButton<String>(
+              onSelected: (value) async {
+                switch (value) {
+                  case 'adjust':
+                    await showAdjustStockSheet(context, batch, medication);
+                  case 'edit':
+                    context
+                        .push('/inventory/batches/${batch.inventoryBatchId}');
+                  case 'delete':
+                    final ok = await confirmDialog(
+                      context,
+                      title: l10n.deleteBatchTitle,
+                      body: l10n.deleteBatchBody,
+                      confirmLabel: l10n.delete,
+                      destructive: true,
+                    );
+                    if (!ok || !context.mounted) return;
+                    await runGuarded(
+                      context,
+                      () => ref.read(trashRepositoryProvider).moveToTrash(
+                            entityType: EntityTypes.inventoryBatch,
+                            entityId: batch.inventoryBatchId,
+                            patientId: medication.patientId,
+                            label:
+                                '${medication.nameEn} · ${formatScaled(batch.availableQuantityScaled)}',
+                          ),
+                      success: l10n.deletedMessage,
+                    );
+                    ref.read(syncCoordinatorProvider).request();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'adjust', child: Text(l10n.adjustStock)),
+                PopupMenuItem(value: 'edit', child: Text(l10n.editBatch)),
+                PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
+              ],
+            ),
+          ),
+          if (strip != null)
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
+              child: _BatchStrip(
+                batch: batch,
+                medication: medication,
+                strip: strip,
+                expired: state == ExpirationState.expired,
+                lowStock: lowStock,
+              ),
+            ),
+        ],
       ),
+    );
+  }
+}
+
+/// The strip of one batch. The quantity shown always comes from the
+/// persisted batch (via the stock stream); tapping asks the inventory use
+/// case to consume one unit.
+class _BatchStrip extends ConsumerStatefulWidget {
+  const _BatchStrip({
+    required this.batch,
+    required this.medication,
+    required this.strip,
+    required this.expired,
+    required this.lowStock,
+  });
+
+  final InventoryBatch batch;
+  final Medication medication;
+  final StripState strip;
+  final bool expired;
+  final bool lowStock;
+
+  @override
+  ConsumerState<_BatchStrip> createState() => _BatchStripState();
+}
+
+class _BatchStripState extends ConsumerState<_BatchStrip> {
+  bool _busy = false;
+
+  Future<void> _consume() async {
+    if (_busy) return;
+    final l10n = context.l10n;
+    final unit = widget.medication.doseUnit;
+    setState(() => _busy = true);
+    await runGuarded(
+      context,
+      () => ref
+          .read(inventoryServiceProvider)
+          .consumeUnit(widget.batch.inventoryBatchId),
+      success: l10n.stripUnitUsed(quantityWithUnit(quantityScale, unit, l10n)),
+    );
+    ref.read(syncCoordinatorProvider).request();
+    if (mounted) setState(() => _busy = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final strip = widget.strip;
+    return MedStrip(
+      state: strip,
+      unitLabel: unitLabelFor(
+        widget.medication.doseUnit,
+        strip.capacity * quantityScale,
+        l10n,
+      ),
+      lowStock: widget.lowStock,
+      enabled: !widget.expired && widget.batch.deletedAt == null,
+      busy: _busy,
+      disabledMessage: widget.expired ? l10n.stripDisabledExpired : null,
+      onConsume: _consume,
     );
   }
 }

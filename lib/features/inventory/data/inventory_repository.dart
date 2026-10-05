@@ -35,6 +35,13 @@ abstract final class AdjustmentReasons {
     'count_correction',
     'other',
   ];
+
+  /// One unit marked as used from the inventory strip. Recorded through the
+  /// same ledger as manual adjustments, but not offered in the manual list.
+  static const stripUse = 'strip_use';
+
+  static bool isValid(String reason) =>
+      all.contains(reason) || reason == stripUse;
 }
 
 class BatchInput {
@@ -293,7 +300,7 @@ class InventoryRepository {
     String? notes,
   }) async {
     if (deltaScaled == 0) throw const ValidationException('quantityRequired');
-    if (!AdjustmentReasons.all.contains(reason)) {
+    if (!AdjustmentReasons.isValid(reason)) {
       throw const ValidationException('invalidReason');
     }
     await _db.transaction(() async {
