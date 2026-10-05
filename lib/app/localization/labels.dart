@@ -1,4 +1,5 @@
 import '../../core/database/app_database.dart';
+import '../theme/typography.dart';
 import '../../core/errors/domain_exceptions.dart';
 import '../../core/utilities/scaled_quantity.dart';
 import '../../features/health/data/health_repositories.dart';
@@ -38,6 +39,15 @@ String unitLabel(String code, AppLocalizations l10n) => switch (code) {
       'g' => l10n.unit_g,
       'unit' => l10n.unit_unit,
       _ => code,
+    };
+
+String fontSizeLabel(FontSizeOption option, AppLocalizations l10n) =>
+    switch (option) {
+      FontSizeOption.standard => l10n.fontSize_standard,
+      FontSizeOption.medium => l10n.fontSize_medium,
+      FontSizeOption.large => l10n.fontSize_large,
+      FontSizeOption.larger => l10n.fontSize_larger,
+      FontSizeOption.maximum => l10n.fontSize_maximum,
     };
 
 const _englishPlurals = {
@@ -88,6 +98,7 @@ String adjustmentReasonLabel(String code, AppLocalizations l10n) =>
       'lost' => l10n.reason_lost,
       'returned' => l10n.reason_returned,
       'count_correction' => l10n.reason_count_correction,
+      'strip_use' => l10n.reason_strip_use,
       _ => l10n.reason_other,
     };
 
