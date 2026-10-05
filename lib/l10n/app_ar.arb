@@ -277,7 +277,6 @@
   "deleteBatchBody": "تُحفظ الدفعة وسجلها في سلة المحذوفات ويمكن استعادتها.",
   "useAdjustmentNote": "لهذه الدفعة سجل استهلاك، لذا تُسجَّل تغييرات الكمية كتعديلات.",
   "packaging_box": "علبة",
-  "packaging_blister": "بليستر",
   "packaging_bottle": "زجاجة",
   "packaging_tube": "أنبوب",
   "packaging_sachet": "كيس",

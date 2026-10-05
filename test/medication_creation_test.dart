@@ -71,8 +71,8 @@ void main() {
       doseUnit: 'tablet',
       strength: '500 MG',
     );
-    expect((await h.medications.findDuplicate(patientId, same))?.medicationId,
-        id);
+    expect(
+        (await h.medications.findDuplicate(patientId, same))?.medicationId, id);
     const otherStrength = MedicationInput(
       nameEn: 'Panadol',
       doseUnit: 'tablet',

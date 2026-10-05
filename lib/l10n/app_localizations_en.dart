@@ -918,9 +918,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packaging_box => 'Box';
 
   @override
-  String get packaging_blister => 'Blister';
-
-  @override
   String get packaging_bottle => 'Bottle';
 
   @override
@@ -1781,7 +1778,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get error_timesRequired => 'Add at least one time';
 
   @override
-  String get containsInnerPacks => 'Contains strips or blisters';
+  String get containsInnerPacks => 'Contains strips';
 
   @override
   String get innerPackType => 'Inner pack';

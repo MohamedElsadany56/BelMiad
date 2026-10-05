@@ -19,8 +19,7 @@ void main() {
 
   tearDown(() => h.close());
 
-  Future<String> addBatch(int units, {String? expires}) =>
-      h.inventory.addBatch(
+  Future<String> addBatch(int units, {String? expires}) => h.inventory.addBatch(
         BatchInput(
           medicationId: medicationId,
           quantityScaled: units * 1000,

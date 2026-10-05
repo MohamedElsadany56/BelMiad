@@ -921,9 +921,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get packaging_box => 'علبة';
 
   @override
-  String get packaging_blister => 'بليستر';
-
-  @override
   String get packaging_bottle => 'زجاجة';
 
   @override

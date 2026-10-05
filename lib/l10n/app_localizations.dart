@@ -1760,12 +1760,6 @@ abstract class AppLocalizations {
   /// **'Box'**
   String get packaging_box;
 
-  /// No description provided for @packaging_blister.
-  ///
-  /// In en, this message translates to:
-  /// **'Blister'**
-  String get packaging_blister;
-
   /// No description provided for @packaging_bottle.
   ///
   /// In en, this message translates to:
@@ -3317,7 +3311,7 @@ abstract class AppLocalizations {
   /// No description provided for @containsInnerPacks.
   ///
   /// In en, this message translates to:
-  /// **'Contains strips or blisters'**
+  /// **'Contains strips'**
   String get containsInnerPacks;
 
   /// No description provided for @innerPackType.

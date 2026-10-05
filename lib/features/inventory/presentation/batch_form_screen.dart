@@ -20,7 +20,11 @@ import 'med_strip.dart' show maxInteractiveStripCells;
 
 /// Outer packages that commonly contain inner packs (box → strips).
 const _outerWithInner = {'box', 'container'};
-const _innerTypes = ['strip', 'blister', 'sachet', 'ampoule', 'vial', 'bottle'];
+const _innerTypes = ['strip', 'sachet', 'ampoule', 'vial', 'bottle'];
+
+/// Older stock may still say "blister"; it is the same as a strip.
+String _normalizePackaging(String? type) =>
+    type == 'blister' ? 'strip' : type ?? 'other';
 const _newStorageMedicine = '__new_storage__';
 
 /// Add stock (from inventory, medication details, after creating a
@@ -81,20 +85,20 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
         _unitsPerPack.text = '${batch.unitsPerPackage ?? ''}';
         _hasInner = batch.subPackagesPerPackage != null;
         _innerPerPackage.text = '${batch.subPackagesPerPackage ?? 2}';
-        _innerType = batch.subPackagingType ?? 'strip';
+        _innerType = _normalizePackaging(batch.subPackagingType ?? 'strip');
         _loose.text = batch.looseQuantityScaled == null
             ? ''
             : formatScaled(batch.looseQuantityScaled);
         _opened.addAll([
           for (final pack in decodePartialPacks(batch.partialPacksJson))
             _OpenedPack(
-              type: pack.type,
+              type: _normalizePackaging(pack.type),
               remaining: formatScaled(pack.remainingScaled),
               capacity: pack.capacity == null ? '' : '${pack.capacity}',
             ),
         ]);
         _quantity.text = formatScaled(batch.initialQuantityScaled);
-        _packaging = batch.packagingType ?? 'box';
+        _packaging = _normalizePackaging(batch.packagingType ?? 'box');
         _purchaseDate = batch.purchaseDate;
         _expirationDate = batch.expirationDate;
         _price.text = batch.purchasePrice?.toStringAsFixed(2) ?? '';
@@ -238,7 +242,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   }
 
   /// Opened packs that can be drawn tablet by tablet.
-  static const _drawable = {'strip', 'blister'};
+  static const _drawable = {'strip'};
 
   Widget _openedPackCard(
     _OpenedPack pack,

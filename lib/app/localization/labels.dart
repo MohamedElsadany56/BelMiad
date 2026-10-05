@@ -79,7 +79,8 @@ String quantityWithUnit(int? scaled, String unit, AppLocalizations l10n) =>
 String packagingLabel(String? code, AppLocalizations l10n) => switch (code) {
       'box' => l10n.packaging_box,
       'strip' => l10n.packaging_strip,
-      'blister' => l10n.packaging_blister,
+      // Legacy value: a blister is the same thing as a strip.
+      'blister' => l10n.packaging_strip,
       'bottle' => l10n.packaging_bottle,
       'tube' => l10n.packaging_tube,
       'sachet' => l10n.packaging_sachet,

@@ -332,7 +332,6 @@
   "deleteBatchBody": "The batch and its history are kept in trash and can be restored.",
   "useAdjustmentNote": "This batch has history, so quantity changes must be recorded as adjustments.",
   "packaging_box": "Box",
-  "packaging_blister": "Blister",
   "packaging_bottle": "Bottle",
   "packaging_tube": "Tube",
   "packaging_sachet": "Sachet",
@@ -651,7 +650,7 @@
   "sharedSettings": "Applies to all times",
   "variesByDay": "varies by day",
   "error_timesRequired": "Add at least one time",
-  "containsInnerPacks": "Contains strips or blisters",
+  "containsInnerPacks": "Contains strips",
   "innerPackType": "Inner pack",
   "innerPacksPer": "{inner} per {outer}",
   "@innerPacksPer": {

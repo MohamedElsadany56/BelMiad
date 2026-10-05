@@ -15,7 +15,6 @@ abstract final class PackagingTypes {
   static const all = [
     'box',
     'strip',
-    'blister',
     'bottle',
     'tube',
     'sachet',
