@@ -168,6 +168,19 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
       await _handleZero();
       return;
     }
+    // Halves only for tablets. Amounts already planned for this dose are
+    // accepted as they are (older schedules may contain them).
+    if (actual != data.requiredScaled && actual != data.usableScaled) {
+      final error = validateUnitQuantity(
+        _quantity.text,
+        l10n,
+        data.medication.doseUnit,
+      );
+      if (error != null) {
+        setState(() => _quantityError = error);
+        return;
+      }
+    }
     List<BatchAllocation>? manual;
     if (_manualMode && data.stockRecorded) {
       manual = [
@@ -308,7 +321,7 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
 
     final quickOptions = <int>{
       0,
-      500,
+      if (allowsHalfUnit(data.medication.doseUnit)) 500,
       1000,
       if (data.isInsufficient) data.usableScaled,
       data.requiredScaled,
@@ -423,8 +436,7 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
               const SizedBox(height: 8),
               TextField(
                 controller: _quantity,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: quantityKeyboard(data.medication.doseUnit),
                 decoration: InputDecoration(
                   labelText: l10n.customAmount,
                   suffixText: unit,

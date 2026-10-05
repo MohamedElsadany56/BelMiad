@@ -867,5 +867,24 @@
   "openExisting": "Open existing",
   "addAnyway": "Add anyway",
   "thisMonth": "This month",
-  "blisterPickHint": "Tap the tablets that are already used. They will show as empty."
+  "blisterPickHint": "Tap the tablets that are already used. They will show as empty.",
+  "stripMaxUnits": "A strip holds at most {max} units",
+  "@stripMaxUnits": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "error_halfStepOnly": "Only whole or half tablets are allowed (for example 1 or 1.5)",
+  "error_wholeUnitsOnly": "Only whole numbers are allowed for this medicine",
+  "fullPacksHint": "Use 0 if you only have an opened pack",
+  "blisterPickHintHalf": "Tap a tablet to change it: full, half, or empty.",
+  "stripCellHalf": "{index} of {total}, half a tablet left. Double tap to change.",
+  "@stripCellHalf": {
+    "placeholders": {
+      "index": {},
+      "total": {}
+    }
+  },
+  "fullPacksMode": "Full packs",
+  "openedOnlyMode": "Only an incomplete pack"
 }

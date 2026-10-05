@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +18,7 @@ import '../../medications/presentation/medications_screen.dart';
 import '../data/inventory_repository.dart';
 import '../domain/partial_pack.dart';
 import 'blister_grid.dart';
-import 'med_strip.dart' show maxInteractiveStripCells;
+import '../domain/strip_model.dart' show maxStripCapacity;
 
 /// Outer packages that commonly contain inner packs (box → strips).
 const _outerWithInner = {'box', 'container'};
@@ -52,6 +54,9 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   final _notes = TextEditingController();
   String? _medicationId;
   bool _byPackages = true;
+
+  /// Only an opened pack, no full packs ("I just have this strip").
+  bool _onlyOpened = false;
   String _packaging = 'box';
   bool _hasInner = true;
   String _innerType = 'strip';
@@ -62,7 +67,8 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   bool _busy = false;
 
   bool get _editing => widget.batchId != null;
-  bool get _innerApplies => _hasInner && _outerWithInner.contains(_packaging);
+  bool get _innerApplies =>
+      !_onlyOpened && _hasInner && _outerWithInner.contains(_packaging);
 
   @override
   void initState() {
@@ -94,9 +100,10 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
             _OpenedPack(
               type: _normalizePackaging(pack.type),
               remaining: formatScaled(pack.remainingScaled),
-              capacity: pack.capacity == null ? '' : '${pack.capacity}',
+              capacity: pack.capacity,
             ),
         ]);
+        _onlyOpened = batch.packagesCount == 0 && _opened.isNotEmpty;
         _quantity.text = formatScaled(batch.initialQuantityScaled);
         _packaging = _normalizePackaging(batch.packagingType ?? 'box');
         _purchaseDate = batch.purchaseDate;
@@ -127,25 +134,31 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
     super.dispose();
   }
 
+  String get _packType => _innerApplies ? _innerType : _packaging;
+  int? get _packCapacity => int.tryParse(_unitsPerPack.text);
+
   List<PartialPack> get _openedPacks => [
         for (final pack in _opened)
           if (ScaledQuantity.tryParse(pack.remaining.text) != null)
             PartialPack(
-              type: pack.type,
+              type: pack.type ?? _packType,
               remainingScaled:
                   ScaledQuantity.tryParse(pack.remaining.text)!.scaled,
-              capacity: int.tryParse(pack.capacity.text),
+              capacity: pack.capacity ?? _packCapacity,
             ),
       ];
 
-  void _addOpenedPack() => setState(
-        () => _opened.add(
-          _OpenedPack(
-            type: _innerApplies ? _innerType : _packaging,
-            capacity: _unitsPerPack.text,
-          ),
-        ),
-      );
+  void _setOnlyOpened(bool value) => setState(() {
+        _onlyOpened = value;
+        if (value) {
+          _packages.text = '0';
+          if (_opened.isEmpty) _opened.add(_OpenedPack());
+        } else if (_packages.text.trim() == '0') {
+          _packages.text = '1';
+        }
+      });
+
+  void _addOpenedPack() => setState(() => _opened.add(_OpenedPack()));
 
   int get _looseScaled => ScaledQuantity.tryParse(_loose.text)?.scaled ?? 0;
 
@@ -244,6 +257,50 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   /// Opened packs that can be drawn tablet by tablet.
   static const _drawable = {'strip'};
 
+  /// Rebuilds the picked pockets from the typed quantity when they disagree.
+  void _syncCells(_OpenedPack pack, int capacity) {
+    final scaled = ScaledQuantity.tryParse(pack.remaining.text)?.scaled;
+    final expected =
+        (capacity - pack.used.length) * quantityScale - pack.half.length * 500;
+    final inRange = pack.used.every((i) => i < capacity) &&
+        pack.half.every((i) => i < capacity);
+    if (scaled == null) {
+      if (pack.used.isNotEmpty || pack.half.isNotEmpty) {
+        pack.used = {};
+        pack.half = {};
+      }
+      return;
+    }
+    if (inRange && scaled == expected) return;
+    final hasHalf = scaled % quantityScale >= 500;
+    final filled = math.min(
+      capacity,
+      scaled ~/ quantityScale + (hasHalf ? 1 : 0),
+    );
+    final usedCount = capacity - filled;
+    pack.used = {for (var i = 0; i < usedCount; i++) i};
+    pack.half = hasHalf && filled > 0 ? {usedCount} : {};
+  }
+
+  /// Tap on a pocket: full -> half -> empty -> full for tablets (they can be
+  /// split), full <-> empty for everything else.
+  void _cycleCell(_OpenedPack pack, int capacity, int i, bool halves) {
+    setState(() {
+      if (pack.used.contains(i)) {
+        pack.used = {...pack.used}..remove(i);
+      } else if (pack.half.contains(i)) {
+        pack.half = {};
+        pack.used = {...pack.used, i};
+      } else if (halves) {
+        pack.half = {i};
+      } else {
+        pack.used = {...pack.used, i};
+      }
+      final left = capacity - pack.used.length;
+      pack.remaining.text = pack.half.isEmpty ? '$left' : '${left - 1}.5';
+    });
+  }
+
   Widget _openedPackCard(
     _OpenedPack pack,
     AppLocalizations l10n,
@@ -251,46 +308,39 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
     String unit,
     bool locked,
   ) {
-    final capacity = int.tryParse(pack.capacity.text);
+    final halves = allowsHalfUnit(unitCode);
+    final capacity = pack.capacity ?? _packCapacity;
+    final type = pack.type ?? _packType;
     final pickable = !locked &&
-        _drawable.contains(pack.type) &&
+        _drawable.contains(type) &&
         capacity != null &&
         capacity >= 1 &&
-        capacity <= maxInteractiveStripCells;
+        capacity <= maxStripCapacity;
     Widget? picker;
     if (pickable) {
-      final scaled = ScaledQuantity.tryParse(pack.remaining.text)?.scaled;
-      final remaining = scaled == null
-          ? capacity
-          : (scaled ~/ quantityScale).clamp(0, capacity).toInt();
-      if (pack.used.length != capacity - remaining ||
-          pack.used.any((i) => i >= capacity)) {
-        pack.used = {for (var i = 0; i < capacity - remaining; i++) i};
-      }
+      _syncCells(pack, capacity);
       picker = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
           Text(
-            l10n.blisterPickHint,
+            halves ? l10n.blisterPickHintHalf : l10n.blisterPickHint,
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 8),
           BlisterGrid(
             capacity: capacity,
             used: pack.used,
-            capsule: unitCode == 'capsule',
+            half: pack.half,
+            shape: unitCode == 'capsule' ? PillShape.capsule : PillShape.tablet,
             tapUsed: true,
-            pillColor: Theme.of(context).colorScheme.primary,
-            labelFor: (i, used) => used
-                ? l10n.stripCellUsed(i + 1, capacity)
-                : l10n.stripCellRemaining(i + 1, capacity),
-            onTapCell: (i) => setState(() {
-              pack.used = pack.used.contains(i)
-                  ? ({...pack.used}..remove(i))
-                  : {...pack.used, i};
-              pack.remaining.text = '${capacity - pack.used.length}';
-            }),
+            look: PillLook.forSeed(_medicationId ?? 'pack'),
+            labelFor: (i, state) => switch (state) {
+              PocketState.empty => l10n.stripCellUsed(i + 1, capacity),
+              PocketState.half => l10n.stripCellHalf(i + 1, capacity),
+              PocketState.full => l10n.stripCellRemaining(i + 1, capacity),
+            },
+            onTapCell: (i) => _cycleCell(pack, capacity, i, halves),
           ),
         ],
       );
@@ -304,27 +354,31 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: PackagingTypes.all.contains(pack.type)
-                        ? pack.type
-                        : 'other',
-                    isExpanded: true,
-                    decoration: InputDecoration(labelText: l10n.packagingType),
-                    items: [
-                      for (final t in PackagingTypes.all)
-                        DropdownMenuItem(
-                          value: t,
-                          child: Text(packagingLabel(t, l10n)),
-                        ),
-                    ],
-                    onChanged: locked
-                        ? null
-                        : (v) => setState(() => pack.type = v ?? 'other'),
+                  child: TextFormField(
+                    controller: pack.remaining,
+                    enabled: !locked,
+                    keyboardType: quantityKeyboard(unitCode),
+                    decoration: InputDecoration(
+                      labelText: l10n.unitsLeft,
+                      suffixText: unit,
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    validator: (v) {
+                      final error = validateUnitQuantity(v, l10n, unitCode);
+                      if (error != null) return error;
+                      final cap = capacity;
+                      final left = ScaledQuantity.tryParse(v)!;
+                      if (cap != null && left > ScaledQuantity.units(cap)) {
+                        return l10n.error_invalidPartialPack;
+                      }
+                      return null;
+                    },
                   ),
                 ),
-                if (!locked)
+                if (!locked && !(_onlyOpened && _opened.length == 1))
                   IconButton(
                     tooltip: l10n.delete,
                     icon: const Icon(Icons.close),
@@ -334,42 +388,6 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                     }),
                   ),
               ],
-            ),
-            const SizedBox(height: 12),
-            // Full-width fields: labels are never clipped, whatever the
-            // language or font size.
-            TextFormField(
-              controller: pack.capacity,
-              enabled: !locked,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: l10n.packCapacity,
-                suffixText: unit,
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: pack.remaining,
-              enabled: !locked,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: InputDecoration(
-                labelText: l10n.unitsLeft,
-                suffixText: unit,
-              ),
-              onChanged: (_) => setState(() {}),
-              validator: (v) {
-                final error = validateQuantity(v, l10n);
-                if (error != null) return error;
-                final cap = int.tryParse(pack.capacity.text);
-                final left = ScaledQuantity.tryParse(v)!;
-                if (cap != null && left > ScaledQuantity.units(cap)) {
-                  return l10n.error_invalidPartialPack;
-                }
-                return null;
-              },
             ),
             if (picker != null) picker,
           ],
@@ -467,16 +485,25 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                   title: Text(l10n.useAdjustmentNote),
                 ),
               ),
-            SegmentedButton<bool>(
-              segments: [
-                ButtonSegment(value: true, label: Text(l10n.byPackages)),
-                ButtonSegment(value: false, label: Text(l10n.byQuantity)),
-              ],
-              selected: {_byPackages},
-              onSelectionChanged: quantityLocked
-                  ? null
-                  : (v) => setState(() => _byPackages = v.first),
-            ),
+            if (_byPackages)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: Text(l10n.fullPacksMode),
+                    selected: !_onlyOpened,
+                    onSelected:
+                        quantityLocked ? null : (_) => _setOnlyOpened(false),
+                  ),
+                  ChoiceChip(
+                    label: Text(l10n.openedOnlyMode),
+                    selected: _onlyOpened,
+                    onSelected:
+                        quantityLocked ? null : (_) => _setOnlyOpened(true),
+                  ),
+                ],
+              ),
             DropdownButtonFormField<String>(
               isExpanded: true,
               initialValue: _packaging,
@@ -493,27 +520,30 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                   : (v) => setState(() => _packaging = v ?? 'box'),
             ),
             if (_byPackages) ...[
-              TextFormField(
-                controller: _packages,
-                enabled: !quantityLocked,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText:
-                      '${l10n.packagesCount} (${packagingLabel(_packaging, l10n)})',
+              if (!_onlyOpened)
+                TextFormField(
+                  controller: _packages,
+                  enabled: !quantityLocked,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText:
+                        '${l10n.packagesCount} (${packagingLabel(_packaging, l10n)})',
+                    helperText: l10n.fullPacksHint,
+                    helperMaxLines: 2,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                  validator: (v) {
+                    final count = int.tryParse(v ?? '');
+                    if (count == null || count < 0) {
+                      return l10n.error_invalidPackages;
+                    }
+                    if (count == 0 && _opened.isEmpty) {
+                      return l10n.error_invalidPackages;
+                    }
+                    return null;
+                  },
                 ),
-                onChanged: (_) => setState(() {}),
-                validator: (v) {
-                  final count = int.tryParse(v ?? '');
-                  if (count == null || count < 0) {
-                    return l10n.error_invalidPackages;
-                  }
-                  if (count == 0 && _opened.isEmpty) {
-                    return l10n.error_invalidPackages;
-                  }
-                  return null;
-                },
-              ),
-              if (_outerWithInner.contains(_packaging)) ...[
+              if (!_onlyOpened && _outerWithInner.contains(_packaging)) ...[
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   value: _hasInner,
@@ -574,45 +604,52 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                   suffixText: unit,
                 ),
                 onChanged: (_) => setState(() {}),
-                // Not needed when the batch is only opened packs.
-                validator: (v) => int.tryParse(_packages.text) != 0 &&
-                        (int.tryParse(v ?? '') ?? 0) < 1
-                    ? l10n.error_quantityRequired
-                    : null,
+                // The pack size is always needed: opened packs use it too.
+                validator: (v) {
+                  final units = int.tryParse(v ?? '') ?? 0;
+                  if (units < 1) return l10n.error_quantityRequired;
+                  final inner = _innerApplies ? _innerType : _packaging;
+                  if (inner == 'strip' && units > maxStripCapacity) {
+                    return l10n.stripMaxUnits(maxStripCapacity);
+                  }
+                  return null;
+                },
               ),
-              TextFormField(
-                controller: _loose,
-                enabled: !quantityLocked,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: '${l10n.looseUnits} (${l10n.optional})',
-                  suffixText: unit,
+              if (_editing && _looseScaled > 0)
+                TextFormField(
+                  controller: _loose,
+                  enabled: !quantityLocked,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: '${l10n.looseUnits} (${l10n.optional})',
+                    suffixText: unit,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                  validator: (v) => validateQuantity(
+                    v,
+                    l10n,
+                    required: false,
+                    allowZero: true,
+                  ),
                 ),
-                onChanged: (_) => setState(() {}),
-                validator: (v) => validateQuantity(
-                  v,
-                  l10n,
-                  required: false,
-                  allowZero: true,
+              SectionHeader(l10n.openedPacks),
+              if (!_onlyOpened)
+                Text(
+                  l10n.openedPacksHint,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
-              ),
-              SectionHeader(
-                l10n.openedPacks,
-                trailing: quantityLocked
-                    ? null
-                    : TextButton.icon(
-                        onPressed: _addOpenedPack,
-                        icon: const Icon(Icons.add),
-                        label: Text(l10n.addOpenedPack),
-                      ),
-              ),
-              Text(
-                l10n.openedPacksHint,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
               for (final pack in _opened)
                 _openedPackCard(pack, l10n, unitCode, unit, quantityLocked),
+              if (!quantityLocked)
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton.icon(
+                    onPressed: _addOpenedPack,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.addOpenedPack),
+                  ),
+                ),
               if (_packageTotal != null)
                 Card(
                   color: Theme.of(context).colorScheme.primaryContainer,
@@ -631,13 +668,13 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
               TextFormField(
                 controller: _quantity,
                 enabled: !quantityLocked,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: quantityKeyboard(unitCode),
                 decoration: InputDecoration(
                   labelText: l10n.availableQuantity,
                   suffixText: unit,
                 ),
-                validator: (v) => validateQuantity(v, l10n, allowZero: true),
+                validator: (v) =>
+                    validateUnitQuantity(v, l10n, unitCode, allowZero: true),
               ),
             DateField(
               label: l10n.expirationDate,
@@ -801,21 +838,21 @@ class _StorageMedicineScreenState extends ConsumerState<StorageMedicineScreen> {
   }
 }
 
-/// Editable row for an opened pack ("strip with 9 of 14 left").
+/// One opened or incomplete pack. Its type and size come from the pack
+/// definition above (only older records keep their own).
 class _OpenedPack {
-  _OpenedPack({required this.type, String remaining = '', String capacity = ''})
-      : remaining = TextEditingController(text: remaining),
-        capacity = TextEditingController(text: capacity);
+  _OpenedPack({this.type, this.capacity, String remaining = ''})
+      : remaining = TextEditingController(text: remaining);
 
-  String type;
+  /// Packaging code and size kept from an older record; null = use the
+  /// current pack definition.
+  final String? type;
+  final int? capacity;
   final TextEditingController remaining;
-  final TextEditingController capacity;
 
-  /// Pockets the user marked as already used (visual picker only).
+  /// Pockets already used / holding half a tablet (visual picker).
   Set<int> used = {};
+  Set<int> half = {};
 
-  void dispose() {
-    remaining.dispose();
-    capacity.dispose();
-  }
+  void dispose() => remaining.dispose();
 }

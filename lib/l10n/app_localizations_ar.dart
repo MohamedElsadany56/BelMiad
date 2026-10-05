@@ -2251,4 +2251,34 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get blisterPickHint =>
       'اضغط على الأقراص التي تم استخدامها بالفعل لتظهر فارغة.';
+
+  @override
+  String stripMaxUnits(Object max) {
+    return 'يتسع الشريط لـ $max وحدة على الأكثر';
+  }
+
+  @override
+  String get error_halfStepOnly =>
+      'يُسمح بأقراص كاملة أو نصف قرص فقط (مثل 1 أو 1.5)';
+
+  @override
+  String get error_wholeUnitsOnly => 'يُسمح بالأعداد الصحيحة فقط لهذا الدواء';
+
+  @override
+  String get fullPacksHint => 'اكتب 0 إذا كانت لديك عبوة مفتوحة فقط';
+
+  @override
+  String get blisterPickHintHalf =>
+      'اضغط على القرص لتغيير حالته: كامل، نصف، أو فارغ.';
+
+  @override
+  String stripCellHalf(Object index, Object total) {
+    return '$index من $total، متبقٍ نصف قرص. اضغط مرتين للتغيير.';
+  }
+
+  @override
+  String get fullPacksMode => 'عبوات كاملة';
+
+  @override
+  String get openedOnlyMode => 'علبة غير مكتملة فقط';
 }

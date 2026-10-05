@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/common.dart';
+import '../../../core/utilities/scaled_quantity.dart';
 import '../domain/strip_model.dart';
 import 'blister_grid.dart';
 
 /// Above this many positions a strip stops being drawn tablet by tablet and
 /// switches to a compact bar with a "use one" button.
-const maxInteractiveStripCells = 40;
+const maxInteractiveStripCells = maxStripCapacity;
 
 /// A blister strip: one position per tablet/capsule of the strip in use.
 /// Remaining units are filled, used ones are empty; tapping a remaining one
@@ -23,7 +24,8 @@ class MedStrip extends StatefulWidget {
     required this.state,
     required this.unitLabel,
     required this.onConsume,
-    this.capsule = false,
+    this.shape = PillShape.tablet,
+    this.look = const PillLook(Color(0xFF0064F6), Color(0xFFFFFFFF)),
     this.lowStock = false,
     this.enabled = true,
     this.busy = false,
@@ -36,11 +38,14 @@ class MedStrip extends StatefulWidget {
   /// Localized unit name for the strip, already singular/plural as needed.
   final String unitLabel;
 
-  /// Called when a remaining unit is tapped. Null disables interaction.
-  final VoidCallback? onConsume;
+  /// Called with the quantity (scaled) to take out when a pocket is tapped:
+  /// one unit for a full pocket, half a unit for a half tablet. Null disables
+  /// interaction.
+  final ValueChanged<int>? onConsume;
 
-  /// Draw capsules instead of round tablets.
-  final bool capsule;
+  /// Tablets or capsules, and their colours.
+  final PillShape shape;
+  final PillLook look;
 
   /// Remaining units use the warning colour.
   final bool lowStock;
@@ -63,14 +68,23 @@ class _MedStripState extends State<MedStrip> {
   /// *which* pocket empties is local, so the tablet you touch is the one
   /// that disappears.
   late Set<int> _used = _canonical();
+  late Set<int> _half = _canonicalHalf();
 
-  Set<int> _canonical() => {for (var i = 0; i < widget.state.consumed; i++) i};
+  /// Empty pockets that follow from the database. A half tablet takes one
+  /// of the consumed pockets.
+  int get _expectedUsed =>
+      widget.state.consumed - (widget.state.hasHalf ? 1 : 0);
+
+  Set<int> _canonical() => {for (var i = 0; i < _expectedUsed; i++) i};
+
+  Set<int> _canonicalHalf() =>
+      widget.state.hasHalf ? {widget.state.consumed - 1} : <int>{};
 
   bool get _interactive =>
       widget.enabled &&
       !widget.busy &&
       widget.onConsume != null &&
-      widget.state.remaining > 0;
+      (widget.state.remaining > 0 || widget.state.hasHalf);
 
   Timer? _reconcile;
 
@@ -83,17 +97,23 @@ class _MedStripState extends State<MedStrip> {
   @override
   void didUpdateWidget(MedStrip old) {
     super.didUpdateWidget(old);
-    final consumed = widget.state.consumed;
-    if (_used.length < consumed) {
-      // Stock was used elsewhere: just follow the database.
+    final expected = _expectedUsed;
+    if (_used.length < expected) {
+      // Stock changed elsewhere: just follow the database.
       _used = _canonical();
-    } else if (_used.length > consumed && !widget.busy) {
+      _half = _canonicalHalf();
+    } else if (_used.length > expected && !widget.busy) {
       // The picture is ahead of the database. Give the stream a moment to
       // catch up; if it never does (the save failed) fall back to it.
       _reconcile?.cancel();
       _reconcile = Timer(const Duration(milliseconds: 800), () {
-        if (mounted && _used.length != widget.state.consumed) {
-          setState(() => _used = _canonical());
+        if (mounted &&
+            (_used.length != _expectedUsed ||
+                _half.isEmpty == widget.state.hasHalf)) {
+          setState(() {
+            _used = _canonical();
+            _half = _canonicalHalf();
+          });
         }
       });
     }
@@ -101,8 +121,12 @@ class _MedStripState extends State<MedStrip> {
 
   void _tap(int index) {
     if (!_interactive || _used.contains(index)) return;
-    setState(() => _used = {..._used, index});
-    widget.onConsume!();
+    final isHalf = _half.contains(index);
+    setState(() {
+      _used = {..._used, index};
+      if (isHalf) _half = {..._half}..remove(index);
+    });
+    widget.onConsume!(isHalf ? quantityScale ~/ 2 : quantityScale);
   }
 
   @override
@@ -140,21 +164,22 @@ class _MedStripState extends State<MedStrip> {
             state: state,
             lowStock: widget.lowStock,
             enabled: widget.enabled,
-            onConsume: _interactive ? widget.onConsume : null,
+            onConsume:
+                _interactive ? () => widget.onConsume!(quantityScale) : null,
           )
         else
           BlisterGrid(
             capacity: state.capacity,
             used: _used,
-            capsule: widget.capsule,
-            pillColor: _remainingColor(
-              context,
-              widget.lowStock,
-              widget.enabled,
-            ),
-            labelFor: (i, used) => used
-                ? l10n.stripCellUsed(i + 1, state.capacity)
-                : l10n.stripCellRemaining(i + 1, state.capacity),
+            half: _half,
+            shape: widget.shape,
+            look: widget.enabled ? widget.look : widget.look.muted,
+            labelFor: (i, pocket) => switch (pocket) {
+              PocketState.empty => l10n.stripCellUsed(i + 1, state.capacity),
+              PocketState.half => l10n.stripCellHalf(i + 1, state.capacity),
+              PocketState.full =>
+                l10n.stripCellRemaining(i + 1, state.capacity),
+            },
             onTapCell: _interactive ? _tap : null,
           ),
         if (!widget.enabled && widget.disabledMessage != null) ...[

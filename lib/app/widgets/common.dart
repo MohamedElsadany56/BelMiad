@@ -385,6 +385,37 @@ String? validateQuantity(
   return null;
 }
 
+/// Only tablets can be split, so only they accept halves (1, 1.5, 2...).
+/// Capsules, drops, sachets and every other unit are whole numbers.
+bool allowsHalfUnit(String unitCode) => unitCode == 'tablet';
+
+/// Number pad that matches [allowsHalfUnit]: no decimal key for whole units.
+TextInputType quantityKeyboard(String unitCode) => allowsHalfUnit(unitCode)
+    ? const TextInputType.numberWithOptions(decimal: true)
+    : TextInputType.number;
+
+/// [validateQuantity] plus the unit rule: halves for tablets only.
+String? validateUnitQuantity(
+  String? text,
+  AppLocalizations l10n,
+  String unitCode, {
+  bool allowZero = false,
+  bool required = true,
+}) {
+  final base = validateQuantity(
+    text,
+    l10n,
+    allowZero: allowZero,
+    required: required,
+  );
+  if (base != null || text == null || text.trim().isEmpty) return base;
+  final scaled = ScaledQuantity.tryParse(text)!.scaled;
+  if (allowsHalfUnit(unitCode)) {
+    return scaled % (quantityScale ~/ 2) == 0 ? null : l10n.error_halfStepOnly;
+  }
+  return scaled % quantityScale == 0 ? null : l10n.error_wholeUnitsOnly;
+}
+
 String? requiredText(String? text, AppLocalizations l10n) =>
     text == null || text.trim().isEmpty ? l10n.error_nameRequired : null;
 

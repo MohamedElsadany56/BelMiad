@@ -34,9 +34,23 @@ void main() {
       }
     });
 
-    test('half tablets are not shown as a position', () {
+    test('a half tablet sits in an empty pocket', () {
       final s = stripStateFor(unitsPerPackage: 10, availableScaled: 7500)!;
       expect(s.remaining, 7);
+      expect(s.hasHalf, isTrue);
+      expect(s.isEmpty, isFalse);
+    });
+
+    test('only a half tablet left is not empty', () {
+      final s = stripStateFor(unitsPerPackage: 10, availableScaled: 500)!;
+      expect(s.remaining, 0);
+      expect(s.hasHalf, isTrue);
+      expect(s.isEmpty, isFalse);
+    });
+
+    test('a full strip has no pocket for a half', () {
+      final s = stripStateFor(unitsPerPackage: 10, availableScaled: 10500)!;
+      expect(s.hasHalf, isFalse);
     });
   });
 }

@@ -2249,4 +2249,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get blisterPickHint =>
       'Tap the tablets that are already used. They will show as empty.';
+
+  @override
+  String stripMaxUnits(Object max) {
+    return 'A strip holds at most $max units';
+  }
+
+  @override
+  String get error_halfStepOnly =>
+      'Only whole or half tablets are allowed (for example 1 or 1.5)';
+
+  @override
+  String get error_wholeUnitsOnly =>
+      'Only whole numbers are allowed for this medicine';
+
+  @override
+  String get fullPacksHint => 'Use 0 if you only have an opened pack';
+
+  @override
+  String get blisterPickHintHalf =>
+      'Tap a tablet to change it: full, half, or empty.';
+
+  @override
+  String stripCellHalf(Object index, Object total) {
+    return '$index of $total, half a tablet left. Double tap to change.';
+  }
+
+  @override
+  String get fullPacksMode => 'Full packs';
+
+  @override
+  String get openedOnlyMode => 'Only an incomplete pack';
 }

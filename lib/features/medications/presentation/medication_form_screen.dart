@@ -378,13 +378,14 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         ),
         TextFormField(
           controller: _maximum,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: quantityKeyboard(_unit),
           decoration: InputDecoration(
             labelText: '${l10n.maximumDaily} (${l10n.optional})',
             helperText: l10n.maximumDailyHint,
             suffixText: unitLabel(_unit, l10n),
           ),
-          validator: (v) => validateQuantity(v, l10n, required: false),
+          validator: (v) =>
+              validateUnitQuantity(v, l10n, _unit, required: false),
         ),
       ],
     );

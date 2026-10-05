@@ -14,6 +14,7 @@ import '../../reports/application/pdf_report_service.dart';
 import '../data/inventory_repository.dart';
 import '../domain/partial_pack.dart';
 import '../domain/strip_model.dart';
+import 'blister_grid.dart' show PillLook, PillShape;
 import 'med_strip.dart';
 import '../domain/stock_forecast.dart';
 
@@ -374,17 +375,18 @@ class _BatchStrip extends ConsumerStatefulWidget {
 class _BatchStripState extends ConsumerState<_BatchStrip> {
   bool _busy = false;
 
-  Future<void> _consume() async {
+  Future<void> _consume(int quantityScaled) async {
     if (_busy) return;
     final l10n = context.l10n;
     final unit = widget.medication.doseUnit;
     setState(() => _busy = true);
     await runGuarded(
       context,
-      () => ref
-          .read(inventoryServiceProvider)
-          .consumeUnit(widget.batch.inventoryBatchId),
-      success: l10n.stripUnitUsed(quantityWithUnit(quantityScale, unit, l10n)),
+      () => ref.read(inventoryServiceProvider).consumeUnit(
+            widget.batch.inventoryBatchId,
+            quantityScaled: quantityScaled,
+          ),
+      success: l10n.stripUnitUsed(quantityWithUnit(quantityScaled, unit, l10n)),
     );
     ref.read(syncCoordinatorProvider).request();
     if (mounted) setState(() => _busy = false);
@@ -401,7 +403,10 @@ class _BatchStripState extends ConsumerState<_BatchStrip> {
         strip.capacity * quantityScale,
         l10n,
       ),
-      capsule: widget.medication.doseUnit == 'capsule',
+      shape: widget.medication.doseUnit == 'capsule'
+          ? PillShape.capsule
+          : PillShape.tablet,
+      look: PillLook.forSeed(widget.batch.inventoryBatchId),
       lowStock: widget.lowStock,
       enabled: !widget.expired && widget.batch.deletedAt == null,
       busy: _busy,
@@ -510,14 +515,17 @@ class _AdjustStockSheetState extends ConsumerState<_AdjustStockSheet> {
               TextFormField(
                 controller: _quantity,
                 autofocus: true,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: quantityKeyboard(widget.medication.doseUnit),
                 decoration: InputDecoration(
                   labelText: l10n.quantity,
                   suffixText: unit,
                 ),
                 validator: (v) {
-                  final error = validateQuantity(v, l10n);
+                  final error = validateUnitQuantity(
+                    v,
+                    l10n,
+                    widget.medication.doseUnit,
+                  );
                   if (error != null) return error;
                   final amount = ScaledQuantity.tryParse(v)!.scaled;
                   if (!_add && amount > widget.batch.availableQuantityScaled) {

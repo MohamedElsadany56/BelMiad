@@ -4081,6 +4081,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap the tablets that are already used. They will show as empty.'**
   String get blisterPickHint;
+
+  /// No description provided for @stripMaxUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'A strip holds at most {max} units'**
+  String stripMaxUnits(Object max);
+
+  /// No description provided for @error_halfStepOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only whole or half tablets are allowed (for example 1 or 1.5)'**
+  String get error_halfStepOnly;
+
+  /// No description provided for @error_wholeUnitsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only whole numbers are allowed for this medicine'**
+  String get error_wholeUnitsOnly;
+
+  /// No description provided for @fullPacksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 0 if you only have an opened pack'**
+  String get fullPacksHint;
+
+  /// No description provided for @blisterPickHintHalf.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a tablet to change it: full, half, or empty.'**
+  String get blisterPickHintHalf;
+
+  /// No description provided for @stripCellHalf.
+  ///
+  /// In en, this message translates to:
+  /// **'{index} of {total}, half a tablet left. Double tap to change.'**
+  String stripCellHalf(Object index, Object total);
+
+  /// No description provided for @fullPacksMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Full packs'**
+  String get fullPacksMode;
+
+  /// No description provided for @openedOnlyMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an incomplete pack'**
+  String get openedOnlyMode;
 }
 
 class _AppLocalizationsDelegate

@@ -663,5 +663,24 @@
   "openExisting": "فتح الموجود",
   "addAnyway": "إضافة على أي حال",
   "thisMonth": "هذا الشهر",
-  "blisterPickHint": "اضغط على الأقراص التي تم استخدامها بالفعل لتظهر فارغة."
+  "blisterPickHint": "اضغط على الأقراص التي تم استخدامها بالفعل لتظهر فارغة.",
+  "stripMaxUnits": "يتسع الشريط لـ {max} وحدة على الأكثر",
+  "@stripMaxUnits": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "error_halfStepOnly": "يُسمح بأقراص كاملة أو نصف قرص فقط (مثل 1 أو 1.5)",
+  "error_wholeUnitsOnly": "يُسمح بالأعداد الصحيحة فقط لهذا الدواء",
+  "fullPacksHint": "اكتب 0 إذا كانت لديك عبوة مفتوحة فقط",
+  "blisterPickHintHalf": "اضغط على القرص لتغيير حالته: كامل، نصف، أو فارغ.",
+  "stripCellHalf": "{index} من {total}، متبقٍ نصف قرص. اضغط مرتين للتغيير.",
+  "@stripCellHalf": {
+    "placeholders": {
+      "index": {},
+      "total": {}
+    }
+  },
+  "fullPacksMode": "عبوات كاملة",
+  "openedOnlyMode": "علبة غير مكتملة فقط"
 }

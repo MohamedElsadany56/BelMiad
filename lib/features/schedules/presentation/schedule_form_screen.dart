@@ -377,6 +377,7 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
                 slot: _slots[i],
                 meals: meals,
                 unit: unit,
+                unitCode: medication.doseUnit,
                 canRemove: _slots.length > 1,
                 onChanged: () => setState(() {}),
                 onRemove: () => setState(() => _slots.removeAt(i).dispose()),
@@ -490,16 +491,15 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
                       width: 100,
                       child: TextFormField(
                         controller: _weekdayQuantities[d],
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
+                        keyboardType: quantityKeyboard(medication.doseUnit),
                         decoration: InputDecoration(
                           labelText: weekdayShortName(d, context.localeName),
                           hintText: _slots.first.quantity.text,
                         ),
-                        validator: (v) => validateQuantity(
+                        validator: (v) => validateUnitQuantity(
                           v,
                           l10n,
+                          medication.doseUnit,
                           required: false,
                           allowZero: true,
                         ),
@@ -539,6 +539,7 @@ class _SlotCard extends StatelessWidget {
     required this.slot,
     required this.meals,
     required this.unit,
+    required this.unitCode,
     required this.canRemove,
     required this.onChanged,
     required this.onRemove,
@@ -549,6 +550,7 @@ class _SlotCard extends StatelessWidget {
   final _Slot slot;
   final List<Meal> meals;
   final String unit;
+  final String unitCode;
   final bool canRemove;
   final VoidCallback onChanged;
   final VoidCallback onRemove;
@@ -673,13 +675,12 @@ class _SlotCard extends StatelessWidget {
             const SizedBox(height: 12),
             TextFormField(
               controller: slot.quantity,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: quantityKeyboard(unitCode),
               decoration: InputDecoration(
                 labelText: l10n.quantity,
                 suffixText: unit,
               ),
-              validator: (v) => validateQuantity(v, l10n),
+              validator: (v) => validateUnitQuantity(v, l10n, unitCode),
             ),
           ],
         ),
