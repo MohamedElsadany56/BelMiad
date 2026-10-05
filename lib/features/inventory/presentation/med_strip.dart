@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/common.dart';
 import '../domain/strip_model.dart';
+import 'blister_grid.dart';
 
 /// Above this many positions a strip stops being drawn tablet by tablet and
 /// switches to a compact bar with a "use one" button.
@@ -15,11 +18,12 @@ const maxInteractiveStripCells = 40;
 /// Purely presentational. The owner computes [state] from the persisted
 /// inventory and performs the consumption, so this widget is never the
 /// source of truth.
-class MedStrip extends StatelessWidget {
+class MedStrip extends StatefulWidget {
   const MedStrip({
     required this.state,
     required this.unitLabel,
     required this.onConsume,
+    this.capsule = false,
     this.lowStock = false,
     this.enabled = true,
     this.busy = false,
@@ -35,6 +39,9 @@ class MedStrip extends StatelessWidget {
   /// Called when a remaining unit is tapped. Null disables interaction.
   final VoidCallback? onConsume;
 
+  /// Draw capsules instead of round tablets.
+  final bool capsule;
+
   /// Remaining units use the warning colour.
   final bool lowStock;
 
@@ -47,13 +54,62 @@ class MedStrip extends StatelessWidget {
   /// Explains why the strip is disabled.
   final String? disabledMessage;
 
+  @override
+  State<MedStrip> createState() => _MedStripState();
+}
+
+class _MedStripState extends State<MedStrip> {
+  /// Which pockets are empty. The count always follows the database; only
+  /// *which* pocket empties is local, so the tablet you touch is the one
+  /// that disappears.
+  late Set<int> _used = _canonical();
+
+  Set<int> _canonical() => {for (var i = 0; i < widget.state.consumed; i++) i};
+
   bool get _interactive =>
-      enabled && !busy && onConsume != null && state.remaining > 0;
+      widget.enabled &&
+      !widget.busy &&
+      widget.onConsume != null &&
+      widget.state.remaining > 0;
+
+  Timer? _reconcile;
+
+  @override
+  void dispose() {
+    _reconcile?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(MedStrip old) {
+    super.didUpdateWidget(old);
+    final consumed = widget.state.consumed;
+    if (_used.length < consumed) {
+      // Stock was used elsewhere: just follow the database.
+      _used = _canonical();
+    } else if (_used.length > consumed && !widget.busy) {
+      // The picture is ahead of the database. Give the stream a moment to
+      // catch up; if it never does (the save failed) fall back to it.
+      _reconcile?.cancel();
+      _reconcile = Timer(const Duration(milliseconds: 800), () {
+        if (mounted && _used.length != widget.state.consumed) {
+          setState(() => _used = _canonical());
+        }
+      });
+    }
+  }
+
+  void _tap(int index) {
+    if (!_interactive || _used.contains(index)) return;
+    setState(() => _used = {..._used, index});
+    widget.onConsume!();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final state = widget.state;
     final compact = state.capacity > maxInteractiveStripCells;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +123,7 @@ class MedStrip extends StatelessWidget {
               l10n.stripRemaining(
                 state.remaining,
                 state.capacity,
-                unitLabel,
+                widget.unitLabel,
               ),
               style: theme.textTheme.titleSmall,
             ),
@@ -82,20 +138,28 @@ class MedStrip extends StatelessWidget {
         if (compact)
           _CompactStrip(
             state: state,
-            lowStock: lowStock,
-            enabled: enabled,
-            onConsume: _interactive ? onConsume : null,
+            lowStock: widget.lowStock,
+            enabled: widget.enabled,
+            onConsume: _interactive ? widget.onConsume : null,
           )
         else
-          _CellStrip(
-            state: state,
-            lowStock: lowStock,
-            enabled: enabled,
-            onConsume: _interactive ? onConsume : null,
+          BlisterGrid(
+            capacity: state.capacity,
+            used: _used,
+            capsule: widget.capsule,
+            pillColor: _remainingColor(
+              context,
+              widget.lowStock,
+              widget.enabled,
+            ),
+            labelFor: (i, used) => used
+                ? l10n.stripCellUsed(i + 1, state.capacity)
+                : l10n.stripCellRemaining(i + 1, state.capacity),
+            onTapCell: _interactive ? _tap : null,
           ),
-        if (!enabled && disabledMessage != null) ...[
+        if (!widget.enabled && widget.disabledMessage != null) ...[
           const SizedBox(height: 4),
-          Text(disabledMessage!, style: theme.textTheme.bodySmall),
+          Text(widget.disabledMessage!, style: theme.textTheme.bodySmall),
         ],
       ],
     );
@@ -106,104 +170,6 @@ Color _remainingColor(BuildContext context, bool lowStock, bool enabled) {
   final scheme = Theme.of(context).colorScheme;
   if (!enabled) return scheme.onSurface.withValues(alpha: 0.28);
   return lowStock ? context.statusColors.warning : scheme.primary;
-}
-
-class _CellStrip extends StatelessWidget {
-  const _CellStrip({
-    required this.state,
-    required this.lowStock,
-    required this.enabled,
-    required this.onConsume,
-  });
-
-  final StripState state;
-  final bool lowStock;
-  final bool enabled;
-  final VoidCallback? onConsume;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    // Cells grow a little with the font size so they stay easy to hit, and
-    // the Wrap flows onto more rows instead of overflowing.
-    final size = MediaQuery.textScalerOf(context).scale(36).clamp(36.0, 52.0);
-    final fill = _remainingColor(context, lowStock, enabled);
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: [
-        for (var i = 0; i < state.capacity; i++)
-          _Cell(
-            // Used positions come first, like pushing tablets out in order.
-            used: i < state.consumed,
-            size: size,
-            fill: fill,
-            label: i < state.consumed
-                ? l10n.stripCellUsed(i + 1, state.capacity)
-                : l10n.stripCellRemaining(i + 1, state.capacity),
-            onTap: i < state.consumed ? null : onConsume,
-          ),
-      ],
-    );
-  }
-}
-
-class _Cell extends StatelessWidget {
-  const _Cell({
-    required this.used,
-    required this.size,
-    required this.fill,
-    required this.label,
-    required this.onTap,
-  });
-
-  final bool used;
-  final double size;
-  final Color fill;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Semantics(
-      label: label,
-      button: !used,
-      enabled: onTap != null,
-      excludeSemantics: true,
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            width: size,
-            height: size,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: used ? scheme.surfaceContainerHighest : fill,
-              border: Border.all(
-                color: used ? scheme.outlineVariant : fill,
-                width: 1.5,
-              ),
-            ),
-            child: used
-                ? null
-                : Container(
-                    width: size * 0.34,
-                    height: size * 0.34,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.38),
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _CompactStrip extends StatelessWidget {

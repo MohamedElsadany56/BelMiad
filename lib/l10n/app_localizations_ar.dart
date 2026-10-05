@@ -2250,4 +2250,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get thisMonth => 'هذا الشهر';
+
+  @override
+  String get blisterPickHint =>
+      'اضغط على الأقراص التي تم استخدامها بالفعل لتظهر فارغة.';
 }

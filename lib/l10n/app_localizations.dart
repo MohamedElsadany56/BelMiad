@@ -4081,6 +4081,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This month'**
   String get thisMonth;
+
+  /// No description provided for @blisterPickHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the tablets that are already used. They will show as empty.'**
+  String get blisterPickHint;
 }
 
 class _AppLocalizationsDelegate

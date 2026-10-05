@@ -6,6 +6,7 @@ import '../../../app/localization/labels.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../app/widgets/common.dart';
 import '../../../core/database/app_database.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/time/local_date.dart';
 import '../../../core/utilities/scaled_quantity.dart';
 import '../../catalog/data/drug_catalog_repository.dart';
@@ -14,6 +15,8 @@ import '../../catalog/presentation/catalog_search.dart';
 import '../../medications/presentation/medications_screen.dart';
 import '../data/inventory_repository.dart';
 import '../domain/partial_pack.dart';
+import 'blister_grid.dart';
+import 'med_strip.dart' show maxInteractiveStripCells;
 
 /// Outer packages that commonly contain inner packs (box → strips).
 const _outerWithInner = {'box', 'container'};
@@ -232,6 +235,143 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
       ),
     );
     if (id != null && mounted) setState(() => _medicationId = id);
+  }
+
+  /// Opened packs that can be drawn tablet by tablet.
+  static const _drawable = {'strip', 'blister'};
+
+  Widget _openedPackCard(
+    _OpenedPack pack,
+    AppLocalizations l10n,
+    String unitCode,
+    String unit,
+    bool locked,
+  ) {
+    final capacity = int.tryParse(pack.capacity.text);
+    final pickable = !locked &&
+        _drawable.contains(pack.type) &&
+        capacity != null &&
+        capacity >= 1 &&
+        capacity <= maxInteractiveStripCells;
+    Widget? picker;
+    if (pickable) {
+      final scaled = ScaledQuantity.tryParse(pack.remaining.text)?.scaled;
+      final remaining = scaled == null
+          ? capacity
+          : (scaled ~/ quantityScale).clamp(0, capacity).toInt();
+      if (pack.used.length != capacity - remaining ||
+          pack.used.any((i) => i >= capacity)) {
+        pack.used = {for (var i = 0; i < capacity - remaining; i++) i};
+      }
+      picker = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 12),
+          Text(
+            l10n.blisterPickHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          BlisterGrid(
+            capacity: capacity,
+            used: pack.used,
+            capsule: unitCode == 'capsule',
+            tapUsed: true,
+            pillColor: Theme.of(context).colorScheme.primary,
+            labelFor: (i, used) => used
+                ? l10n.stripCellUsed(i + 1, capacity)
+                : l10n.stripCellRemaining(i + 1, capacity),
+            onTapCell: (i) => setState(() {
+              pack.used = pack.used.contains(i)
+                  ? ({...pack.used}..remove(i))
+                  : {...pack.used, i};
+              pack.remaining.text = '${capacity - pack.used.length}';
+            }),
+          ),
+        ],
+      );
+    }
+    return Card(
+      key: ObjectKey(pack),
+      margin: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: PackagingTypes.all.contains(pack.type)
+                        ? pack.type
+                        : 'other',
+                    isExpanded: true,
+                    decoration: InputDecoration(labelText: l10n.packagingType),
+                    items: [
+                      for (final t in PackagingTypes.all)
+                        DropdownMenuItem(
+                          value: t,
+                          child: Text(packagingLabel(t, l10n)),
+                        ),
+                    ],
+                    onChanged: locked
+                        ? null
+                        : (v) => setState(() => pack.type = v ?? 'other'),
+                  ),
+                ),
+                if (!locked)
+                  IconButton(
+                    tooltip: l10n.delete,
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() {
+                      _opened.remove(pack);
+                      pack.dispose();
+                    }),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Full-width fields: labels are never clipped, whatever the
+            // language or font size.
+            TextFormField(
+              controller: pack.capacity,
+              enabled: !locked,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.packCapacity,
+                suffixText: unit,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: pack.remaining,
+              enabled: !locked,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: InputDecoration(
+                labelText: l10n.unitsLeft,
+                suffixText: unit,
+              ),
+              onChanged: (_) => setState(() {}),
+              validator: (v) {
+                final error = validateQuantity(v, l10n);
+                if (error != null) return error;
+                final cap = int.tryParse(pack.capacity.text);
+                final left = ScaledQuantity.tryParse(v)!;
+                if (cap != null && left > ScaledQuantity.units(cap)) {
+                  return l10n.error_invalidPartialPack;
+                }
+                return null;
+              },
+            ),
+            if (picker != null) picker,
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -468,82 +608,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               for (final pack in _opened)
-                Padding(
-                  key: ObjectKey(pack),
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 4,
-                        child: DropdownButtonFormField<String>(
-                          initialValue: PackagingTypes.all.contains(pack.type)
-                              ? pack.type
-                              : 'other',
-                          isExpanded: true,
-                          decoration:
-                              InputDecoration(labelText: l10n.packagingType),
-                          items: [
-                            for (final t in PackagingTypes.all)
-                              DropdownMenuItem(
-                                value: t,
-                                child: Text(packagingLabel(t, l10n)),
-                              ),
-                          ],
-                          onChanged: quantityLocked
-                              ? null
-                              : (v) => setState(() => pack.type = v ?? 'other'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 3,
-                        child: TextFormField(
-                          controller: pack.remaining,
-                          enabled: !quantityLocked,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration:
-                              InputDecoration(labelText: l10n.unitsLeft),
-                          onChanged: (_) => setState(() {}),
-                          validator: (v) {
-                            final error = validateQuantity(v, l10n);
-                            if (error != null) return error;
-                            final capacity = int.tryParse(pack.capacity.text);
-                            final left = ScaledQuantity.tryParse(v)!;
-                            if (capacity != null &&
-                                left > ScaledQuantity.units(capacity)) {
-                              return l10n.error_invalidPartialPack;
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 3,
-                        child: TextFormField(
-                          controller: pack.capacity,
-                          enabled: !quantityLocked,
-                          keyboardType: TextInputType.number,
-                          decoration:
-                              InputDecoration(labelText: l10n.packCapacity),
-                          onChanged: (_) => setState(() {}),
-                        ),
-                      ),
-                      if (!quantityLocked)
-                        IconButton(
-                          tooltip: l10n.delete,
-                          icon: const Icon(Icons.close),
-                          onPressed: () => setState(() {
-                            _opened.remove(pack);
-                            pack.dispose();
-                          }),
-                        ),
-                    ],
-                  ),
-                ),
+                _openedPackCard(pack, l10n, unitCode, unit, quantityLocked),
               if (_packageTotal != null)
                 Card(
                   color: Theme.of(context).colorScheme.primaryContainer,
@@ -741,6 +806,9 @@ class _OpenedPack {
   String type;
   final TextEditingController remaining;
   final TextEditingController capacity;
+
+  /// Pockets the user marked as already used (visual picker only).
+  Set<int> used = {};
 
   void dispose() {
     remaining.dispose();

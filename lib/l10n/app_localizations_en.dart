@@ -2248,4 +2248,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get thisMonth => 'This month';
+
+  @override
+  String get blisterPickHint =>
+      'Tap the tablets that are already used. They will show as empty.';
 }

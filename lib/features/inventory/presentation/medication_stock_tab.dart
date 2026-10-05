@@ -401,6 +401,7 @@ class _BatchStripState extends ConsumerState<_BatchStrip> {
         strip.capacity * quantityScale,
         l10n,
       ),
+      capsule: widget.medication.doseUnit == 'capsule',
       lowStock: widget.lowStock,
       enabled: !widget.expired && widget.batch.deletedAt == null,
       busy: _busy,
