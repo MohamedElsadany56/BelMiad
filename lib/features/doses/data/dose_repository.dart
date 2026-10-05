@@ -1,15 +1,37 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../schedules/data/schedule_repository.dart';
+import '../domain/dose_grouping.dart';
 import '../domain/dose_status.dart';
 
 class DoseView {
-  const DoseView({required this.dose, required this.medication});
+  const DoseView({
+    required this.dose,
+    required this.medication,
+    this.schedule,
+  });
 
   final DoseInstance dose;
   final Medication medication;
 
+  /// The schedule the dose was generated from (null for PRN doses).
+  final MedicationSchedule? schedule;
+
   DoseStatus get status => DoseStatus.fromCode(dose.status);
+
+  /// Input of the shared grouping rule (`dose_grouping.dart`).
+  DoseGroupInput get groupInput {
+    final mealRelative = schedule?.scheduleType == ScheduleTypes.mealRelative;
+    return DoseGroupInput(
+      patientId: dose.patientId,
+      localDate: dose.localDate,
+      scheduledAt: dose.scheduledAt,
+      isPrn: dose.isPrn,
+      mealId: mealRelative ? schedule?.mealId : null,
+      timingRelation: mealRelative ? schedule?.timingRelation : null,
+    );
+  }
 }
 
 /// Read-side dose queries. All mutations go through [DoseService].
@@ -25,11 +47,17 @@ class DoseRepository {
           _db.medications.medicationId
               .equalsExp(_db.doseInstances.medicationId),
         ),
+        leftOuterJoin(
+          _db.medicationSchedules,
+          _db.medicationSchedules.scheduleId
+              .equalsExp(_db.doseInstances.scheduleId),
+        ),
       ]);
 
   DoseView _map(TypedResult r) => DoseView(
         dose: r.readTable(_db.doseInstances),
         medication: r.readTable(_db.medications),
+        schedule: r.readTableOrNull(_db.medicationSchedules),
       );
 
   /// Hides undone PRN entries, which only exist for history.

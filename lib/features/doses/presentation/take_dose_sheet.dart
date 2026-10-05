@@ -182,6 +182,7 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
     setState(() => _busy = true);
     final service = ref.read(doseServiceProvider);
     final settings = await ref.read(settingsRepositoryProvider).load();
+    var completion = const GroupCompletion();
     try {
       if (isPrn) {
         await service.logPrnDose(
@@ -200,11 +201,27 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
           graceMinutes: settings.missedGraceMinutes,
           takenAt: _earlier ? _intakeUtc : null,
         );
+        // Combined mode: the rest of the dose group is completed with the
+        // same intake time (use case decides what belongs to the group).
+        if (settings.doseCompletionMode.isCombined) {
+          completion = await service.completeGroupMates(
+            primaryDoseId: data.dose!.doseInstanceId,
+            graceMinutes: settings.missedGraceMinutes,
+            takenAt: _earlier ? _intakeUtc : null,
+          );
+        }
       }
       ref.read(syncCoordinatorProvider).request();
       if (!mounted) return;
       Navigator.pop(context);
-      showMessage(context, l10n.doseTaken);
+      showMessage(
+        context,
+        completion.failed.isNotEmpty
+            ? l10n.doseGroupPartial(completion.failed.length)
+            : completion.taken.isNotEmpty
+                ? l10n.doseGroupTaken
+                : l10n.doseTaken,
+      );
     } on MaximumDailyQuantityExceededException catch (error) {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -277,6 +294,13 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
     final name =
         medicationDisplayName(data.medication, arabic: context.isArabic);
     final actual = _actualScaled ?? 0;
+    final combinedGroup = data.groupMateIds.isNotEmpty &&
+        (ref
+                .watch(settingsProvider)
+                .valueOrNull
+                ?.doseCompletionMode
+                .isCombined ??
+            true);
     final suggested = data.suggestedAllocation(actual);
     final batchesById = {
       for (final b in data.usableBatches) b.inventoryBatchId: b,
@@ -315,6 +339,14 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
                   quantityWithUnit(
                       data.maximumScaled, data.medication.doseUnit, l10n),
                 )),
+              if (!isPrn && combinedGroup)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: _Note(
+                    icon: Icons.layers_outlined,
+                    text: l10n.groupCompletionNote(data.groupMateIds.length),
+                  ),
+                ),
               const SizedBox(height: 12),
               Text(l10n.whenTaken,
                   style: Theme.of(context).textTheme.titleSmall),
