@@ -2059,4 +2059,193 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get soundCustomAndroidOnly =>
       'Custom tones and ringtones are available on Android.';
+
+  @override
+  String get doseGroupTaken =>
+      'All medications in this dose group were marked as taken';
+
+  @override
+  String doseGroupPartial(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Dose taken. $count other medications in this group could not be recorded.',
+      one:
+          'Dose taken. 1 other medication in this group could not be recorded.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String takeAll(Object count) {
+    return 'Take all ($count)';
+  }
+
+  @override
+  String groupCompletionNote(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'This will also mark $count other medications in this dose group as taken.',
+      one:
+          'This will also mark 1 other medication in this dose group as taken.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get doseCompletion => 'Dose completion';
+
+  @override
+  String get doseCompletionCombinedHint =>
+      'Taking one medication also marks the other medications scheduled at the same time or for the same meal.';
+
+  @override
+  String get doseCompletionSeparateHint =>
+      'Each medication is marked as taken on its own.';
+
+  @override
+  String get notificationGrouping => 'Notification grouping';
+
+  @override
+  String get notificationGroupingCombinedHint =>
+      'One notification for all medications at the same time or for the same meal.';
+
+  @override
+  String get notificationGroupingSeparateHint =>
+      'A separate notification for every medication.';
+
+  @override
+  String get modeCombined => 'Combined';
+
+  @override
+  String get modeSeparate => 'Separate';
+
+  @override
+  String get fontSize => 'Font size';
+
+  @override
+  String get fontSize_standard => 'Standard';
+
+  @override
+  String get fontSize_medium => 'Medium';
+
+  @override
+  String get fontSize_large => 'Large';
+
+  @override
+  String get fontSize_larger => 'Extra large';
+
+  @override
+  String get fontSize_maximum => 'Maximum';
+
+  @override
+  String get fontSizePreview => 'Your next dose: 1 tablet after lunch.';
+
+  @override
+  String get notificationRetentionNote =>
+      'Notifications are removed automatically after 7 days.';
+
+  @override
+  String get markAsRead => 'Mark as read';
+
+  @override
+  String get markAsUnread => 'Mark as unread';
+
+  @override
+  String get moreOptions => 'More options';
+
+  @override
+  String get notificationRead => 'Read';
+
+  @override
+  String get unread => 'Unread';
+
+  @override
+  String get deleteReadNotifications => 'Delete read notifications';
+
+  @override
+  String get deleteAllNotifications => 'Delete all notifications';
+
+  @override
+  String get deleteNotificationsBody =>
+      'This removes them from the notification list. Scheduled reminders are not affected.';
+
+  @override
+  String stripRemaining(Object remaining, Object total, Object unit) {
+    return '$remaining of $total $unit remaining';
+  }
+
+  @override
+  String stripExtra(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+ $count more full strips',
+      one: '+ 1 more full strip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String stripTapHint(Object unit) {
+    return 'Tap a remaining $unit to mark it as used';
+  }
+
+  @override
+  String stripUnitUsed(Object quantity) {
+    return 'Marked $quantity as used';
+  }
+
+  @override
+  String stripCellRemaining(Object index, Object total) {
+    return '$index of $total, remaining. Double tap to mark as used.';
+  }
+
+  @override
+  String stripCellUsed(Object index, Object total) {
+    return '$index of $total, already used';
+  }
+
+  @override
+  String get stripUseOne => 'Use one';
+
+  @override
+  String get stripDisabledExpired =>
+      'This batch has expired, so it cannot be used from the strip.';
+
+  @override
+  String get reason_strip_use => 'Marked as used from the strip';
+
+  @override
+  String get addMedicationNextTitle => 'Medication added';
+
+  @override
+  String get addMedicationNextBody =>
+      'What would you like to do next? You can do any of this later.';
+
+  @override
+  String get setSchedule => 'Set up schedule';
+
+  @override
+  String get viewMedication => 'View medication';
+
+  @override
+  String get duplicateMedicationTitle => 'Already in your list';
+
+  @override
+  String duplicateMedicationBody(Object name) {
+    return '$name is already in this patient\'s medications. Open it instead of adding a duplicate?';
+  }
+
+  @override
+  String get openExisting => 'Open existing';
+
+  @override
+  String get addAnyway => 'Add anyway';
+
+  @override
+  String get thisMonth => 'This month';
 }
