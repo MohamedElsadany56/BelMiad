@@ -169,25 +169,37 @@ class EmptyState extends StatelessWidget {
 }
 
 class SectionHeader extends StatelessWidget {
-  const SectionHeader(this.title, {this.trailing, super.key});
+  const SectionHeader(
+    this.title, {
+    this.trailing,
+    this.padding = const EdgeInsetsDirectional.fromSTEB(16, 20, 8, 8),
+    super.key,
+  });
 
   final String title;
   final Widget? trailing;
 
+  /// Defaults to the inset used on full-width lists; pass a smaller start
+  /// inset inside lists that already have their own side padding.
+  final EdgeInsetsGeometry padding;
+
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(16, 20, 8, 8),
+        padding: padding,
         child: Row(
           children: [
             Expanded(
-              child: Text(
+              child: MixedText(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
               ),
             ),
-            if (trailing != null) trailing!,
+            if (trailing != null) ...[
+              const SizedBox(width: 8),
+              trailing!,
+            ],
           ],
         ),
       );

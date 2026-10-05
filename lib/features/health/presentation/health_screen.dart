@@ -11,6 +11,7 @@ import '../../medications/data/medication_repository.dart';
 import '../../medications/presentation/medication_detail_screen.dart';
 import '../../medications/presentation/medications_screen.dart';
 import '../application/prescription_documents.dart';
+import '../domain/prescription_grouping.dart';
 import 'health_forms.dart';
 
 final appointmentsProvider = StreamProvider.family<List<Appointment>, String>(
@@ -298,6 +299,10 @@ class _PrescriptionsTab extends ConsumerWidget {
 
   final String patientId;
 
+  /// Headers sit on the same edge as the cards below them (the list already
+  /// has its own side padding).
+  static const _headerPadding = EdgeInsetsDirectional.fromSTEB(0, 20, 0, 8);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -305,31 +310,7 @@ class _PrescriptionsTab extends ConsumerWidget {
     return AsyncBody(
       value: ref.watch(prescriptionsProvider(patientId)),
       builder: (items) {
-        String keyOf(Prescription p) => switch (grouping) {
-              _RxGrouping.doctor => (p.doctorName?.trim().isEmpty ?? true)
-                  ? l10n.unknownDoctor
-                  : p.doctorName!.trim(),
-              _RxGrouping.date => p.issueDate == null
-                  ? l10n.noDate
-                  : DateFormat.yMMMM(context.localeName).format(
-                      LocalDate.parse(p.issueDate!).toDateTime(),
-                    ),
-              _RxGrouping.fileType => switch (
-                    prescriptionFileKind(p.filePath)) {
-                  PrescriptionFileKind.image => l10n.fileType_image,
-                  PrescriptionFileKind.pdf => l10n.fileType_pdf,
-                  PrescriptionFileKind.other => l10n.fileType_other,
-                },
-            };
-        final sorted = [...items]..sort(
-            (a, b) => (b.issueDate ?? '').compareTo(a.issueDate ?? ''),
-          );
-        final groups = <String, List<Prescription>>{};
-        for (final p in sorted) {
-          groups.putIfAbsent(keyOf(p), () => []).add(p);
-        }
-        final keys = groups.keys.toList();
-        if (grouping == _RxGrouping.doctor) keys.sort();
+        final groups = _groups(context, items, grouping);
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
           children: [
@@ -337,32 +318,29 @@ class _PrescriptionsTab extends ConsumerWidget {
               l10n.prescriptionsPrivateNote,
               style: Theme.of(context).textTheme.bodySmall,
             ),
+            const SizedBox(height: 12),
+            // Chips wrap onto a second line instead of clipping their text
+            // in Arabic or at large font sizes.
+            Text(
+              l10n.groupBy,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
             const SizedBox(height: 8),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                Text(l10n.groupBy),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SegmentedButton<_RxGrouping>(
-                    segments: [
-                      ButtonSegment(
-                        value: _RxGrouping.doctor,
-                        label: Text(l10n.groupDoctor),
-                      ),
-                      ButtonSegment(
-                        value: _RxGrouping.date,
-                        label: Text(l10n.groupDate),
-                      ),
-                      ButtonSegment(
-                        value: _RxGrouping.fileType,
-                        label: Text(l10n.groupFileType),
-                      ),
-                    ],
-                    selected: {grouping},
-                    onSelectionChanged: (v) =>
-                        ref.read(_rxGroupingProvider.notifier).state = v.first,
+                for (final (value, label) in [
+                  (_RxGrouping.date, l10n.groupDate),
+                  (_RxGrouping.doctor, l10n.groupDoctor),
+                  (_RxGrouping.fileType, l10n.groupFileType),
+                ])
+                  ChoiceChip(
+                    label: Text(label),
+                    selected: grouping == value,
+                    onSelected: (_) =>
+                        ref.read(_rxGroupingProvider.notifier).state = value,
                   ),
-                ),
               ],
             ),
             if (items.isEmpty)
@@ -373,12 +351,13 @@ class _PrescriptionsTab extends ConsumerWidget {
                   message: l10n.noRecords,
                 ),
               ),
-            for (final key in keys) ...[
+            for (final group in groups) ...[
               SectionHeader(
-                key,
-                trailing: StatusBadge('${groups[key]!.length}'),
+                group.label,
+                padding: _headerPadding,
+                trailing: StatusBadge('${group.items.length}'),
               ),
-              for (final p in groups[key]!)
+              for (final p in group.items)
                 Card(
                   child: ListTile(
                     leading: Icon(
@@ -402,4 +381,61 @@ class _PrescriptionsTab extends ConsumerWidget {
       },
     );
   }
+
+  /// Labelled groups in display order. Dates are ordered by the real
+  /// calendar month (never by the localized month name).
+  List<({String label, List<Prescription> items})> _groups(
+    BuildContext context,
+    List<Prescription> items,
+    _RxGrouping grouping,
+  ) {
+    final l10n = context.l10n;
+    switch (grouping) {
+      case _RxGrouping.date:
+        final today = LocalDate.fromDateTime(DateTime.now());
+        return [
+          for (final group in groupByIssueMonth(items, (p) => p.issueDate))
+            (
+              label: group.month == null
+                  ? l10n.noDate
+                  : group.month!.year == today.year &&
+                          group.month!.month == today.month
+                      ? l10n.thisMonth
+                      : DateFormat.yMMMM(context.localeName)
+                          .format(group.month!.toDateTime()),
+              items: group.items,
+            ),
+        ];
+      case _RxGrouping.doctor:
+        final byDoctor = <String, List<Prescription>>{};
+        for (final p in _newestFirst(items)) {
+          final name = p.doctorName?.trim() ?? '';
+          byDoctor
+              .putIfAbsent(name.isEmpty ? l10n.unknownDoctor : name, () => [])
+              .add(p);
+        }
+        final names = byDoctor.keys.toList()..sort();
+        return [for (final n in names) (label: n, items: byDoctor[n]!)];
+      case _RxGrouping.fileType:
+        final byKind = <PrescriptionFileKind, List<Prescription>>{};
+        for (final p in _newestFirst(items)) {
+          byKind.putIfAbsent(prescriptionFileKind(p.filePath), () => []).add(p);
+        }
+        return [
+          for (final kind in PrescriptionFileKind.values)
+            if (byKind[kind] != null)
+              (
+                label: switch (kind) {
+                  PrescriptionFileKind.image => l10n.fileType_image,
+                  PrescriptionFileKind.pdf => l10n.fileType_pdf,
+                  PrescriptionFileKind.other => l10n.fileType_other,
+                },
+                items: byKind[kind]!,
+              ),
+        ];
+    }
+  }
+
+  List<Prescription> _newestFirst(List<Prescription> items) => [...items]
+    ..sort((a, b) => (b.issueDate ?? '').compareTo(a.issueDate ?? ''));
 }
