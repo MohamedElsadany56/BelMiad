@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -181,11 +182,11 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   int get _looseScaled => ScaledQuantity.tryParse(_loose.text)?.scaled ?? 0;
 
   int? get _packageTotal {
-    final packages = int.tryParse(_packages.text);
+    final packages = _fullPacks;
     final units =
         int.tryParse(_unitsPerPack.text) ?? (packages == 0 ? 0 : null);
     final inner = _innerApplies ? int.tryParse(_innerPerPackage.text) : null;
-    if (packages == null || units == null) return null;
+    if (units == null) return null;
     if (_innerApplies && inner == null) return null;
     return ScaledQuantity.fromPackages(
       packages: packages,
@@ -198,12 +199,12 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   String _breakdown(String unitCode) {
     final l10n = context.l10n;
     final parts = [
-      '${_packages.text} ${packagingLabel(_packaging, l10n)}',
+      '$_fullPacks ${packagingLabel(_packaging, l10n)}',
       if (_innerApplies)
         '${_innerPerPackage.text} ${packagingLabel(_innerType, l10n)}',
       '${_unitsPerPack.text} ${unitLabelFor(unitCode, null, l10n)}',
     ];
-    final full = int.tryParse(_packages.text) == 0 ? '' : parts.join(' × ');
+    final full = _fullPacks == 0 ? '' : parts.join(' × ');
     final extras = [
       for (final pack in _openedPacks)
         l10n.partialPackOf(
@@ -229,7 +230,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
     final input = _byPackages
         ? BatchInput.fromPackages(
             medicationId: _medicationId!,
-            packagesCount: int.parse(_packages.text),
+            packagesCount: _fullPacks,
             unitsPerPackage: int.tryParse(_unitsPerPack.text) ?? 0,
             subPackagesPerPackage:
                 _innerApplies ? int.parse(_innerPerPackage.text) : null,
@@ -385,6 +386,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                     controller: pack.remaining,
                     enabled: !locked,
                     keyboardType: quantityKeyboard(unitCode),
+                    inputFormatters: quantityInputFormatters(unitCode),
                     decoration: InputDecoration(
                       labelText: l10n.unitsLeft,
                       suffixText: unit,
@@ -559,6 +561,10 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                           controller: _innerPerPackage,
                           enabled: !quantityLocked,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(3),
+                          ],
                           decoration: InputDecoration(
                             labelText: l10n.innerPacksPer(
                               packagingLabel(_innerType, l10n),
@@ -578,6 +584,10 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                 controller: _unitsPerPack,
                 enabled: !quantityLocked,
                 keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(3),
+                ],
                 decoration: InputDecoration(
                   labelText: l10n.unitsPer(unit, innerPackLabel),
                   suffixText: unit,
@@ -617,6 +627,11 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
               _CountRow(
                 label:
                     '${l10n.fullPacksMode} (${packagingLabel(_packaging, l10n)})',
+                controller: _packages,
+                onTyped: () => setState(() {
+                  _fullTouched = true;
+                  _autoZeroed = false;
+                }),
                 value: _fullPacks,
                 enabled: !quantityLocked,
                 onChanged: _setFullPacks,
@@ -653,6 +668,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                 controller: _quantity,
                 enabled: !quantityLocked,
                 keyboardType: quantityKeyboard(unitCode),
+                inputFormatters: quantityInputFormatters(unitCode),
                 decoration: InputDecoration(
                   labelText: l10n.availableQuantity,
                   suffixText: unit,
@@ -822,11 +838,13 @@ class _StorageMedicineScreenState extends ConsumerState<StorageMedicineScreen> {
   }
 }
 
-/// "Full packs  [-] 2 [+]": a count that is quick to change with a thumb
-/// and never needs the keyboard.
+/// "Full packs  [-] 2 [+]": tap -/+ for small changes or type the number
+/// directly for larger ones.
 class _CountRow extends StatelessWidget {
   const _CountRow({
     required this.label,
+    required this.controller,
+    required this.onTyped,
     required this.value,
     required this.enabled,
     required this.onChanged,
@@ -834,7 +852,13 @@ class _CountRow extends StatelessWidget {
     required this.increaseLabel,
   });
 
+  static const max = 999;
+
   final String label;
+  final TextEditingController controller;
+
+  /// The number was typed (the controller already holds it).
+  final VoidCallback onTyped;
   final int value;
   final bool enabled;
   final ValueChanged<int> onChanged;
@@ -852,17 +876,37 @@ class _CountRow extends StatelessWidget {
           onPressed: enabled && value > 0 ? () => onChanged(value - 1) : null,
           icon: const Icon(Icons.remove),
         ),
-        ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 44),
-          child: Text(
-            '$value',
+        const SizedBox(width: 6),
+        SizedBox(
+          width: MediaQuery.textScalerOf(context).scale(64),
+          child: TextField(
+            controller: controller,
+            enabled: enabled,
             textAlign: TextAlign.center,
-            style: theme.textTheme.titleLarge,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(3),
+            ],
+            style: theme.textTheme.titleMedium,
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: '0',
+              semanticCounterText: label,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+            ),
+            onTap: () => controller.selection = TextSelection(
+              baseOffset: 0,
+              extentOffset: controller.text.length,
+            ),
+            onChanged: (_) => onTyped(),
           ),
         ),
+        const SizedBox(width: 6),
         IconButton.filledTonal(
           tooltip: increaseLabel,
-          onPressed: enabled && value < 999 ? () => onChanged(value + 1) : null,
+          onPressed: enabled && value < max ? () => onChanged(value + 1) : null,
           icon: const Icon(Icons.add),
         ),
       ],

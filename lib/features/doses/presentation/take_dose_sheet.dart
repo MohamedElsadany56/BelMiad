@@ -437,6 +437,8 @@ class _TakeDoseSheetState extends ConsumerState<TakeDoseSheet> {
               TextField(
                 controller: _quantity,
                 keyboardType: quantityKeyboard(data.medication.doseUnit),
+                inputFormatters:
+                    quantityInputFormatters(data.medication.doseUnit),
                 decoration: InputDecoration(
                   labelText: l10n.customAmount,
                   suffixText: unit,

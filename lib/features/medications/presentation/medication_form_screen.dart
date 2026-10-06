@@ -379,6 +379,7 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         TextFormField(
           controller: _maximum,
           keyboardType: quantityKeyboard(_unit),
+          inputFormatters: quantityInputFormatters(_unit),
           decoration: InputDecoration(
             labelText: '${l10n.maximumDaily} (${l10n.optional})',
             helperText: l10n.maximumDailyHint,

@@ -516,6 +516,8 @@ class _AdjustStockSheetState extends ConsumerState<_AdjustStockSheet> {
                 controller: _quantity,
                 autofocus: true,
                 keyboardType: quantityKeyboard(widget.medication.doseUnit),
+                inputFormatters:
+                    quantityInputFormatters(widget.medication.doseUnit),
                 decoration: InputDecoration(
                   labelText: l10n.quantity,
                   suffixText: unit,

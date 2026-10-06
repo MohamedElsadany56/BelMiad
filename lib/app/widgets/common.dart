@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' hide TextDirection;
@@ -393,6 +394,33 @@ bool allowsHalfUnit(String unitCode) => unitCode == 'tablet';
 TextInputType quantityKeyboard(String unitCode) => allowsHalfUnit(unitCode)
     ? const TextInputType.numberWithOptions(decimal: true)
     : TextInputType.number;
+
+/// Blocks impossible amounts while typing: up to 4 digits, plus ".5" for
+/// tablets only (a comma, the Arabic decimal sign and Arabic digits work
+/// too). "1.3", "0.25" or "2.5 capsules" cannot be typed at all.
+class UnitQuantityFormatter extends TextInputFormatter {
+  UnitQuantityFormatter({required this.allowHalf});
+
+  final bool allowHalf;
+
+  static const _d = '[0-9\u0660-\u0669\u06F0-\u06F9]';
+  static final _whole = RegExp('^$_d{0,4}\$');
+  static final _half =
+      RegExp('^$_d{0,4}([.,\u066B][5\u0665\u06F5]?|\u00BD)?\$');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) =>
+      (allowHalf ? _half : _whole).hasMatch(newValue.text.trim())
+          ? newValue
+          : oldValue;
+}
+
+/// Input filter matching [allowsHalfUnit] for quantity fields.
+List<TextInputFormatter> quantityInputFormatters(String unitCode) =>
+    [UnitQuantityFormatter(allowHalf: allowsHalfUnit(unitCode))];
 
 /// [validateQuantity] plus the unit rule: halves for tablets only.
 String? validateUnitQuantity(

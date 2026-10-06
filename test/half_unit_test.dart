@@ -34,4 +34,30 @@ void main() {
     expect(validateUnitQuantity('0', l10n, 'tablet'), isNotNull);
     expect(validateUnitQuantity('0', l10n, 'tablet', allowZero: true), isNull);
   });
+
+  group('typing filter', () {
+    String type(UnitQuantityFormatter f, String from, String to) => f
+        .formatEditUpdate(
+          TextEditingValue(text: from),
+          TextEditingValue(text: to),
+        )
+        .text;
+
+    test('tablets: whole numbers and a trailing .5 only', () {
+      final f = UnitQuantityFormatter(allowHalf: true);
+      expect(type(f, '1', '1.'), '1.');
+      expect(type(f, '1.', '1.5'), '1.5');
+      expect(type(f, '1.', '1.3'), '1.');
+      expect(type(f, '1.5', '1.55'), '1.5');
+      expect(type(f, '', '٣٫٥'), '٣٫٥');
+      expect(type(f, '12', '12345'), '12');
+    });
+
+    test('other units: digits only', () {
+      final f = UnitQuantityFormatter(allowHalf: false);
+      expect(type(f, '2', '2.'), '2');
+      expect(type(f, '2', '25'), '25');
+      expect(type(f, '', 'a'), '');
+    });
+  });
 }

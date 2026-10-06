@@ -492,6 +492,8 @@ class _ScheduleFormScreenState extends ConsumerState<ScheduleFormScreen> {
                       child: TextFormField(
                         controller: _weekdayQuantities[d],
                         keyboardType: quantityKeyboard(medication.doseUnit),
+                        inputFormatters:
+                            quantityInputFormatters(medication.doseUnit),
                         decoration: InputDecoration(
                           labelText: weekdayShortName(d, context.localeName),
                           hintText: _slots.first.quantity.text,
@@ -676,6 +678,7 @@ class _SlotCard extends StatelessWidget {
             TextFormField(
               controller: slot.quantity,
               keyboardType: quantityKeyboard(unitCode),
+              inputFormatters: quantityInputFormatters(unitCode),
               decoration: InputDecoration(
                 labelText: l10n.quantity,
                 suffixText: unit,
