@@ -1,16 +1,21 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';
 import '../../../app/widgets/common.dart';
 import '../../../core/utilities/scaled_quantity.dart';
+import '../../../l10n/app_localizations.dart';
 import '../domain/strip_model.dart';
 import 'blister_grid.dart';
 
 /// Above this many positions a strip stops being drawn tablet by tablet and
 /// switches to a compact bar with a "use one" button.
 const maxInteractiveStripCells = maxStripCapacity;
+
+/// Full strips drawn next to the strip in use before switching to text.
+const maxDrawnFullStrips = 2;
 
 /// A blister strip: one position per tablet/capsule of the strip in use.
 /// Remaining units are filled, used ones are empty; tapping a remaining one
@@ -119,6 +124,15 @@ class _MedStripState extends State<MedStrip> {
     }
   }
 
+  String _label(AppLocalizations l10n, int i, PocketState pocket) {
+    final total = widget.state.capacity;
+    return switch (pocket) {
+      PocketState.empty => l10n.stripCellUsed(i + 1, total),
+      PocketState.half => l10n.stripCellHalf(i + 1, total),
+      PocketState.full => l10n.stripCellRemaining(i + 1, total),
+    };
+  }
+
   void _tap(int index) {
     if (!_interactive || _used.contains(index)) return;
     final isHalf = _half.contains(index);
@@ -135,6 +149,12 @@ class _MedStripState extends State<MedStrip> {
     final theme = Theme.of(context);
     final state = widget.state;
     final compact = state.capacity > maxInteractiveStripCells;
+    final look = widget.enabled ? widget.look : widget.look.muted;
+    // Draw at most two full strips besides the one in use; the rest is
+    // summarised in text so the card stays short on a phone.
+    final drawnFull = math.min(state.extraFullStrips, maxDrawnFullStrips);
+    final hiddenFull =
+        compact ? state.extraFullStrips : state.extraFullStrips - drawnFull;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -151,11 +171,6 @@ class _MedStripState extends State<MedStrip> {
               ),
               style: theme.textTheme.titleSmall,
             ),
-            if (state.extraFullStrips > 0)
-              Text(
-                l10n.stripExtra(state.extraFullStrips),
-                style: theme.textTheme.bodySmall,
-              ),
           ],
         ),
         const SizedBox(height: 8),
@@ -168,20 +183,40 @@ class _MedStripState extends State<MedStrip> {
                 _interactive ? () => widget.onConsume!(quantityScale) : null,
           )
         else
-          BlisterGrid(
-            capacity: state.capacity,
-            used: _used,
-            half: _half,
-            shape: widget.shape,
-            look: widget.enabled ? widget.look : widget.look.muted,
-            labelFor: (i, pocket) => switch (pocket) {
-              PocketState.empty => l10n.stripCellUsed(i + 1, state.capacity),
-              PocketState.half => l10n.stripCellHalf(i + 1, state.capacity),
-              PocketState.full =>
-                l10n.stripCellRemaining(i + 1, state.capacity),
-            },
-            onTapCell: _interactive ? _tap : null,
+          // The strip in use (tap to use a tablet) followed by the full
+          // ones, e.g. 25 tablets in strips of 15 = one strip with 10 left
+          // and one full strip.
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              BlisterGrid(
+                capacity: state.capacity,
+                used: _used,
+                half: _half,
+                shape: widget.shape,
+                look: look,
+                labelFor: (i, pocket) => _label(l10n, i, pocket),
+                onTapCell: _interactive ? _tap : null,
+              ),
+              for (var i = 0; i < drawnFull; i++)
+                BlisterGrid(
+                  key: ValueKey('full-$i'),
+                  capacity: state.capacity,
+                  used: const {},
+                  shape: widget.shape,
+                  look: look,
+                  labelFor: (cell, pocket) => _label(l10n, cell, pocket),
+                ),
+            ],
           ),
+        if (hiddenFull > 0) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.stripExtra(hiddenFull),
+            style: theme.textTheme.bodySmall,
+          ),
+        ],
         if (!widget.enabled && widget.disabledMessage != null) ...[
           const SizedBox(height: 4),
           Text(widget.disabledMessage!, style: theme.textTheme.bodySmall),

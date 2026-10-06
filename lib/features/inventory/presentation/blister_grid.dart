@@ -81,14 +81,16 @@ class BlisterGrid extends StatelessWidget {
 
   final String Function(int index, PocketState state) labelFor;
 
-  static const double _pad = 14;
-  static const double _gap = 10;
+  // Phone-sized: a 10-tablet strip is about 100 x 220 dp, so two or three
+  // strips fit side by side.
+  static const double _pad = 10;
+  static const double _gap = 6;
 
   /// Real packs are two columns wide up to 16 units, then wider.
   static int columnsFor(int capacity) {
-    if (capacity <= 16) return capacity <= 1 ? 1 : 2;
-    if (capacity <= 24) return 3;
-    return 4;
+    if (capacity <= 1) return 1;
+    // At most 5 rows, like real packs: 10 -> 2x5, 15 -> 3x5, 20 -> 4x5.
+    return ((capacity + 4) ~/ 5).clamp(2, 6);
   }
 
   @override
@@ -100,48 +102,45 @@ class BlisterGrid extends StatelessWidget {
       builder: (context, constraints) {
         final available =
             constraints.maxWidth.isFinite ? constraints.maxWidth : 320.0;
-        final maxCell = capsule ? 84.0 : 56.0;
+        final maxCell = capsule ? 56.0 : 38.0;
         final fit = (available - 2 * _pad - _gap * (cols - 1)) / cols;
-        final cell = math.min(maxCell, math.max(28.0, fit));
+        final cell = math.min(maxCell, math.max(24.0, fit));
         final cellHeight = capsule ? cell * 0.62 : cell;
         final width = cols * cell + (cols - 1) * _gap + 2 * _pad;
         final height = rows * cellHeight + (rows - 1) * _gap + 2 * _pad;
-        return Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: CustomPaint(
-            painter: _FoilPainter(
-              rows: rows,
-              cols: cols,
-              pad: _pad,
-              gap: _gap,
-              cellHeight: cellHeight,
-            ),
-            child: SizedBox(
-              width: width,
-              height: height,
-              child: Padding(
-                padding: const EdgeInsets.all(_pad),
-                child: Column(
-                  children: [
-                    for (var r = 0; r < rows; r++) ...[
-                      if (r > 0) const SizedBox(height: _gap),
-                      Row(
-                        children: [
-                          for (var c = 0; c < cols; c++) ...[
-                            if (c > 0) const SizedBox(width: _gap),
-                            SizedBox(
-                              width: cell,
-                              height: cellHeight,
-                              child: r * cols + c < capacity
-                                  ? _cell(r * cols + c)
-                                  : null,
-                            ),
-                          ],
+        return CustomPaint(
+          painter: _FoilPainter(
+            rows: rows,
+            cols: cols,
+            pad: _pad,
+            gap: _gap,
+            cellHeight: cellHeight,
+          ),
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Padding(
+              padding: const EdgeInsets.all(_pad),
+              child: Column(
+                children: [
+                  for (var r = 0; r < rows; r++) ...[
+                    if (r > 0) const SizedBox(height: _gap),
+                    Row(
+                      children: [
+                        for (var c = 0; c < cols; c++) ...[
+                          if (c > 0) const SizedBox(width: _gap),
+                          SizedBox(
+                            width: cell,
+                            height: cellHeight,
+                            child: r * cols + c < capacity
+                                ? _cell(r * cols + c)
+                                : null,
+                          ),
                         ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
           ),
@@ -188,7 +187,7 @@ class _FoilPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final card = RRect.fromRectAndRadius(
       Offset.zero & size,
-      const Radius.circular(16),
+      const Radius.circular(12),
     );
     canvas.drawShadow(
         Path()..addRRect(card), const Color(0x55000000), 3, false);
