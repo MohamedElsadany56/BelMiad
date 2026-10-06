@@ -55,8 +55,12 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   String? _medicationId;
   bool _byPackages = true;
 
-  /// Only an opened pack, no full packs ("I just have this strip").
-  bool _onlyOpened = false;
+  /// The user changed the number of full packs themselves.
+  bool _fullTouched = false;
+
+  /// Full packs were set to 0 automatically when the first opened pack was
+  /// added ("I only have this strip with 9 tablets").
+  bool _autoZeroed = false;
   String _packaging = 'box';
   bool _hasInner = true;
   String _innerType = 'strip';
@@ -67,8 +71,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   bool _busy = false;
 
   bool get _editing => widget.batchId != null;
-  bool get _innerApplies =>
-      !_onlyOpened && _hasInner && _outerWithInner.contains(_packaging);
+  bool get _innerApplies => _hasInner && _outerWithInner.contains(_packaging);
 
   @override
   void initState() {
@@ -103,7 +106,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
               capacity: pack.capacity,
             ),
         ]);
-        _onlyOpened = batch.packagesCount == 0 && _opened.isNotEmpty;
+        _fullTouched = true;
         _quantity.text = formatScaled(batch.initialQuantityScaled);
         _packaging = _normalizePackaging(batch.packagingType ?? 'box');
         _purchaseDate = batch.purchaseDate;
@@ -148,17 +151,32 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
             ),
       ];
 
-  void _setOnlyOpened(bool value) => setState(() {
-        _onlyOpened = value;
-        if (value) {
-          _packages.text = '0';
-          if (_opened.isEmpty) _opened.add(_OpenedPack());
-        } else if (_packages.text.trim() == '0') {
-          _packages.text = '1';
-        }
+  int get _fullPacks => int.tryParse(_packages.text.trim()) ?? 0;
+
+  void _setFullPacks(int value) => setState(() {
+        _packages.text = '${value < 0 ? 0 : value}';
+        _fullTouched = true;
+        _autoZeroed = false;
       });
 
-  void _addOpenedPack() => setState(() => _opened.add(_OpenedPack()));
+  /// Adding the first opened pack before touching the full-pack count means
+  /// "this is what I have": the default full pack is not added on top.
+  void _addOpenedPack() => setState(() {
+        if (!_fullTouched && _opened.isEmpty && _fullPacks == 1) {
+          _packages.text = '0';
+          _autoZeroed = true;
+        }
+        _opened.add(_OpenedPack());
+      });
+
+  void _removeOpenedPack(_OpenedPack pack) => setState(() {
+        _opened.remove(pack);
+        pack.dispose();
+        if (_opened.isEmpty && _autoZeroed && _fullPacks == 0) {
+          _packages.text = '1';
+          _autoZeroed = false;
+        }
+      });
 
   int get _looseScaled => ScaledQuantity.tryParse(_loose.text)?.scaled ?? 0;
 
@@ -200,6 +218,12 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
 
   Future<void> _save() async {
     if (!_form.currentState!.validate() || _medicationId == null) return;
+    if (_byPackages && (_packageTotal ?? 0) <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.error_quantityRequired)),
+      );
+      return;
+    }
     final price = double.tryParse(_price.text.replaceAll(',', '.'));
     final notes = _notes.text.trim().isEmpty ? null : _notes.text.trim();
     final input = _byPackages
@@ -378,14 +402,11 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                     },
                   ),
                 ),
-                if (!locked && !(_onlyOpened && _opened.length == 1))
+                if (!locked)
                   IconButton(
                     tooltip: l10n.delete,
                     icon: const Icon(Icons.close),
-                    onPressed: () => setState(() {
-                      _opened.remove(pack);
-                      pack.dispose();
-                    }),
+                    onPressed: () => _removeOpenedPack(pack),
                   ),
               ],
             ),
@@ -485,25 +506,6 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                   title: Text(l10n.useAdjustmentNote),
                 ),
               ),
-            if (_byPackages)
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: Text(l10n.fullPacksMode),
-                    selected: !_onlyOpened,
-                    onSelected:
-                        quantityLocked ? null : (_) => _setOnlyOpened(false),
-                  ),
-                  ChoiceChip(
-                    label: Text(l10n.openedOnlyMode),
-                    selected: _onlyOpened,
-                    onSelected:
-                        quantityLocked ? null : (_) => _setOnlyOpened(true),
-                  ),
-                ],
-              ),
             DropdownButtonFormField<String>(
               isExpanded: true,
               initialValue: _packaging,
@@ -520,30 +522,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                   : (v) => setState(() => _packaging = v ?? 'box'),
             ),
             if (_byPackages) ...[
-              if (!_onlyOpened)
-                TextFormField(
-                  controller: _packages,
-                  enabled: !quantityLocked,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText:
-                        '${l10n.packagesCount} (${packagingLabel(_packaging, l10n)})',
-                    helperText: l10n.fullPacksHint,
-                    helperMaxLines: 2,
-                  ),
-                  onChanged: (_) => setState(() {}),
-                  validator: (v) {
-                    final count = int.tryParse(v ?? '');
-                    if (count == null || count < 0) {
-                      return l10n.error_invalidPackages;
-                    }
-                    if (count == 0 && _opened.isEmpty) {
-                      return l10n.error_invalidPackages;
-                    }
-                    return null;
-                  },
-                ),
-              if (!_onlyOpened && _outerWithInner.contains(_packaging)) ...[
+              if (_outerWithInner.contains(_packaging)) ...[
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   value: _hasInner,
@@ -633,12 +612,17 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                     allowZero: true,
                   ),
                 ),
-              SectionHeader(l10n.openedPacks),
-              if (!_onlyOpened)
-                Text(
-                  l10n.openedPacksHint,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+              // How much is there: full packs and/or opened packs, on one page.
+              SectionHeader(l10n.quantity),
+              _CountRow(
+                label:
+                    '${l10n.fullPacksMode} (${packagingLabel(_packaging, l10n)})',
+                value: _fullPacks,
+                enabled: !quantityLocked,
+                onChanged: _setFullPacks,
+                decreaseLabel: l10n.decrease,
+                increaseLabel: l10n.increase,
+              ),
               for (final pack in _opened)
                 _openedPackCard(pack, l10n, unitCode, unit, quantityLocked),
               if (!quantityLocked)
@@ -834,6 +818,54 @@ class _StorageMedicineScreenState extends ConsumerState<StorageMedicineScreen> {
                     ],
                   ),
                 )),
+    );
+  }
+}
+
+/// "Full packs  [-] 2 [+]": a count that is quick to change with a thumb
+/// and never needs the keyboard.
+class _CountRow extends StatelessWidget {
+  const _CountRow({
+    required this.label,
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+    required this.decreaseLabel,
+    required this.increaseLabel,
+  });
+
+  final String label;
+  final int value;
+  final bool enabled;
+  final ValueChanged<int> onChanged;
+  final String decreaseLabel;
+  final String increaseLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(child: Text(label, style: theme.textTheme.titleSmall)),
+        IconButton.filledTonal(
+          tooltip: decreaseLabel,
+          onPressed: enabled && value > 0 ? () => onChanged(value - 1) : null,
+          icon: const Icon(Icons.remove),
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 44),
+          child: Text(
+            '$value',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleLarge,
+          ),
+        ),
+        IconButton.filledTonal(
+          tooltip: increaseLabel,
+          onPressed: enabled && value < 999 ? () => onChanged(value + 1) : null,
+          icon: const Icon(Icons.add),
+        ),
+      ],
     );
   }
 }

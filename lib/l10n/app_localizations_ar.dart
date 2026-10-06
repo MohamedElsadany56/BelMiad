@@ -797,12 +797,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectMedication => 'اختر الدواء';
 
   @override
-  String get byPackages => 'بالعبوات';
-
-  @override
-  String get byQuantity => 'بالكمية';
-
-  @override
   String get packagingType => 'نوع العبوة';
 
   @override
@@ -2002,14 +1996,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يمكن أن تزيد الوحدات المتبقية في العبوة المفتوحة عن سعتها';
 
   @override
-  String get openedPacks => 'عبوات مفتوحة أو غير مكتملة';
-
-  @override
   String get addOpenedPack => 'إضافة عبوة مفتوحة';
-
-  @override
-  String get openedPacksHint =>
-      'مثلاً شريط متبقٍ فيه 9 من 14 قرصاً، أو علبة استُخدم بعض شرائطها.';
 
   @override
   String get unitsLeft => 'الوحدات المتبقية';
@@ -2265,9 +2252,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get error_wholeUnitsOnly => 'يُسمح بالأعداد الصحيحة فقط لهذا الدواء';
 
   @override
-  String get fullPacksHint => 'اكتب 0 إذا كانت لديك عبوة مفتوحة فقط';
-
-  @override
   String get blisterPickHintHalf =>
       'اضغط على القرص لتغيير حالته: كامل، نصف، أو فارغ.';
 
@@ -2280,5 +2264,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fullPacksMode => 'عبوات كاملة';
 
   @override
-  String get openedOnlyMode => 'علبة غير مكتملة فقط';
+  String get decrease => 'إنقاص';
+
+  @override
+  String get increase => 'زيادة';
 }

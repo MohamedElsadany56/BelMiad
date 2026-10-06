@@ -1544,18 +1544,6 @@ abstract class AppLocalizations {
   /// **'Select medicine'**
   String get selectMedication;
 
-  /// No description provided for @byPackages.
-  ///
-  /// In en, this message translates to:
-  /// **'By packages'**
-  String get byPackages;
-
-  /// No description provided for @byQuantity.
-  ///
-  /// In en, this message translates to:
-  /// **'By quantity'**
-  String get byQuantity;
-
   /// No description provided for @packagingType.
   ///
   /// In en, this message translates to:
@@ -3692,23 +3680,11 @@ abstract class AppLocalizations {
   /// **'Units left in an opened pack can\'t be more than it holds'**
   String get error_invalidPartialPack;
 
-  /// No description provided for @openedPacks.
-  ///
-  /// In en, this message translates to:
-  /// **'Opened or incomplete packs'**
-  String get openedPacks;
-
   /// No description provided for @addOpenedPack.
   ///
   /// In en, this message translates to:
   /// **'Add opened pack'**
   String get addOpenedPack;
-
-  /// No description provided for @openedPacksHint.
-  ///
-  /// In en, this message translates to:
-  /// **'For example a strip with 9 of 14 tablets left, or a box with some strips used.'**
-  String get openedPacksHint;
 
   /// No description provided for @unitsLeft.
   ///
@@ -4100,12 +4076,6 @@ abstract class AppLocalizations {
   /// **'Only whole numbers are allowed for this medicine'**
   String get error_wholeUnitsOnly;
 
-  /// No description provided for @fullPacksHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Use 0 if you only have an opened pack'**
-  String get fullPacksHint;
-
   /// No description provided for @blisterPickHintHalf.
   ///
   /// In en, this message translates to:
@@ -4124,11 +4094,17 @@ abstract class AppLocalizations {
   /// **'Full packs'**
   String get fullPacksMode;
 
-  /// No description provided for @openedOnlyMode.
+  /// No description provided for @decrease.
   ///
   /// In en, this message translates to:
-  /// **'Only an incomplete pack'**
-  String get openedOnlyMode;
+  /// **'Decrease'**
+  String get decrease;
+
+  /// No description provided for @increase.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase'**
+  String get increase;
 }
 
 class _AppLocalizationsDelegate

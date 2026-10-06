@@ -796,12 +796,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectMedication => 'Select medicine';
 
   @override
-  String get byPackages => 'By packages';
-
-  @override
-  String get byQuantity => 'By quantity';
-
-  @override
   String get packagingType => 'Packaging';
 
   @override
@@ -1999,14 +1993,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Units left in an opened pack can\'t be more than it holds';
 
   @override
-  String get openedPacks => 'Opened or incomplete packs';
-
-  @override
   String get addOpenedPack => 'Add opened pack';
-
-  @override
-  String get openedPacksHint =>
-      'For example a strip with 9 of 14 tablets left, or a box with some strips used.';
 
   @override
   String get unitsLeft => 'Units left';
@@ -2264,9 +2251,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only whole numbers are allowed for this medicine';
 
   @override
-  String get fullPacksHint => 'Use 0 if you only have an opened pack';
-
-  @override
   String get blisterPickHintHalf =>
       'Tap a tablet to change it: full, half, or empty.';
 
@@ -2279,5 +2263,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullPacksMode => 'Full packs';
 
   @override
-  String get openedOnlyMode => 'Only an incomplete pack';
+  String get decrease => 'Decrease';
+
+  @override
+  String get increase => 'Increase';
 }

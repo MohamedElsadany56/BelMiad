@@ -241,8 +241,6 @@
   "noForecast": "لا يوجد استخدام مجدول",
   "addStock": "إضافة مخزون",
   "selectMedication": "اختر الدواء",
-  "byPackages": "بالعبوات",
-  "byQuantity": "بالكمية",
   "packagingType": "نوع العبوة",
   "packagesCount": "عدد العبوات",
   "unitsPerPackage": "عدد الوحدات في العبوة",
@@ -599,9 +597,7 @@
   "error_takenInFuture": "لا يمكن أن يكون وقت التناول في المستقبل",
   "error_takenTooEarly": "هذا الوقت مبكر جداً عن موعد الجرعة",
   "error_invalidPartialPack": "لا يمكن أن تزيد الوحدات المتبقية في العبوة المفتوحة عن سعتها",
-  "openedPacks": "عبوات مفتوحة أو غير مكتملة",
   "addOpenedPack": "إضافة عبوة مفتوحة",
-  "openedPacksHint": "مثلاً شريط متبقٍ فيه 9 من 14 قرصاً، أو علبة استُخدم بعض شرائطها.",
   "unitsLeft": "الوحدات المتبقية",
   "packCapacity": "السعة الكاملة",
   "partialPackOf": "{pack} {remaining} من {capacity}",
@@ -672,7 +668,6 @@
   },
   "error_halfStepOnly": "يُسمح بأقراص كاملة أو نصف قرص فقط (مثل 1 أو 1.5)",
   "error_wholeUnitsOnly": "يُسمح بالأعداد الصحيحة فقط لهذا الدواء",
-  "fullPacksHint": "اكتب 0 إذا كانت لديك عبوة مفتوحة فقط",
   "blisterPickHintHalf": "اضغط على القرص لتغيير حالته: كامل، نصف، أو فارغ.",
   "stripCellHalf": "{index} من {total}، متبقٍ نصف قرص. اضغط مرتين للتغيير.",
   "@stripCellHalf": {
@@ -682,5 +677,6 @@
     }
   },
   "fullPacksMode": "عبوات كاملة",
-  "openedOnlyMode": "علبة غير مكتملة فقط"
+  "decrease": "إنقاص",
+  "increase": "زيادة"
 }

@@ -296,8 +296,6 @@
   "noForecast": "No scheduled use",
   "addStock": "Add stock",
   "selectMedication": "Select medicine",
-  "byPackages": "By packages",
-  "byQuantity": "By quantity",
   "packagingType": "Packaging",
   "packagesCount": "Packages",
   "unitsPerPackage": "Units per package",
@@ -757,9 +755,7 @@
   "error_takenInFuture": "The intake time can't be in the future",
   "error_takenTooEarly": "That time is too long before the scheduled dose",
   "error_invalidPartialPack": "Units left in an opened pack can't be more than it holds",
-  "openedPacks": "Opened or incomplete packs",
   "addOpenedPack": "Add opened pack",
-  "openedPacksHint": "For example a strip with 9 of 14 tablets left, or a box with some strips used.",
   "unitsLeft": "Units left",
   "packCapacity": "Holds when full",
   "partialPackOf": "{pack} {remaining} of {capacity}",
@@ -876,7 +872,6 @@
   },
   "error_halfStepOnly": "Only whole or half tablets are allowed (for example 1 or 1.5)",
   "error_wholeUnitsOnly": "Only whole numbers are allowed for this medicine",
-  "fullPacksHint": "Use 0 if you only have an opened pack",
   "blisterPickHintHalf": "Tap a tablet to change it: full, half, or empty.",
   "stripCellHalf": "{index} of {total}, half a tablet left. Double tap to change.",
   "@stripCellHalf": {
@@ -886,5 +881,6 @@
     }
   },
   "fullPacksMode": "Full packs",
-  "openedOnlyMode": "Only an incomplete pack"
+  "decrease": "Decrease",
+  "increase": "Increase"
 }
