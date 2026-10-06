@@ -37,6 +37,7 @@ import '../../features/schedules/application/dose_generation_service.dart';
 import '../../features/schedules/application/schedule_plan_loader.dart';
 import '../../features/schedules/data/schedule_repository.dart';
 import '../../features/trash/data/trash_repository.dart';
+import '../theme/typography.dart';
 
 // ------------------------------------------------------------- infrastructure
 
@@ -378,6 +379,26 @@ class ThemeModeController extends StateNotifier<ThemeMode> {
 
 final themeModeProvider = StateNotifierProvider<ThemeModeController, ThemeMode>(
   (ref) => ThemeModeController(ref.watch(sharedPreferencesProvider)),
+);
+
+// ---------------------------------------------------------------- font size
+
+class FontSizeController extends StateNotifier<FontSizeOption> {
+  FontSizeController(this._prefs)
+      : super(FontSizeOption.fromCode(_prefs.getString(_key)));
+
+  static const _key = 'font_size';
+  final SharedPreferences _prefs;
+
+  Future<void> set(FontSizeOption option) async {
+    state = option;
+    await _prefs.setString(_key, option.code);
+  }
+}
+
+final fontSizeProvider =
+    StateNotifierProvider<FontSizeController, FontSizeOption>(
+  (ref) => FontSizeController(ref.watch(sharedPreferencesProvider)),
 );
 
 // ------------------------------------------------------------ reminder sound

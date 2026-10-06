@@ -1544,18 +1544,6 @@ abstract class AppLocalizations {
   /// **'Select medicine'**
   String get selectMedication;
 
-  /// No description provided for @byPackages.
-  ///
-  /// In en, this message translates to:
-  /// **'By packages'**
-  String get byPackages;
-
-  /// No description provided for @byQuantity.
-  ///
-  /// In en, this message translates to:
-  /// **'By quantity'**
-  String get byQuantity;
-
   /// No description provided for @packagingType.
   ///
   /// In en, this message translates to:
@@ -1759,12 +1747,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Box'**
   String get packaging_box;
-
-  /// No description provided for @packaging_blister.
-  ///
-  /// In en, this message translates to:
-  /// **'Blister'**
-  String get packaging_blister;
 
   /// No description provided for @packaging_bottle.
   ///
@@ -3317,7 +3299,7 @@ abstract class AppLocalizations {
   /// No description provided for @containsInnerPacks.
   ///
   /// In en, this message translates to:
-  /// **'Contains strips or blisters'**
+  /// **'Contains strips'**
   String get containsInnerPacks;
 
   /// No description provided for @innerPackType.
@@ -3698,23 +3680,11 @@ abstract class AppLocalizations {
   /// **'Units left in an opened pack can\'t be more than it holds'**
   String get error_invalidPartialPack;
 
-  /// No description provided for @openedPacks.
-  ///
-  /// In en, this message translates to:
-  /// **'Opened or incomplete packs'**
-  String get openedPacks;
-
   /// No description provided for @addOpenedPack.
   ///
   /// In en, this message translates to:
   /// **'Add opened pack'**
   String get addOpenedPack;
-
-  /// No description provided for @openedPacksHint.
-  ///
-  /// In en, this message translates to:
-  /// **'For example a strip with 9 of 14 tablets left, or a box with some strips used.'**
-  String get openedPacksHint;
 
   /// No description provided for @unitsLeft.
   ///
@@ -3805,6 +3775,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Custom tones and ringtones are available on Android.'**
   String get soundCustomAndroidOnly;
+
+  /// No description provided for @doseGroupTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'All medications in this dose group were marked as taken'**
+  String get doseGroupTaken;
+
+  /// No description provided for @doseGroupPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Dose taken. 1 other medication in this group could not be recorded.} other{Dose taken. {count} other medications in this group could not be recorded.}}'**
+  String doseGroupPartial(num count);
+
+  /// No description provided for @takeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Take all ({count})'**
+  String takeAll(Object count);
+
+  /// No description provided for @groupCompletionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{This will also mark 1 other medication in this dose group as taken.} other{This will also mark {count} other medications in this dose group as taken.}}'**
+  String groupCompletionNote(num count);
+
+  /// No description provided for @doseCompletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Dose completion'**
+  String get doseCompletion;
+
+  /// No description provided for @doseCompletionCombinedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking one medication also marks the other medications scheduled at the same time or for the same meal.'**
+  String get doseCompletionCombinedHint;
+
+  /// No description provided for @doseCompletionSeparateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each medication is marked as taken on its own.'**
+  String get doseCompletionSeparateHint;
+
+  /// No description provided for @notificationGrouping.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification grouping'**
+  String get notificationGrouping;
+
+  /// No description provided for @notificationGroupingCombinedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One notification for all medications at the same time or for the same meal.'**
+  String get notificationGroupingCombinedHint;
+
+  /// No description provided for @notificationGroupingSeparateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A separate notification for every medication.'**
+  String get notificationGroupingSeparateHint;
+
+  /// No description provided for @modeCombined.
+  ///
+  /// In en, this message translates to:
+  /// **'Combined'**
+  String get modeCombined;
+
+  /// No description provided for @modeSeparate.
+  ///
+  /// In en, this message translates to:
+  /// **'Separate'**
+  String get modeSeparate;
+
+  /// No description provided for @fontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Font size'**
+  String get fontSize;
+
+  /// No description provided for @fontSize_standard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get fontSize_standard;
+
+  /// No description provided for @fontSize_medium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get fontSize_medium;
+
+  /// No description provided for @fontSize_large.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get fontSize_large;
+
+  /// No description provided for @fontSize_larger.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra large'**
+  String get fontSize_larger;
+
+  /// No description provided for @fontSize_maximum.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum'**
+  String get fontSize_maximum;
+
+  /// No description provided for @fontSizePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Your next dose: 1 tablet after lunch.'**
+  String get fontSizePreview;
+
+  /// No description provided for @notificationRetentionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are removed automatically after 7 days.'**
+  String get notificationRetentionNote;
+
+  /// No description provided for @markAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read'**
+  String get markAsRead;
+
+  /// No description provided for @markAsUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as unread'**
+  String get markAsUnread;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreOptions;
+
+  /// No description provided for @notificationRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get notificationRead;
+
+  /// No description provided for @unread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get unread;
+
+  /// No description provided for @deleteReadNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete read notifications'**
+  String get deleteReadNotifications;
+
+  /// No description provided for @deleteAllNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all notifications'**
+  String get deleteAllNotifications;
+
+  /// No description provided for @deleteNotificationsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes them from the notification list. Scheduled reminders are not affected.'**
+  String get deleteNotificationsBody;
+
+  /// No description provided for @stripRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{remaining} of {total} {unit} remaining'**
+  String stripRemaining(Object remaining, Object total, Object unit);
+
+  /// No description provided for @stripExtra.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{+ 1 more full strip} other{+ {count} more full strips}}'**
+  String stripExtra(num count);
+
+  /// No description provided for @stripTapHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a remaining {unit} to mark it as used'**
+  String stripTapHint(Object unit);
+
+  /// No description provided for @stripUnitUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked {quantity} as used'**
+  String stripUnitUsed(Object quantity);
+
+  /// No description provided for @stripCellRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{index} of {total}, remaining. Double tap to mark as used.'**
+  String stripCellRemaining(Object index, Object total);
+
+  /// No description provided for @stripCellUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{index} of {total}, already used'**
+  String stripCellUsed(Object index, Object total);
+
+  /// No description provided for @stripUseOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Use one'**
+  String get stripUseOne;
+
+  /// No description provided for @stripDisabledExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This batch has expired, so it cannot be used from the strip.'**
+  String get stripDisabledExpired;
+
+  /// No description provided for @reason_strip_use.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked as used from the strip'**
+  String get reason_strip_use;
+
+  /// No description provided for @addMedicationNextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medication added'**
+  String get addMedicationNextTitle;
+
+  /// No description provided for @addMedicationNextBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like to do next? You can do any of this later.'**
+  String get addMedicationNextBody;
+
+  /// No description provided for @setSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up schedule'**
+  String get setSchedule;
+
+  /// No description provided for @viewMedication.
+  ///
+  /// In en, this message translates to:
+  /// **'View medication'**
+  String get viewMedication;
+
+  /// No description provided for @duplicateMedicationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in your list'**
+  String get duplicateMedicationTitle;
+
+  /// No description provided for @duplicateMedicationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is already in this patient\'s medications. Open it instead of adding a duplicate?'**
+  String duplicateMedicationBody(Object name);
+
+  /// No description provided for @openExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Open existing'**
+  String get openExisting;
+
+  /// No description provided for @addAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Add anyway'**
+  String get addAnyway;
+
+  /// No description provided for @thisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get thisMonth;
+
+  /// No description provided for @blisterPickHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the tablets that are already used. They will show as empty.'**
+  String get blisterPickHint;
+
+  /// No description provided for @stripMaxUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'A strip holds at most {max} units'**
+  String stripMaxUnits(Object max);
+
+  /// No description provided for @error_halfStepOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only whole or half tablets are allowed (for example 1 or 1.5)'**
+  String get error_halfStepOnly;
+
+  /// No description provided for @error_wholeUnitsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only whole numbers are allowed for this medicine'**
+  String get error_wholeUnitsOnly;
+
+  /// No description provided for @blisterPickHintHalf.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a tablet to change it: full, half, or empty.'**
+  String get blisterPickHintHalf;
+
+  /// No description provided for @stripCellHalf.
+  ///
+  /// In en, this message translates to:
+  /// **'{index} of {total}, half a tablet left. Double tap to change.'**
+  String stripCellHalf(Object index, Object total);
+
+  /// No description provided for @fullPacksMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Full packs'**
+  String get fullPacksMode;
+
+  /// No description provided for @decrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease'**
+  String get decrease;
+
+  /// No description provided for @increase.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase'**
+  String get increase;
 }
 
 class _AppLocalizationsDelegate

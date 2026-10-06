@@ -160,7 +160,10 @@ void main() {
     );
     expect(find.text('Panadol'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Take'));
+    await tester.tap(find.ancestor(
+      of: find.text('Take'),
+      matching: find.bySubtype<FilledButton>(),
+    ));
     await _settle(tester);
     expect(find.text('Mark taken'), findsOneWidget);
     await tester.tap(find.text('Mark taken'));

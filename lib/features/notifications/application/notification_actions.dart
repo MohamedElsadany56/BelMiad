@@ -31,7 +31,12 @@ const snoozeDuration = Duration(minutes: 10);
 
 /// Small JSON payload attached to notifications.
 class NotificationPayload {
-  const NotificationPayload({required this.kind, this.doseId, this.patientId});
+  const NotificationPayload({
+    required this.kind,
+    this.doseId,
+    this.patientId,
+    this.group,
+  });
 
   static const dose = 'dose';
   static const open = 'open';
@@ -44,6 +49,7 @@ class NotificationPayload {
         kind: json['kind'] as String? ?? open,
         doseId: json['dose'] as String?,
         patientId: json['patient'] as String?,
+        group: json['group'] as String?,
       );
     } catch (_) {
       return null;
@@ -54,18 +60,28 @@ class NotificationPayload {
   final String? doseId;
   final String? patientId;
 
+  /// Dose-group key when the notification covers several medications.
+  final String? group;
+
   String encode() => jsonEncode({
         'kind': kind,
         if (doseId != null) 'dose': doseId,
         if (patientId != null) 'patient': patientId,
+        if (group != null) 'group': group,
       });
 }
 
 /// Button labels for dose reminders in the app language.
-List<NotifierAction> doseReminderActions({required bool arabic}) => [
+List<NotifierAction> doseReminderActions({
+  required bool arabic,
+  bool group = false,
+}) =>
+    [
       NotifierAction(
         NotificationActionIds.take,
-        arabic ? '✓ تم التناول' : '✓ Take',
+        group
+            ? (arabic ? '✓ تم تناول الكل' : '✓ Take all')
+            : (arabic ? '✓ تم التناول' : '✓ Take'),
       ),
       NotifierAction(
         NotificationActionIds.snooze,
@@ -131,13 +147,14 @@ class DoseNotificationActions {
       return ActionOutcome.ignored;
     }
     return switch (actionId) {
-      NotificationActionIds.take => _take(doseId),
-      NotificationActionIds.snooze => _snooze(doseId, rawPayload!),
+      NotificationActionIds.take => _take(doseId, payload?.group),
+      NotificationActionIds.snooze =>
+        _snooze(doseId, rawPayload!, payload?.group),
       _ => Future.value(ActionOutcome.ignored),
     };
   }
 
-  Future<ActionOutcome> _take(String doseId) async {
+  Future<ActionOutcome> _take(String doseId, String? group) async {
     final row = await _doseWithMedication(doseId);
     if (row == null) return ActionOutcome.ignored;
     final (dose, medication, patient) = row;
@@ -167,19 +184,42 @@ class DoseNotificationActions {
       );
       return ActionOutcome.failed;
     }
-    // The dose is handled: remove its pending alerts.
-    for (final key in [
-      '${NotificationTypes.doseReminder}:$doseId',
-      '${NotificationTypes.missedDose}:$doseId',
-      'snooze:$doseId',
-    ]) {
-      await _notifier.cancel(notificationIdFor(key));
+    // Combined mode: the rest of the dose group is completed as well.
+    var completion = const GroupCompletion();
+    if (settings.doseCompletionMode.isCombined) {
+      completion = await _doses.completeGroupMates(
+        primaryDoseId: doseId,
+        graceMinutes: settings.missedGraceMinutes,
+      );
+    }
+    // The doses are handled: remove their pending alerts.
+    for (final id in [doseId, ...completion.taken]) {
+      for (final key in [
+        '${NotificationTypes.doseReminder}:$id',
+        '${NotificationTypes.missedDose}:$id',
+        'snooze:$id',
+      ]) {
+        await _notifier.cancel(notificationIdFor(key));
+      }
+    }
+    if (group != null) {
+      for (final key in [
+        '${NotificationTypes.doseReminder}:g:$group',
+        '${NotificationTypes.missedDose}:g:$group',
+      ]) {
+        await _notifier.cancel(notificationIdFor(key));
+      }
     }
     final clock = PatientTime(patient.timezone).localTimeOf(_clock()).toHHmm();
+    final more = completion.taken.length;
     await _notifier.show(
       id: notificationIdFor('confirm:$doseId'),
       title: arabic ? '✓ تم التسجيل' : '✓ Recorded',
-      body: arabic ? 'تم تناول $name الساعة $clock' : '$name taken at $clock',
+      body: more == 0
+          ? (arabic ? 'تم تناول $name الساعة $clock' : '$name taken at $clock')
+          : (arabic
+              ? 'تم تسجيل $name و$more دواء آخر الساعة $clock'
+              : '$name and $more more taken at $clock'),
       channel: NotificationChannel.confirmations,
       payload:
           const NotificationPayload(kind: NotificationPayload.open).encode(),
@@ -187,7 +227,11 @@ class DoseNotificationActions {
     return ActionOutcome.taken;
   }
 
-  Future<ActionOutcome> _snooze(String doseId, String payload) async {
+  Future<ActionOutcome> _snooze(
+    String doseId,
+    String payload,
+    String? group,
+  ) async {
     final dose = await (_db.select(_db.doseInstances)
           ..where((d) => d.doseInstanceId.equals(doseId)))
         .getSingleOrNull();
@@ -196,8 +240,11 @@ class DoseNotificationActions {
     }
     final reminder = await (_db.select(_db.notifications)
           ..where(
-            (n) =>
-                n.dedupKey.equals('${NotificationTypes.doseReminder}:$doseId'),
+            (n) => n.dedupKey.equals(
+              group == null
+                  ? '${NotificationTypes.doseReminder}:$doseId'
+                  : '${NotificationTypes.doseReminder}:g:$group',
+            ),
           ))
         .getSingleOrNull();
     await _notifier.schedule(
@@ -208,7 +255,7 @@ class DoseNotificationActions {
       at: _clock().add(snoozeDuration),
       channel: NotificationChannel.doses,
       payload: payload,
-      actions: doseReminderActions(arabic: arabic),
+      actions: doseReminderActions(arabic: arabic, group: group != null),
     );
     return ActionOutcome.snoozed;
   }

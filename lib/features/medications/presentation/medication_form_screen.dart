@@ -12,6 +12,8 @@ import '../../catalog/data/drug_catalog_repository.dart';
 import '../../catalog/presentation/catalog_search.dart';
 import '../data/medication_repository.dart';
 
+enum _NextStep { stock, schedule, later }
+
 class MedicationFormScreen extends ConsumerStatefulWidget {
   const MedicationFormScreen({this.medicationId, super.key});
 
@@ -114,7 +116,10 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
     final patientId = ref.read(currentPatientIdProvider);
-    if (patientId == null) return;
+    if (patientId == null) {
+      showMessage(context, context.l10n.noPatientSelected);
+      return;
+    }
     final input = MedicationInput(
       nameEn: _nameEn.text.trim().isEmpty ? _nameAr.text : _nameEn.text,
       nameAr: _nameAr.text,
@@ -134,8 +139,31 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
           ? null
           : ScaledQuantity.tryParse(_maximum.text)?.scaled,
     );
-    setState(() => _busy = true);
     final repo = ref.read(medicationRepositoryProvider);
+    if (!_editing) {
+      // Reuse an existing definition instead of creating a copy.
+      final existing = await repo.findDuplicate(patientId, input);
+      if (existing != null && mounted) {
+        final l10n = context.l10n;
+        final addAnyway = await confirmDialog(
+          context,
+          title: l10n.duplicateMedicationTitle,
+          body: l10n.duplicateMedicationBody(
+            medicationDisplayName(existing, arabic: context.isArabic),
+          ),
+          confirmLabel: l10n.addAnyway,
+          cancelLabel: l10n.openExisting,
+        );
+        if (!mounted) return;
+        if (!addAnyway) {
+          context.pop();
+          context.push('/medications/${existing.medicationId}');
+          return;
+        }
+      }
+    }
+    if (!mounted) return;
+    setState(() => _busy = true);
     String? createdId;
     final ok = await runGuarded(context, () async {
       if (_editing) {
@@ -152,22 +180,68 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
       context.pop();
       return;
     }
-    // After creating a medication, optionally add stock (spec §13).
-    final l10n = context.l10n;
-    final addStock = await confirmDialog(
-      context,
-      title: l10n.addStockNowTitle,
-      body: l10n.addStockNowBody,
-      confirmLabel: l10n.addStock,
-      cancelLabel: l10n.later,
-    );
+    // After creating a medication, offer the next steps without forcing any
+    // of them: stock and schedule can both be added later (spec §13).
+    final next = await _askNextStep(context, allowSchedule: !_prn);
     if (!mounted) return;
     context.pop();
-    if (addStock) {
-      context.push('/inventory/add?medicationId=$createdId');
-    } else {
-      context.push('/medications/$createdId');
+    context.push('/medications/$createdId');
+    switch (next) {
+      case _NextStep.stock:
+        context.push('/inventory/add?medicationId=$createdId');
+      case _NextStep.schedule:
+        context.push('/medications/$createdId/schedules/new');
+      case _NextStep.later:
+        break;
     }
+  }
+
+  Future<_NextStep> _askNextStep(
+    BuildContext context, {
+    required bool allowSchedule,
+  }) async {
+    final l10n = context.l10n;
+    final choice = await showModalBottomSheet<_NextStep>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.addMedicationNextTitle,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 4),
+              Text(l10n.addMedicationNextBody),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () => Navigator.pop(context, _NextStep.stock),
+                icon: const Icon(Icons.inventory_2_outlined),
+                label: Text(l10n.addStock),
+              ),
+              if (allowSchedule) ...[
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context, _NextStep.schedule),
+                  icon: const Icon(Icons.schedule),
+                  label: Text(l10n.setSchedule),
+                ),
+              ],
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(context, _NextStep.later),
+                child: Text(l10n.later),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return choice ?? _NextStep.later;
   }
 
   @override
@@ -304,13 +378,15 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         ),
         TextFormField(
           controller: _maximum,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: quantityKeyboard(_unit),
+          inputFormatters: quantityInputFormatters(_unit),
           decoration: InputDecoration(
             labelText: '${l10n.maximumDaily} (${l10n.optional})',
             helperText: l10n.maximumDailyHint,
             suffixText: unitLabel(_unit, l10n),
           ),
-          validator: (v) => validateQuantity(v, l10n, required: false),
+          validator: (v) =>
+              validateUnitQuantity(v, l10n, _unit, required: false),
         ),
       ],
     );

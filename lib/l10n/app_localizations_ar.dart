@@ -797,12 +797,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectMedication => 'اختر الدواء';
 
   @override
-  String get byPackages => 'بالعبوات';
-
-  @override
-  String get byQuantity => 'بالكمية';
-
-  @override
   String get packagingType => 'نوع العبوة';
 
   @override
@@ -919,9 +913,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get packaging_box => 'علبة';
-
-  @override
-  String get packaging_blister => 'شريط';
 
   @override
   String get packaging_bottle => 'زجاجة';
@@ -2005,14 +1996,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يمكن أن تزيد الوحدات المتبقية في العبوة المفتوحة عن سعتها';
 
   @override
-  String get openedPacks => 'عبوات مفتوحة أو غير مكتملة';
-
-  @override
   String get addOpenedPack => 'إضافة عبوة مفتوحة';
-
-  @override
-  String get openedPacksHint =>
-      'مثلاً شريط متبقٍ فيه 9 من 14 قرصاً، أو علبة استُخدم بعض شرائطها.';
 
   @override
   String get unitsLeft => 'الوحدات المتبقية';
@@ -2062,4 +2046,226 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get soundCustomAndroidOnly =>
       'النغمات المخصصة ونغمات الرنين متاحة على أندرويد.';
+
+  @override
+  String get doseGroupTaken => 'تم تسجيل جميع أدوية هذه الجرعة';
+
+  @override
+  String doseGroupPartial(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم تسجيل الجرعة. تعذّر تسجيل $count دواءً آخر في هذه المجموعة.',
+      few: 'تم تسجيل الجرعة. تعذّر تسجيل $count أدوية أخرى في هذه المجموعة.',
+      two: 'تم تسجيل الجرعة. تعذّر تسجيل دوائين آخرين في هذه المجموعة.',
+      one: 'تم تسجيل الجرعة. تعذّر تسجيل دواء آخر في هذه المجموعة.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String takeAll(Object count) {
+    return 'تم أخذ الكل ($count)';
+  }
+
+  @override
+  String groupCompletionNote(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'سيتم أيضاً تسجيل $count دواءً آخر في هذه الجرعة كمأخوذة.',
+      few: 'سيتم أيضاً تسجيل $count أدوية أخرى في هذه الجرعة كمأخوذة.',
+      two: 'سيتم أيضاً تسجيل دوائين آخرين في هذه الجرعة كمأخوذين.',
+      one: 'سيتم أيضاً تسجيل دواء آخر في هذه الجرعة كمأخوذ.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get doseCompletion => 'تسجيل الجرعات';
+
+  @override
+  String get doseCompletionCombinedHint =>
+      'عند تسجيل دواء كمأخوذ يتم تسجيل الأدوية الأخرى المجدولة في نفس الوقت أو مع نفس الوجبة.';
+
+  @override
+  String get doseCompletionSeparateHint => 'يتم تسجيل كل دواء على حدة.';
+
+  @override
+  String get notificationGrouping => 'تجميع الإشعارات';
+
+  @override
+  String get notificationGroupingCombinedHint =>
+      'إشعار واحد لكل الأدوية في نفس الوقت أو مع نفس الوجبة.';
+
+  @override
+  String get notificationGroupingSeparateHint => 'إشعار مستقل لكل دواء.';
+
+  @override
+  String get modeCombined => 'مجمّع';
+
+  @override
+  String get modeSeparate => 'منفصل';
+
+  @override
+  String get fontSize => 'حجم الخط';
+
+  @override
+  String get fontSize_standard => 'قياسي';
+
+  @override
+  String get fontSize_medium => 'متوسط';
+
+  @override
+  String get fontSize_large => 'كبير';
+
+  @override
+  String get fontSize_larger => 'كبير جداً';
+
+  @override
+  String get fontSize_maximum => 'الأقصى';
+
+  @override
+  String get fontSizePreview => 'جرعتك القادمة: قرص واحد بعد الغداء.';
+
+  @override
+  String get notificationRetentionNote =>
+      'تُحذف الإشعارات تلقائياً بعد 7 أيام.';
+
+  @override
+  String get markAsRead => 'تعيين كمقروء';
+
+  @override
+  String get markAsUnread => 'تعيين كغير مقروء';
+
+  @override
+  String get moreOptions => 'خيارات أخرى';
+
+  @override
+  String get notificationRead => 'مقروء';
+
+  @override
+  String get unread => 'غير مقروء';
+
+  @override
+  String get deleteReadNotifications => 'حذف الإشعارات المقروءة';
+
+  @override
+  String get deleteAllNotifications => 'حذف كل الإشعارات';
+
+  @override
+  String get deleteNotificationsBody =>
+      'سيتم حذفها من قائمة الإشعارات. التذكيرات المجدولة لن تتأثر.';
+
+  @override
+  String stripRemaining(Object remaining, Object total, Object unit) {
+    return 'متبقٍ $remaining من $total $unit';
+  }
+
+  @override
+  String stripExtra(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+ $count شريطاً كاملاً آخر',
+      few: '+ $count أشرطة كاملة أخرى',
+      two: '+ شريطان كاملان آخران',
+      one: '+ شريط كامل آخر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String stripTapHint(Object unit) {
+    return 'اضغط على $unit متبقٍ لتسجيل استخدامه';
+  }
+
+  @override
+  String stripUnitUsed(Object quantity) {
+    return 'تم تسجيل استخدام $quantity';
+  }
+
+  @override
+  String stripCellRemaining(Object index, Object total) {
+    return '$index من $total، متبقٍ. اضغط مرتين لتسجيل استخدامه.';
+  }
+
+  @override
+  String stripCellUsed(Object index, Object total) {
+    return '$index من $total، تم استخدامه';
+  }
+
+  @override
+  String get stripUseOne => 'استخدام واحد';
+
+  @override
+  String get stripDisabledExpired =>
+      'انتهت صلاحية هذه الدفعة، لذلك لا يمكن الاستخدام من الشريط.';
+
+  @override
+  String get reason_strip_use => 'تسجيل استخدام من الشريط';
+
+  @override
+  String get addMedicationNextTitle => 'تمت إضافة الدواء';
+
+  @override
+  String get addMedicationNextBody =>
+      'ماذا تريد أن تفعل الآن؟ يمكنك القيام بأي من ذلك لاحقاً.';
+
+  @override
+  String get setSchedule => 'ضبط الجدول';
+
+  @override
+  String get viewMedication => 'عرض الدواء';
+
+  @override
+  String get duplicateMedicationTitle => 'موجود بالفعل في قائمتك';
+
+  @override
+  String duplicateMedicationBody(Object name) {
+    return '$name موجود بالفعل في أدوية هذا المريض. هل تريد فتحه بدلاً من إضافة نسخة مكررة؟';
+  }
+
+  @override
+  String get openExisting => 'فتح الموجود';
+
+  @override
+  String get addAnyway => 'إضافة على أي حال';
+
+  @override
+  String get thisMonth => 'هذا الشهر';
+
+  @override
+  String get blisterPickHint =>
+      'اضغط على الأقراص التي تم استخدامها بالفعل لتظهر فارغة.';
+
+  @override
+  String stripMaxUnits(Object max) {
+    return 'يتسع الشريط لـ $max وحدة على الأكثر';
+  }
+
+  @override
+  String get error_halfStepOnly =>
+      'يُسمح بأقراص كاملة أو نصف قرص فقط (مثل 1 أو 1.5)';
+
+  @override
+  String get error_wholeUnitsOnly => 'يُسمح بالأعداد الصحيحة فقط لهذا الدواء';
+
+  @override
+  String get blisterPickHintHalf =>
+      'اضغط على القرص لتغيير حالته: كامل، نصف، أو فارغ.';
+
+  @override
+  String stripCellHalf(Object index, Object total) {
+    return '$index من $total، متبقٍ نصف قرص. اضغط مرتين للتغيير.';
+  }
+
+  @override
+  String get fullPacksMode => 'عبوات كاملة';
+
+  @override
+  String get decrease => 'إنقاص';
+
+  @override
+  String get increase => 'زيادة';
 }

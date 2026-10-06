@@ -4,6 +4,8 @@ import '../../../core/database/app_database.dart';
 import '../../../core/errors/domain_exceptions.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/time/local_date.dart';
+import '../../../core/time/patient_time.dart';
+import '../../../core/utilities/scaled_quantity.dart';
 import '../../../core/utilities/ids.dart';
 import '../data/inventory_repository.dart';
 import '../domain/batch_selection.dart';
@@ -110,5 +112,44 @@ class InventoryService {
           .write(DoseInventoryConsumptionCompanion(reversedAt: Value(now)));
     }
     return rows;
+  }
+
+  /// Marks one unit (a tablet, capsule...) of [batchId] as used, from the
+  /// inventory strip. The decrement goes through the normal stock ledger
+  /// ([InventoryRepository.adjustQuantity]), so history, audit and the
+  /// "never negative" rule are the same as for any other stock change.
+  ///
+  /// Rejected for deleted, expired or empty batches. Returns the quantity
+  /// left in the batch (scaled) after the change.
+  Future<int> consumeUnit(
+    String batchId, {
+    int quantityScaled = quantityScale,
+  }) async {
+    final batch = await _inventory.getBatch(batchId);
+    if (batch == null || batch.deletedAt != null) {
+      throw NotFoundException('inventory_batch');
+    }
+    final medication = await (_db.select(_db.medications)
+          ..where((m) => m.medicationId.equals(batch.medicationId)))
+        .getSingleOrNull();
+    if (medication == null) throw NotFoundException('medication');
+    final patient = await (_db.select(_db.patients)
+          ..where((p) => p.patientId.equals(medication.patientId)))
+        .getSingleOrNull();
+    final today = PatientTime(patient?.timezone ?? defaultTimezone).today(
+      _clock(),
+    );
+    if (snapshotOf(batch).isExpiredOn(today)) {
+      throw const ValidationException('batchNotUsable');
+    }
+    if (batch.availableQuantityScaled < quantityScaled) {
+      throw const NegativeStockException();
+    }
+    await _inventory.adjustQuantity(
+      batchId: batchId,
+      deltaScaled: -quantityScaled,
+      reason: AdjustmentReasons.stripUse,
+    );
+    return batch.availableQuantityScaled - quantityScaled;
   }
 }

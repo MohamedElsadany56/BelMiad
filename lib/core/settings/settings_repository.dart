@@ -9,6 +9,30 @@ abstract final class SettingKeys {
   static const missedGraceMinutes = 'missed_grace_minutes';
   static const inactivityMinutes = 'inactivity_minutes';
   static const reminderLeadMinutes = 'reminder_lead_minutes';
+  static const doseCompletionMode = 'dose_completion_mode';
+  static const notificationGrouping = 'notification_grouping';
+}
+
+/// Whether related doses/notifications are handled together or one by one.
+///
+/// Used by both "dose completion" and "notification grouping" settings. What
+/// counts as *related* is decided in one place:
+/// `features/doses/domain/dose_grouping.dart`.
+enum GroupingMode {
+  combined('combined'),
+  separate('separate');
+
+  const GroupingMode(this.code);
+
+  final String code;
+
+  bool get isCombined => this == combined;
+
+  static GroupingMode fromCode(String? code, {GroupingMode? fallback}) =>
+      GroupingMode.values.firstWhere(
+        (m) => m.code == code,
+        orElse: () => fallback ?? GroupingMode.combined,
+      );
 }
 
 /// Device-level settings persisted in the patient database.
@@ -19,6 +43,8 @@ class AppSettingsData {
     this.expiringWithinDays = 30,
     this.missedGraceMinutes = 180,
     this.inactivityMinutes = 10,
+    this.doseCompletionMode = GroupingMode.combined,
+    this.notificationGrouping = GroupingMode.combined,
   });
 
   final String? devicePersonId;
@@ -32,6 +58,12 @@ class AppSettingsData {
 
   /// Inactivity reset (0 disables). Not a security lock (spec §3).
   final int inactivityMinutes;
+
+  /// Combined: taking one dose also completes the other doses of its group.
+  final GroupingMode doseCompletionMode;
+
+  /// Combined: one notification per dose group instead of one per medication.
+  final GroupingMode notificationGrouping;
 }
 
 class SettingsRepository {
@@ -69,6 +101,10 @@ class SettingsRepository {
       expiringWithinDays: intOf(SettingKeys.expiringWithinDays, 30),
       missedGraceMinutes: intOf(SettingKeys.missedGraceMinutes, 180),
       inactivityMinutes: intOf(SettingKeys.inactivityMinutes, 10),
+      doseCompletionMode:
+          GroupingMode.fromCode(map[SettingKeys.doseCompletionMode]),
+      notificationGrouping:
+          GroupingMode.fromCode(map[SettingKeys.notificationGrouping]),
     );
   }
 }
