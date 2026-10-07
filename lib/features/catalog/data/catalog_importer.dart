@@ -3,11 +3,14 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
+import '../domain/catalog_name_parser.dart';
 import '../domain/drug_search_normalizer.dart';
 
 /// SQL for the read-only catalog database (spec §4, §46).
 abstract final class CatalogSchema {
-  static const version = 1;
+  /// 2: facts read from the name (brand, strength, form, pack size...)
+  /// plus the scientific name and route from the source data.
+  static const version = 2;
 
   static const statements = [
     'CREATE TABLE IF NOT EXISTS drug_catalog ('
@@ -17,7 +20,23 @@ abstract final class CatalogSchema {
         'commercial_name_ar TEXT NOT NULL, '
         'price_egp REAL NOT NULL, '
         'search_en TEXT NOT NULL, '
-        'search_ar TEXT NOT NULL)',
+        'search_ar TEXT NOT NULL, '
+        'brand TEXT, '
+        'brand_key TEXT, '
+        'strength TEXT, '
+        'form TEXT, '
+        'form_details TEXT, '
+        'dose_unit TEXT, '
+        'pack_count INTEGER, '
+        'strip_count INTEGER, '
+        'units_per_strip INTEGER, '
+        'content_amount REAL, '
+        'content_unit TEXT, '
+        'route TEXT, '
+        'scientific_name TEXT, '
+        'flags TEXT)',
+    'CREATE INDEX IF NOT EXISTS drug_catalog_brand '
+        'ON drug_catalog (brand_key)',
     "CREATE VIRTUAL TABLE IF NOT EXISTS drug_catalog_fts USING fts5("
         "search_en, search_ar, content='drug_catalog', content_rowid='rowid', "
         "tokenize='unicode61 remove_diacritics 2')",
@@ -26,8 +45,11 @@ abstract final class CatalogSchema {
 
   static const insert =
       'INSERT OR IGNORE INTO drug_catalog (catalog_id, commercial_name_en, '
-      'commercial_name_ar, price_egp, search_en, search_ar) '
-      'VALUES (?, ?, ?, ?, ?, ?)';
+      'commercial_name_ar, price_egp, search_en, search_ar, brand, brand_key, '
+      'strength, form, form_details, dose_unit, pack_count, strip_count, '
+      'units_per_strip, content_amount, content_unit, route, scientific_name, '
+      'flags) '
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
   static const rebuildFts =
       "INSERT INTO drug_catalog_fts(drug_catalog_fts) VALUES('rebuild')";
@@ -41,6 +63,8 @@ class CatalogRow {
     required this.priceEgp,
     required this.searchEn,
     required this.searchAr,
+    required this.facts,
+    this.scientificName,
   });
 
   final String catalogId;
@@ -49,9 +73,31 @@ class CatalogRow {
   final double priceEgp;
   final String searchEn;
   final String searchAr;
+  final CatalogDrugFacts facts;
+  final String? scientificName;
 
-  List<Object> get parameters =>
-      [catalogId, nameEn, nameAr, priceEgp, searchEn, searchAr];
+  List<Object?> get parameters => [
+        catalogId,
+        nameEn,
+        nameAr,
+        priceEgp,
+        searchEn,
+        searchAr,
+        facts.brand,
+        normalizeForDrugSearch(facts.brand),
+        facts.strength,
+        facts.form,
+        facts.formDetails.isEmpty ? null : facts.formDetails.join(','),
+        facts.doseUnit,
+        facts.packCount,
+        facts.stripCount,
+        facts.unitsPerStrip,
+        facts.contentAmount,
+        facts.contentUnit,
+        facts.route,
+        scientificName,
+        facts.flags.isEmpty ? null : facts.flags.join(','),
+      ];
 }
 
 class RejectedRow {
@@ -156,8 +202,9 @@ class CsvRowReader {
   }
 }
 
-/// Projects the source CSV to the three runtime fields, validates, normalizes
-/// search copies, deduplicates and writes in batches (spec §4, §46).
+/// Projects the source CSV to the runtime fields, validates, normalizes
+/// search copies, reads facts out of the English name, deduplicates and
+/// writes in batches (spec §4, §46).
 class CatalogImporter {
   CatalogImporter({this.batchSize = 500});
 
@@ -186,7 +233,7 @@ class CatalogImporter {
     final seen = <String>{};
     var batch = <CatalogRow>[];
     List<String>? header;
-    late int en, ar, price;
+    late int en, ar, price, scientific, route;
 
     await for (final (line, fields, error) in CsvRowReader().rows(lines)) {
       if (error != null) {
@@ -206,6 +253,9 @@ class CatalogImporter {
         en = header.indexOf('commercial_name_en');
         ar = header.indexOf('commercial_name_ar');
         price = header.indexOf('price_egp');
+        // Optional columns.
+        scientific = header.indexOf('scientific_name');
+        route = header.indexOf('route');
         continue;
       }
       if (row.length != header.length) {
@@ -250,6 +300,7 @@ class CatalogImporter {
         report.duplicates++;
         continue;
       }
+      final scientificName = scientific < 0 ? '' : row[scientific];
       batch.add(CatalogRow(
         catalogId: id,
         nameEn: nameEn,
@@ -257,6 +308,11 @@ class CatalogImporter {
         priceEgp: priceValue,
         searchEn: searchEn,
         searchAr: searchAr,
+        facts: parseCatalogName(
+          nameEn,
+          route: route < 0 ? null : row[route],
+        ),
+        scientificName: scientificName.isEmpty ? null : scientificName,
       ));
       report.accepted++;
       if (batch.length >= batchSize) {
