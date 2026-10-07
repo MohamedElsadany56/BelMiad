@@ -69,6 +69,10 @@ be screenshotted there.
   - Past actions keep their caregiver even after that caregiver is removed.
 - **Medicines**
   - An offline Egyptian drug catalog: 25,065 entries with English and Arabic search.
+  - **Auto-fill from the catalog:** picking a medicine fills in the name, strength, dose unit (tablet, capsule, ml, drops…), dosage form, route and scientific name. Every filled field is marked ✨ and stays editable, because these are suggestions, not facts.
+  - **Same name, different form:** search results show each variant's form, strength and pack size (for example *Suspension · 312 mg/5 ml · 80 ml* or *Tablet (film-coated) · 625 mg · 10 tablets*). After picking one, *Other forms and sizes* switches to the syrup, drops or vial. Fields the user already changed are kept.
+  - **Pack size for stock:** adding stock for a catalog medicine suggests the pack, for example a box of 30 tablets, 25 strips × 10 tablets, a 120 ml bottle, or a single vial.
+  - Withdrawn, unregistered-import and unavailable products are labelled in search.
   - Custom medicines, separate English and Arabic instructions.
   - As-needed (PRN) medicines with a maximum daily quantity.
   - Archive, restore and trash.
@@ -190,6 +194,26 @@ After regenerating, bump `catalogAssetVersion` in
 `lib/features/catalog/data/drug_catalog_database.dart` so that devices copy
 the new catalog. Patient data lives in a separate database and isn't
 touched.
+
+While building, `lib/features/catalog/domain/catalog_name_parser.dart` reads
+these from each English name:
+
+- the brand;
+- the strength (`500 mg`, `160/25 mg`, `250 mg/5 ml`, `0.1%`);
+- the form and its details (film-coated, extended-release, chewable…);
+- the pack count;
+- strips × units, where the name gives them;
+- the bottle or tube size;
+- availability notes.
+
+It also stores the scientific name and route from the CSV. Names are typed by
+hand in the source data, so the result is a best-effort suggestion. In the
+current data it finds a pack count for 99% of tablets and capsules, and a
+size for 96% of syrups and creams. To review the extraction in a spreadsheet:
+
+```bash
+dart run tool/review_catalog_parser.dart review.csv
+```
 
 ### Tests
 
