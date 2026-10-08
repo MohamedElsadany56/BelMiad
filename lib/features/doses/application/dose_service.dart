@@ -11,6 +11,8 @@ import '../../audit/data/audit_log.dart';
 import '../../inventory/application/inventory_service.dart';
 import '../../inventory/data/inventory_repository.dart';
 import '../../inventory/domain/batch_selection.dart';
+import '../../schedules/data/schedule_repository.dart';
+import '../domain/dose_grouping.dart';
 import '../domain/dose_status.dart';
 
 /// Everything the dose confirmation UI needs to decide how to proceed.
@@ -24,6 +26,7 @@ class TakeDoseContext {
     required this.takenTodayScaled,
     required this.today,
     this.dose,
+    this.groupMateIds = const [],
   });
 
   final DoseInstance? dose;
@@ -36,6 +39,10 @@ class TakeDoseContext {
   final List<InventoryBatch> usableBatches;
   final int takenTodayScaled;
   final LocalDate today;
+
+  /// Other pending doses of the same dose group (see `dose_grouping.dart`).
+  /// Used to tell the user how many medications one tap will complete.
+  final List<String> groupMateIds;
 
   int? get maximumScaled => medication.maximumDailyQuantityScaled;
 
@@ -62,6 +69,20 @@ class TakeDoseContext {
   }
 }
 
+/// Outcome of completing the other doses of a dose group.
+class GroupCompletion {
+  const GroupCompletion({this.taken = const [], this.failed = const []});
+
+  /// Doses marked taken together with the primary dose.
+  final List<String> taken;
+
+  /// Group mates that could not be completed (no stock, daily maximum,
+  /// closed window...). They stay as they were and can be handled one by one.
+  final List<String> failed;
+
+  bool get isEmpty => taken.isEmpty && failed.isEmpty;
+}
+
 /// Transactional dose use cases (spec §9, §17–§19, §28).
 class DoseService {
   DoseService(
@@ -86,7 +107,99 @@ class DoseService {
       medicationId: dose.medicationId,
       requiredScaled: dose.requiredQuantityScaled,
       dose: dose,
+      groupMateIds: await groupMateIds(
+        doseInstanceId,
+        includeMissed: dose.status == DoseStatus.missed.code,
+      ),
     );
+  }
+
+  /// Other doses that belong to the same dose group as [doseInstanceId] and
+  /// are still open (scheduled, or missed when correcting an earlier intake).
+  /// The grouping rule itself lives in `dose_grouping.dart`.
+  Future<List<String>> groupMateIds(
+    String doseInstanceId, {
+    bool includeMissed = false,
+  }) async {
+    final primary = await _dose(doseInstanceId);
+    if (primary.isPrn) return const [];
+    final rows = await (_db.select(_db.doseInstances).join([
+      leftOuterJoin(
+        _db.medicationSchedules,
+        _db.medicationSchedules.scheduleId
+            .equalsExp(_db.doseInstances.scheduleId),
+      ),
+    ])
+          ..where(
+            _db.doseInstances.patientId.equals(primary.patientId) &
+                _db.doseInstances.localDate.equals(primary.localDate) &
+                _db.doseInstances.isPrn.equals(false),
+          )
+          ..orderBy([OrderingTerm.asc(_db.doseInstances.scheduledAt)]))
+        .get();
+    DoseGroupInput inputOf(TypedResult row) {
+      final dose = row.readTable(_db.doseInstances);
+      final schedule = row.readTableOrNull(_db.medicationSchedules);
+      final mealRelative = schedule?.scheduleType == ScheduleTypes.mealRelative;
+      return DoseGroupInput(
+        patientId: dose.patientId,
+        localDate: dose.localDate,
+        scheduledAt: dose.scheduledAt,
+        isPrn: dose.isPrn,
+        mealId: mealRelative ? schedule?.mealId : null,
+        timingRelation: mealRelative ? schedule?.timingRelation : null,
+      );
+    }
+
+    final primaryRow = rows.firstWhere(
+      (r) => r.readTable(_db.doseInstances).doseInstanceId == doseInstanceId,
+    );
+    final key = doseGroupKey(inputOf(primaryRow));
+    if (key == null) return const [];
+    return [
+      for (final row in rows)
+        if (row.readTable(_db.doseInstances).doseInstanceId != doseInstanceId &&
+            doseGroupKey(inputOf(row)) == key &&
+            _isOpen(row.readTable(_db.doseInstances), includeMissed))
+          row.readTable(_db.doseInstances).doseInstanceId,
+    ];
+  }
+
+  bool _isOpen(DoseInstance dose, bool includeMissed) =>
+      dose.status == DoseStatus.scheduled.code ||
+      (includeMissed && dose.status == DoseStatus.missed.code);
+
+  /// "Combined" completion: after [primaryDoseId] was taken, marks the other
+  /// doses of its group taken with their scheduled quantity, one transaction
+  /// each (stock, maximum daily and grace window are checked per medication).
+  /// A mate that cannot be completed is left untouched and reported in
+  /// [GroupCompletion.failed]; it never undoes the primary dose.
+  Future<GroupCompletion> completeGroupMates({
+    required String primaryDoseId,
+    int graceMinutes = 180,
+    DateTime? takenAt,
+  }) async {
+    final ids = await groupMateIds(
+      primaryDoseId,
+      includeMissed: takenAt != null,
+    );
+    final taken = <String>[];
+    final failed = <String>[];
+    for (final id in ids) {
+      try {
+        final mate = await _dose(id);
+        await takeDose(
+          doseInstanceId: id,
+          actualQuantityScaled: mate.requiredQuantityScaled,
+          graceMinutes: graceMinutes,
+          takenAt: takenAt,
+        );
+        taken.add(id);
+      } on DomainException {
+        failed.add(id);
+      }
+    }
+    return GroupCompletion(taken: taken, failed: failed);
   }
 
   Future<TakeDoseContext> preparePrn(
@@ -99,6 +212,7 @@ class DoseService {
     required String medicationId,
     required int requiredScaled,
     DoseInstance? dose,
+    List<String> groupMateIds = const [],
   }) async {
     final medication = await _medication(medicationId);
     final time = await _patientTime(medication.patientId);
@@ -119,6 +233,7 @@ class DoseService {
       usableBatches: usable,
       takenTodayScaled: await _takenOn(medicationId, dayDate),
       today: today,
+      groupMateIds: groupMateIds,
     );
   }
 

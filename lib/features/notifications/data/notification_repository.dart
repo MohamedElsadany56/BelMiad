@@ -5,6 +5,7 @@ import '../../../core/time/clock.dart';
 import '../../../core/utilities/ids.dart';
 import '../application/notification_engine.dart';
 import '../domain/notification_types.dart';
+import 'notification_history.dart';
 
 /// In-app notification centre and per-patient preferences.
 class NotificationRepository {
@@ -49,6 +50,46 @@ class NotificationRepository {
       );
     return query.watchSingle().map((r) => r.read(count) ?? 0);
   }
+
+  Future<void> markRead(String notificationId) => (_db.update(_db.notifications)
+        ..where((n) => n.notificationId.equals(notificationId)))
+      .write(const NotificationsCompanion(isRead: Value(true)));
+
+  Future<void> markUnread(String notificationId) =>
+      (_db.update(_db.notifications)
+            ..where((n) => n.notificationId.equals(notificationId)))
+          .write(const NotificationsCompanion(isRead: Value(false)));
+
+  /// Removes one notification from the centre.
+  Future<void> delete(String notificationId) async {
+    final rows = await (_db.select(_db.notifications)
+          ..where((n) => n.notificationId.equals(notificationId)))
+        .get();
+    await removeNotifications(_db, rows, _clock());
+  }
+
+  /// Removes the patient's notifications from the centre; [readOnly] keeps
+  /// the unread ones.
+  Future<void> deleteAll(String patientId, {bool readOnly = false}) async {
+    final now = _clock();
+    final rows = await (_db.select(_db.notifications)
+          ..where(
+            (n) =>
+                n.patientId.equals(patientId) &
+                n.status.isIn([
+                  NotificationStatus.delivered,
+                  NotificationStatus.resolved,
+                  NotificationStatus.scheduled,
+                ]) &
+                n.scheduledAt.isSmallerOrEqualValue(now) &
+                (readOnly ? n.isRead.equals(true) : const Constant(true)),
+          ))
+        .get();
+    await removeNotifications(_db, rows, now);
+  }
+
+  /// Deletes history older than seven days (also runs on every sync).
+  Future<int> purgeExpired() => purgeExpiredNotifications(_db, _clock());
 
   Future<void> markAllRead(String patientId) => (_db.update(_db.notifications)
         ..where(

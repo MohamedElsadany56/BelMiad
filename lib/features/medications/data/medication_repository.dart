@@ -94,6 +94,28 @@ class MedicationRepository {
         ..where((m) => m.medicationId.equals(medicationId)))
       .watchSingleOrNull();
 
+  /// An existing (non-deleted) medication of the patient that [input] would
+  /// duplicate: the same catalog entry, or the same name, strength and unit.
+  /// Used to offer the existing definition instead of creating a copy.
+  Future<Medication?> findDuplicate(
+    String patientId,
+    MedicationInput input, {
+    String? excludeMedicationId,
+  }) async {
+    String norm(String? value) => (value ?? '').trim().toLowerCase();
+    final candidates = await listForPatient(patientId);
+    for (final m in candidates) {
+      if (m.medicationId == excludeMedicationId) continue;
+      final sameCatalog =
+          input.catalogId != null && m.catalogId == input.catalogId;
+      final sameDefinition = norm(m.nameEn) == norm(input.nameEn) &&
+          norm(m.strength) == norm(input.strength) &&
+          m.doseUnit == input.doseUnit;
+      if (sameCatalog || sameDefinition) return m;
+    }
+    return null;
+  }
+
   Future<String> create(String patientId, MedicationInput input) async {
     _validate(input);
     final now = _clock();

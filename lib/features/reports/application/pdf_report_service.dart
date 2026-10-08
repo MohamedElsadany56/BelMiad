@@ -79,7 +79,7 @@ class PdfReportService {
           children: [
             pw.Text(
               title,
-              style: const pw.TextStyle(
+              style: pw.TextStyle(
                 fontSize: 20,
                 fontWeight: pw.FontWeight.bold,
                 color: _brand,
@@ -98,7 +98,7 @@ class PdfReportService {
         padding: const pw.EdgeInsets.only(top: 14, bottom: 6),
         child: pw.Text(
           title,
-          style: const pw.TextStyle(
+          style: pw.TextStyle(
             fontSize: 14,
             fontWeight: pw.FontWeight.bold,
             color: _brand,
@@ -110,7 +110,7 @@ class PdfReportService {
       pw.TableHelper.fromTextArray(
         headers: headers,
         data: rows,
-        headerStyle: const pw.TextStyle(
+        headerStyle: pw.TextStyle(
           fontWeight: pw.FontWeight.bold,
           color: PdfColors.white,
           fontSize: 9,

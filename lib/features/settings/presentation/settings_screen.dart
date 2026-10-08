@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers/app_providers.dart';
+import '../../../app/theme/typography.dart';
+import '../../../app/localization/labels.dart';
 import '../../../app/widgets/common.dart';
 import '../../../core/settings/settings_repository.dart';
 import '../../notifications/presentation/reminder_sound_picker.dart';
@@ -18,6 +20,7 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final fontSize = ref.watch(fontSizeProvider);
     final settings =
         ref.watch(settingsProvider).valueOrNull ?? const AppSettingsData();
     final repo = ref.read(settingsRepositoryProvider);
@@ -26,6 +29,12 @@ class SettingsScreen extends ConsumerWidget {
 
     Future<void> setInt(String key, int value) async {
       await repo.set(key, '$value');
+      ref.read(syncCoordinatorProvider).request();
+    }
+
+    // Pending reminders are rescheduled in the new format on the next sync.
+    Future<void> setString(String key, String value) async {
+      await repo.set(key, value);
       ref.read(syncCoordinatorProvider).request();
     }
 
@@ -74,8 +83,53 @@ class SettingsScreen extends ConsumerWidget {
                   ref.read(themeModeProvider.notifier).set(v.first),
             ),
           ),
+          SectionHeader(l10n.fontSize),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final option in FontSizeOption.values)
+                  ChoiceChip(
+                    label: Text(fontSizeLabel(option, l10n)),
+                    selected: option == fontSize,
+                    onSelected: (_) =>
+                        ref.read(fontSizeProvider.notifier).set(option),
+                  ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text(
+              l10n.fontSizePreview,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          SectionHeader(l10n.doseCompletion),
+          _ModeSelector(
+            mode: settings.doseCompletionMode,
+            hint: settings.doseCompletionMode.isCombined
+                ? l10n.doseCompletionCombinedHint
+                : l10n.doseCompletionSeparateHint,
+            onChanged: (mode) async {
+              await repo.set(SettingKeys.doseCompletionMode, mode.code);
+            },
+          ),
           SectionHeader(l10n.notifications),
           const ReminderSoundTile(),
+          SectionHeader(l10n.notificationGrouping),
+          _ModeSelector(
+            mode: settings.notificationGrouping,
+            hint: settings.notificationGrouping.isCombined
+                ? l10n.notificationGroupingCombinedHint
+                : l10n.notificationGroupingSeparateHint,
+            onChanged: (mode) => setString(
+              SettingKeys.notificationGrouping,
+              mode.code,
+            ),
+          ),
           SectionHeader(l10n.deviceCaregiver),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -183,6 +237,49 @@ class SettingsScreen extends ConsumerWidget {
             },
             child: Text(context.l10n.save),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Combined / Separate switch with an explanation of the chosen mode.
+class _ModeSelector extends StatelessWidget {
+  const _ModeSelector({
+    required this.mode,
+    required this.hint,
+    required this.onChanged,
+  });
+
+  final GroupingMode mode;
+  final String hint;
+  final ValueChanged<GroupingMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SegmentedButton<GroupingMode>(
+            showSelectedIcon: false,
+            segments: [
+              ButtonSegment(
+                value: GroupingMode.combined,
+                label: Text(l10n.modeCombined),
+              ),
+              ButtonSegment(
+                value: GroupingMode.separate,
+                label: Text(l10n.modeSeparate),
+              ),
+            ],
+            selected: {mode},
+            onSelectionChanged: (v) => onChanged(v.first),
+          ),
+          const SizedBox(height: 4),
+          Text(hint, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );

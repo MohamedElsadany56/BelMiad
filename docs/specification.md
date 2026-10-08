@@ -1,6 +1,6 @@
 # Offline Patient Health & Medication Management App
 
-## Master AI-Agent Prompt, Requirements, System Design & Use Cases
+## Requirements, System Design & Use Cases
 
 **Purpose:** Single source of truth for implementing the V1 Flutter
 application.\
@@ -10,7 +10,7 @@ Firebase, Supabase, or cloud dependency.
 
 ------------------------------------------------------------------------
 
-# 1. Master AI Agent Prompt
+# 1. Tools
 
 Implement a production-quality offline-first Flutter/Dart mobile
 application for **patients, family caregivers, and private nurses**.

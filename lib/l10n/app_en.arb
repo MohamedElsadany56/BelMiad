@@ -296,8 +296,6 @@
   "noForecast": "No scheduled use",
   "addStock": "Add stock",
   "selectMedication": "Select medicine",
-  "byPackages": "By packages",
-  "byQuantity": "By quantity",
   "packagingType": "Packaging",
   "packagesCount": "Packages",
   "unitsPerPackage": "Units per package",
@@ -332,7 +330,6 @@
   "deleteBatchBody": "The batch and its history are kept in trash and can be restored.",
   "useAdjustmentNote": "This batch has history, so quantity changes must be recorded as adjustments.",
   "packaging_box": "Box",
-  "packaging_blister": "Blister",
   "packaging_bottle": "Bottle",
   "packaging_tube": "Tube",
   "packaging_sachet": "Sachet",
@@ -651,7 +648,7 @@
   "sharedSettings": "Applies to all times",
   "variesByDay": "varies by day",
   "error_timesRequired": "Add at least one time",
-  "containsInnerPacks": "Contains strips or blisters",
+  "containsInnerPacks": "Contains strips",
   "innerPackType": "Inner pack",
   "innerPacksPer": "{inner} per {outer}",
   "@innerPacksPer": {
@@ -758,9 +755,7 @@
   "error_takenInFuture": "The intake time can't be in the future",
   "error_takenTooEarly": "That time is too long before the scheduled dose",
   "error_invalidPartialPack": "Units left in an opened pack can't be more than it holds",
-  "openedPacks": "Opened or incomplete packs",
   "addOpenedPack": "Add opened pack",
-  "openedPacksHint": "For example a strip with 9 of 14 tablets left, or a box with some strips used.",
   "unitsLeft": "Units left",
   "packCapacity": "Holds when full",
   "partialPackOf": "{pack} {remaining} of {capacity}",
@@ -783,6 +778,111 @@
   "soundSilent": "Silent (vibrate only)",
   "soundPreview": "Play",
   "soundCustomAndroidOnly": "Custom tones and ringtones are available on Android.",
+  "doseGroupTaken": "All medications in this dose group were marked as taken",
+  "doseGroupPartial": "{count, plural, =1{Dose taken. 1 other medication in this group could not be recorded.} other{Dose taken. {count} other medications in this group could not be recorded.}}",
+  "takeAll": "Take all ({count})",
+  "@takeAll": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "groupCompletionNote": "{count, plural, =1{This will also mark 1 other medication in this dose group as taken.} other{This will also mark {count} other medications in this dose group as taken.}}",
+  "doseCompletion": "Dose completion",
+  "doseCompletionCombinedHint": "Taking one medication also marks the other medications scheduled at the same time or for the same meal.",
+  "doseCompletionSeparateHint": "Each medication is marked as taken on its own.",
+  "notificationGrouping": "Notification grouping",
+  "notificationGroupingCombinedHint": "One notification for all medications at the same time or for the same meal.",
+  "notificationGroupingSeparateHint": "A separate notification for every medication.",
+  "modeCombined": "Combined",
+  "modeSeparate": "Separate",
+  "fontSize": "Font size",
+  "fontSize_standard": "Standard",
+  "fontSize_medium": "Medium",
+  "fontSize_large": "Large",
+  "fontSize_larger": "Extra large",
+  "fontSize_maximum": "Maximum",
+  "fontSizePreview": "Your next dose: 1 tablet after lunch.",
+  "notificationRetentionNote": "Notifications are removed automatically after 7 days.",
+  "markAsRead": "Mark as read",
+  "markAsUnread": "Mark as unread",
+  "moreOptions": "More options",
+  "notificationRead": "Read",
+  "unread": "Unread",
+  "deleteReadNotifications": "Delete read notifications",
+  "deleteAllNotifications": "Delete all notifications",
+  "deleteNotificationsBody": "This removes them from the notification list. Scheduled reminders are not affected.",
+  "stripRemaining": "{remaining} of {total} {unit} remaining",
+  "@stripRemaining": {
+    "placeholders": {
+      "remaining": {},
+      "total": {},
+      "unit": {}
+    }
+  },
+  "stripExtra": "{count, plural, =1{+ 1 more full strip} other{+ {count} more full strips}}",
+  "stripTapHint": "Tap a remaining {unit} to mark it as used",
+  "@stripTapHint": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
+  "stripUnitUsed": "Marked {quantity} as used",
+  "@stripUnitUsed": {
+    "placeholders": {
+      "quantity": {}
+    }
+  },
+  "stripCellRemaining": "{index} of {total}, remaining. Double tap to mark as used.",
+  "@stripCellRemaining": {
+    "placeholders": {
+      "index": {},
+      "total": {}
+    }
+  },
+  "stripCellUsed": "{index} of {total}, already used",
+  "@stripCellUsed": {
+    "placeholders": {
+      "index": {},
+      "total": {}
+    }
+  },
+  "stripUseOne": "Use one",
+  "stripDisabledExpired": "This batch has expired, so it cannot be used from the strip.",
+  "reason_strip_use": "Marked as used from the strip",
+  "addMedicationNextTitle": "Medication added",
+  "addMedicationNextBody": "What would you like to do next? You can do any of this later.",
+  "setSchedule": "Set up schedule",
+  "viewMedication": "View medication",
+  "duplicateMedicationTitle": "Already in your list",
+  "duplicateMedicationBody": "{name} is already in this patient's medications. Open it instead of adding a duplicate?",
+  "@duplicateMedicationBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "openExisting": "Open existing",
+  "addAnyway": "Add anyway",
+  "thisMonth": "This month",
+  "blisterPickHint": "Tap the tablets that are already used. They will show as empty.",
+  "stripMaxUnits": "A strip holds at most {max} units",
+  "@stripMaxUnits": {
+    "placeholders": {
+      "max": {}
+    }
+  },
+  "error_halfStepOnly": "Only whole or half tablets are allowed (for example 1 or 1.5)",
+  "error_wholeUnitsOnly": "Only whole numbers are allowed for this medicine",
+  "blisterPickHintHalf": "Tap a tablet to change it: full, half, or empty.",
+  "stripCellHalf": "{index} of {total}, half a tablet left. Double tap to change.",
+  "@stripCellHalf": {
+    "placeholders": {
+      "index": {},
+      "total": {}
+    }
+  },
+  "fullPacksMode": "Full packs",
+  "decrease": "Decrease",
+  "increase": "Increase",
   "drugForm_tablet": "Tablet",
   "drugForm_capsule": "Capsule",
   "drugForm_sachet": "Sachet",

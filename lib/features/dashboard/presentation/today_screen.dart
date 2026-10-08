@@ -11,6 +11,7 @@ import '../../../app/widgets/common.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/time/local_date.dart';
 import '../../doses/data/dose_repository.dart';
+import '../../doses/domain/dose_grouping.dart';
 import '../../doses/domain/dose_status.dart';
 import '../../doses/presentation/take_dose_sheet.dart';
 import '../../health/data/health_repositories.dart';
@@ -142,6 +143,12 @@ class _TodayBody extends ConsumerWidget {
         ref.watch(inventoryDashboardProvider(patientId)).valueOrNull;
     final appointment =
         ref.watch(_nextAppointmentProvider(patientId)).valueOrNull;
+    final combined = ref
+            .watch(settingsProvider)
+            .valueOrNull
+            ?.doseCompletionMode
+            .isCombined ??
+        true;
 
     String dayLabel() {
       if (date == today) return l10n.today;
@@ -268,7 +275,22 @@ class _TodayBody extends ConsumerWidget {
                   )
                 : Column(
                     children: [
-                      for (final view in list) _DoseTile(view: view),
+                      for (final group in groupDoses(
+                        list,
+                        (view) => view.groupInput,
+                      ))
+                        for (final view in group)
+                          _DoseTile(
+                            view: view,
+                            // Doses still open in the same dose group that
+                            // one tap completes (combined mode only).
+                            groupPending: combined
+                                ? group
+                                    .where(
+                                        (v) => v.status == DoseStatus.scheduled)
+                                    .length
+                                : 1,
+                          ),
                     ],
                   ),
             orElse: () => const SizedBox.shrink(),
@@ -326,9 +348,13 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _DoseTile extends ConsumerWidget {
-  const _DoseTile({required this.view});
+  const _DoseTile({required this.view, this.groupPending = 1});
 
   final DoseView view;
+
+  /// Open doses in this dose group (including this one) when combined
+  /// completion is on; 1 otherwise.
+  final int groupPending;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -386,7 +412,7 @@ class _DoseTile extends ConsumerWidget {
               Row(
                 children: [
                   SizedBox(
-                    width: 64,
+                    width: MediaQuery.textScalerOf(context).scale(72),
                     child: Text(
                       formatClock(context, scheduledLocal),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -479,7 +505,11 @@ class _DoseTile extends ConsumerWidget {
                           doseInstanceId: dose.doseInstanceId,
                         ),
                         icon: const Icon(Icons.check),
-                        label: Text(l10n.take),
+                        label: Text(
+                          groupPending > 1
+                              ? l10n.takeAll(groupPending)
+                              : l10n.take,
+                        ),
                       ),
                     ] else
                       TextButton.icon(
