@@ -169,7 +169,7 @@ flutter build web --dart-define=BELMIAD_DEMO=true -o build/web_demo
 
 Normal builds never include the demo data.
 
-### Screenshots
+### Regenerating the screenshots
 
 The README screenshots are rendered from the same demo data at 1080 × 2340,
 in English and Arabic, with the real fonts and drug catalog. To regenerate
