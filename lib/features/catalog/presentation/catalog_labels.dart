@@ -143,11 +143,16 @@ String _amount(double value) =>
 String catalogVariantSummary(DrugSearchResult entry, AppLocalizations l10n) {
   final facts = entry.facts;
   if (facts == null) return entry.nameEn;
-  return [
+  final parts = [
     if (facts.form != null) dosageFormText(facts, l10n),
     if (facts.strength != null) facts.strength!,
     if (packSizeText(facts, l10n) case final pack?) pack,
-  ].join(' · ');
+  ];
+  // In Arabic each part keeps its own direction, so "625 mg" and
+  // "10 أقراص" don't get mixed up (first-strong isolates).
+  return l10n.localeName == 'ar'
+      ? parts.map((p) => '\u2068$p\u2069').join(' · ')
+      : parts.join(' · ');
 }
 
 IconData drugFormIcon(String? form) => switch (form) {

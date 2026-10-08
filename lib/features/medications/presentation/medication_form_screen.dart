@@ -266,6 +266,9 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         ),
         TextFormField(
           controller: _strength,
+          // Always Latin ("500 mg"): keep its order in Arabic too.
+          textDirection: TextDirection.ltr,
+          textAlign: context.isArabic ? TextAlign.right : TextAlign.left,
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(
             labelText: l10n.strength,
@@ -307,6 +310,9 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         ),
         TextFormField(
           controller: _scientific,
+          // Always Latin ("500 mg"): keep its order in Arabic too.
+          textDirection: TextDirection.ltr,
+          textAlign: context.isArabic ? TextAlign.right : TextAlign.left,
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(
             labelText: l10n.scientificName,
@@ -387,7 +393,8 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
             title: Text(l10n.fromCatalog),
             subtitle: Text(
               [
-                if (entry != null) l10n.catalogSourceName(entry.nameEn),
+                if (entry != null)
+                  l10n.catalogSourceName('\u2068${entry.nameEn}\u2069'),
                 l10n.catalogPrice(_catalogPrice?.toStringAsFixed(2) ?? '-'),
                 l10n.referencePriceNote,
               ].join('\n'),

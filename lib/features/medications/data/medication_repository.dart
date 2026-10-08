@@ -248,5 +248,5 @@ String medicationDisplayName(Medication medication, {required bool arabic}) {
   if (strength == null || strength.isEmpty) return base;
   // A left-to-right mark keeps "500 mg" in order after an Arabic name
   // (otherwise it shows as "mg 500").
-  return arabic ? '$base ‎$strength' : '$base $strength';
+  return arabic ? '$base \u200E$strength' : '$base $strength';
 }
