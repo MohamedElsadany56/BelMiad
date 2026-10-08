@@ -3,7 +3,7 @@
 <img src="assets/icon/app_icon_rounded.png" width="112" alt="BelMiad icon">
 
 # BelMiad — بالميعاد
-[![Download](https://img.shields.io/badge/Download-App-blue?style=for-the-badge&logo=google-drive)](https://drive.google.com/file/d/1kz8rLjDxRHb2dd6iuDIqykR5PJgbHyle/view?usp=sharing) 
+[![Download](https://img.shields.io/badge/Download-App-blue?style=for-the-badge&logo=google-drive)](https://drive.google.com/file/d/1VuKaLCx6rgIXCli_7XgGaKLhds2akECR/view?usp=sharing) 
 
 **Offline medicine and dose management for patients, family caregivers and
 private nurses.**
