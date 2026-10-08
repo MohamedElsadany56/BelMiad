@@ -882,5 +882,113 @@
   },
   "fullPacksMode": "Full packs",
   "decrease": "Decrease",
-  "increase": "Increase"
+  "increase": "Increase",
+  "drugForm_tablet": "Tablet",
+  "drugForm_capsule": "Capsule",
+  "drugForm_sachet": "Sachet",
+  "drugForm_ampoule": "Ampoule",
+  "drugForm_vial": "Vial",
+  "drugForm_syringe": "Prefilled syringe",
+  "drugForm_pen": "Injection pen",
+  "drugForm_suppository": "Suppository",
+  "drugForm_lozenge": "Lozenge",
+  "drugForm_patch": "Patch",
+  "drugForm_film": "Oral film",
+  "drugForm_piece": "Piece",
+  "drugForm_teaBag": "Tea bag",
+  "drugForm_syrup": "Syrup",
+  "drugForm_suspension": "Suspension",
+  "drugForm_solution": "Solution",
+  "drugForm_drops": "Drops",
+  "drugForm_eyeDrops": "Eye drops",
+  "drugForm_earDrops": "Ear drops",
+  "drugForm_nasalSpray": "Nasal spray",
+  "drugForm_spray": "Spray",
+  "drugForm_inhaler": "Inhaler",
+  "drugForm_infusion": "IV infusion",
+  "drugForm_injection": "Injection",
+  "drugForm_cream": "Cream",
+  "drugForm_ointment": "Ointment",
+  "drugForm_gel": "Gel",
+  "drugForm_lotion": "Lotion",
+  "drugForm_shampoo": "Shampoo",
+  "drugForm_mouthwash": "Mouthwash",
+  "drugForm_powder": "Powder",
+  "drugForm_emulsion": "Emulsion",
+  "drugForm_oil": "Oil",
+  "drugForm_soap": "Wash",
+  "drugDetail_filmCoated": "film-coated",
+  "drugDetail_coated": "coated",
+  "drugDetail_sugarCoated": "sugar-coated",
+  "drugDetail_entericCoated": "enteric-coated",
+  "drugDetail_extendedRelease": "extended-release",
+  "drugDetail_delayedRelease": "delayed-release",
+  "drugDetail_chewable": "chewable",
+  "drugDetail_effervescent": "effervescent",
+  "drugDetail_orodispersible": "dissolves in the mouth",
+  "drugDetail_dispersible": "dispersible",
+  "drugDetail_sublingual": "under the tongue",
+  "drugDetail_scored": "scored",
+  "drugDetail_softGel": "soft gel",
+  "drugDetail_hardGelatin": "hard gelatin",
+  "drugDetail_vaginal": "vaginal",
+  "drugDetail_rectal": "rectal",
+  "drugDetail_paediatric": "for children",
+  "drugDetail_intravenous": "IV",
+  "drugDetail_intramuscular": "IM",
+  "drugDetail_subcutaneous": "under the skin",
+  "drugDetail_transdermal": "through the skin",
+  "drugRoute_oral": "By mouth",
+  "drugRoute_topical": "On the skin",
+  "drugRoute_injection": "Injection",
+  "drugRoute_eye": "Eye",
+  "drugRoute_ear": "Ear",
+  "drugRoute_nasal": "Nose",
+  "drugRoute_inhalation": "Inhaled",
+  "drugRoute_mouth": "Mouth and throat",
+  "drugRoute_vaginal": "Vaginal",
+  "drugRoute_rectal": "Rectal",
+  "catalogAutofillNote": "Filled in from the drug catalog to save you typing. Please check it: you can change anything before saving.",
+  "catalogSuggested": "Suggested from the catalog",
+  "otherFormsHint": "The same medicine in another form, strength or pack size. Pick the one you have.",
+  "catalogFlagCancelled": "Withdrawn from the market",
+  "catalogFlagIllegalImport": "Unregistered import",
+  "catalogFlagNotAvailable": "Currently unavailable",
+  "catalogFlagHospitalOnly": "Hospitals only",
+  "catalogVariantSelected": "Selected",
+  "catalogSourceName": "Catalog entry: {name}",
+  "@catalogSourceName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "otherFormsTitle": "Other forms and sizes ({count})",
+  "@otherFormsTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "catalogPackOf": "{count} {unit}",
+  "@catalogPackOf": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "stockFromCatalog": "Suggested from the drug catalog: {pack}. Check it matches the pack you have.",
+  "@stockFromCatalog": {
+    "placeholders": {
+      "pack": {
+        "type": "String"
+      }
+    }
+  }
 }

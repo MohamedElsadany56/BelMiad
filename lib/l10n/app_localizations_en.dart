@@ -2267,4 +2267,245 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get increase => 'Increase';
+
+  @override
+  String get drugForm_tablet => 'Tablet';
+
+  @override
+  String get drugForm_capsule => 'Capsule';
+
+  @override
+  String get drugForm_sachet => 'Sachet';
+
+  @override
+  String get drugForm_ampoule => 'Ampoule';
+
+  @override
+  String get drugForm_vial => 'Vial';
+
+  @override
+  String get drugForm_syringe => 'Prefilled syringe';
+
+  @override
+  String get drugForm_pen => 'Injection pen';
+
+  @override
+  String get drugForm_suppository => 'Suppository';
+
+  @override
+  String get drugForm_lozenge => 'Lozenge';
+
+  @override
+  String get drugForm_patch => 'Patch';
+
+  @override
+  String get drugForm_film => 'Oral film';
+
+  @override
+  String get drugForm_piece => 'Piece';
+
+  @override
+  String get drugForm_teaBag => 'Tea bag';
+
+  @override
+  String get drugForm_syrup => 'Syrup';
+
+  @override
+  String get drugForm_suspension => 'Suspension';
+
+  @override
+  String get drugForm_solution => 'Solution';
+
+  @override
+  String get drugForm_drops => 'Drops';
+
+  @override
+  String get drugForm_eyeDrops => 'Eye drops';
+
+  @override
+  String get drugForm_earDrops => 'Ear drops';
+
+  @override
+  String get drugForm_nasalSpray => 'Nasal spray';
+
+  @override
+  String get drugForm_spray => 'Spray';
+
+  @override
+  String get drugForm_inhaler => 'Inhaler';
+
+  @override
+  String get drugForm_infusion => 'IV infusion';
+
+  @override
+  String get drugForm_injection => 'Injection';
+
+  @override
+  String get drugForm_cream => 'Cream';
+
+  @override
+  String get drugForm_ointment => 'Ointment';
+
+  @override
+  String get drugForm_gel => 'Gel';
+
+  @override
+  String get drugForm_lotion => 'Lotion';
+
+  @override
+  String get drugForm_shampoo => 'Shampoo';
+
+  @override
+  String get drugForm_mouthwash => 'Mouthwash';
+
+  @override
+  String get drugForm_powder => 'Powder';
+
+  @override
+  String get drugForm_emulsion => 'Emulsion';
+
+  @override
+  String get drugForm_oil => 'Oil';
+
+  @override
+  String get drugForm_soap => 'Wash';
+
+  @override
+  String get drugDetail_filmCoated => 'film-coated';
+
+  @override
+  String get drugDetail_coated => 'coated';
+
+  @override
+  String get drugDetail_sugarCoated => 'sugar-coated';
+
+  @override
+  String get drugDetail_entericCoated => 'enteric-coated';
+
+  @override
+  String get drugDetail_extendedRelease => 'extended-release';
+
+  @override
+  String get drugDetail_delayedRelease => 'delayed-release';
+
+  @override
+  String get drugDetail_chewable => 'chewable';
+
+  @override
+  String get drugDetail_effervescent => 'effervescent';
+
+  @override
+  String get drugDetail_orodispersible => 'dissolves in the mouth';
+
+  @override
+  String get drugDetail_dispersible => 'dispersible';
+
+  @override
+  String get drugDetail_sublingual => 'under the tongue';
+
+  @override
+  String get drugDetail_scored => 'scored';
+
+  @override
+  String get drugDetail_softGel => 'soft gel';
+
+  @override
+  String get drugDetail_hardGelatin => 'hard gelatin';
+
+  @override
+  String get drugDetail_vaginal => 'vaginal';
+
+  @override
+  String get drugDetail_rectal => 'rectal';
+
+  @override
+  String get drugDetail_paediatric => 'for children';
+
+  @override
+  String get drugDetail_intravenous => 'IV';
+
+  @override
+  String get drugDetail_intramuscular => 'IM';
+
+  @override
+  String get drugDetail_subcutaneous => 'under the skin';
+
+  @override
+  String get drugDetail_transdermal => 'through the skin';
+
+  @override
+  String get drugRoute_oral => 'By mouth';
+
+  @override
+  String get drugRoute_topical => 'On the skin';
+
+  @override
+  String get drugRoute_injection => 'Injection';
+
+  @override
+  String get drugRoute_eye => 'Eye';
+
+  @override
+  String get drugRoute_ear => 'Ear';
+
+  @override
+  String get drugRoute_nasal => 'Nose';
+
+  @override
+  String get drugRoute_inhalation => 'Inhaled';
+
+  @override
+  String get drugRoute_mouth => 'Mouth and throat';
+
+  @override
+  String get drugRoute_vaginal => 'Vaginal';
+
+  @override
+  String get drugRoute_rectal => 'Rectal';
+
+  @override
+  String get catalogAutofillNote =>
+      'Filled in from the drug catalog to save you typing. Please check it: you can change anything before saving.';
+
+  @override
+  String get catalogSuggested => 'Suggested from the catalog';
+
+  @override
+  String get otherFormsHint =>
+      'The same medicine in another form, strength or pack size. Pick the one you have.';
+
+  @override
+  String get catalogFlagCancelled => 'Withdrawn from the market';
+
+  @override
+  String get catalogFlagIllegalImport => 'Unregistered import';
+
+  @override
+  String get catalogFlagNotAvailable => 'Currently unavailable';
+
+  @override
+  String get catalogFlagHospitalOnly => 'Hospitals only';
+
+  @override
+  String get catalogVariantSelected => 'Selected';
+
+  @override
+  String catalogSourceName(String name) {
+    return 'Catalog entry: $name';
+  }
+
+  @override
+  String otherFormsTitle(int count) {
+    return 'Other forms and sizes ($count)';
+  }
+
+  @override
+  String catalogPackOf(int count, String unit) {
+    return '$count $unit';
+  }
+
+  @override
+  String stockFromCatalog(String pack) {
+    return 'Suggested from the drug catalog: $pack. Check it matches the pack you have.';
+  }
 }

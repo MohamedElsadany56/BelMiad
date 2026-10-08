@@ -436,6 +436,49 @@ void main() {
       expect(await repo.search('"panadol" OR *'), isA<List>());
     });
 
+    test('stores name facts and finds other forms of the same medicine',
+        () async {
+      final forms = DrugCatalogDatabaseForTest();
+      for (final statement in CatalogSchema.statements) {
+        await forms.customStatement(statement);
+      }
+      const csv = 'commercial_name_en,commercial_name_ar,scientific_name,'
+          'manufacturer,drug_class,route,price_egp\n'
+          'AUGMENTIN 625 MG 10 F.C.TABS.,اوجمنتين,AMOXICILLIN+CLAVULANIC ACID,'
+          'GSK,ANTIBIOTIC,ORAL.SOLID,90\n'
+          'AUGMENTIN 312 MG/5ML SUSP. 80 ML,اوجمنتين,AMOXICILLIN+CLAVULANIC ACID,'
+          'GSK,ANTIBIOTIC,ORAL.LIQUID,60\n'
+          'AUGMENTIN 1.2G VIAL FOR I.V. INJ./INF.,اوجمنتين,AMOXICILLIN,'
+          'GSK,ANTIBIOTIC,INJECTION,120\n'
+          'PANADOL 500MG 24 TABS.,بانادول,PARACETAMOL,GSK,ANALGESIC,'
+          'ORAL.SOLID,30\n';
+      final sink = _DriftSink(forms);
+      await CatalogImporter().import(
+        Stream.fromIterable(const LineSplitter().convert(csv)),
+        sink,
+      );
+      await sink.flush();
+      await forms.customStatement(CatalogSchema.rebuildFts);
+      final repo = DrugCatalogRepository(forms);
+
+      final tablets = (await repo.search('augmentin 625')).first;
+      expect(tablets.facts!.brand, 'Augmentin');
+      expect(tablets.facts!.strength, '625 mg');
+      expect(tablets.facts!.doseUnit, 'tablet');
+      expect(tablets.facts!.packCount, 10);
+      expect(tablets.facts!.formDetails, ['film_coated']);
+      expect(tablets.scientificName, 'AMOXICILLIN+CLAVULANIC ACID');
+
+      final variants = await repo.variantsOf(tablets);
+      expect(variants, hasLength(3));
+      expect(variants.map((v) => v.facts!.form).toSet(),
+          {'tablet', 'suspension', 'vial'});
+      final syrup = variants.firstWhere((v) => v.facts!.form == 'suspension');
+      expect(syrup.facts!.contentAmount, 80);
+      expect((await repo.byId(syrup.catalogId))!.facts!.doseUnit, 'ml');
+      await forms.close();
+    });
+
     test('normalization keeps display strings intact', () {
       expect(normalizeForDrugSearch('إكسترا'), 'اكسترا');
       expect(normalizeForDrugSearch('بانادولـ'), 'بانادول');
@@ -462,7 +505,7 @@ class _DriftSink implements CatalogSink {
   _DriftSink(this.db);
 
   final GeneratedDatabase db;
-  final _pending = <List<Object>>[];
+  final _pending = <List<Object?>>[];
 
   @override
   void insertBatch(List<CatalogRow> rows) =>
@@ -474,9 +517,12 @@ class _DriftSink implements CatalogSink {
         CatalogSchema.insert,
         variables: [
           for (final p in params)
-            p is double
-                ? Variable.withReal(p)
-                : Variable.withString(p as String),
+            switch (p) {
+              null => const Variable<String>(null),
+              final double d => Variable.withReal(d),
+              final int i => Variable.withInt(i),
+              _ => Variable.withString(p as String),
+            },
         ],
       );
     }

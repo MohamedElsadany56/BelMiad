@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../app/widgets/common.dart';
 import '../data/drug_catalog_repository.dart';
+import 'catalog_labels.dart';
 
 const _recentCatalogKey = 'recent_catalog_ids';
 
@@ -151,14 +152,52 @@ class _CatalogSearchState extends ConsumerState<CatalogSearch> {
                 );
               }
               final item = items[index];
+              final theme = Theme.of(context);
+              final flags = item.facts?.flags ?? const <String>{};
               return ListTile(
-                leading: const Icon(Icons.medication_liquid_outlined),
-                title: Text(item.nameEn),
-                subtitle: Text(item.nameAr, textDirection: TextDirection.rtl),
-                trailing: Text(
-                  l10n.catalogPrice(item.priceEgp.toStringAsFixed(2)),
-                  style: Theme.of(context).textTheme.bodySmall,
+                leading: CircleAvatar(
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  child: Icon(
+                    drugFormIcon(item.facts?.form),
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
+                title: MixedText(item.nameEn),
+                // Form, strength and pack size tell apart the syrup, tablets
+                // and drops of the same medicine.
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (item.facts != null)
+                      Text(
+                        catalogVariantSummary(item, l10n),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    MixedText(item.nameAr),
+                    Text(
+                      l10n.catalogPrice(item.priceEgp.toStringAsFixed(2)),
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    if (flags.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: [
+                            for (final flag in flags)
+                              StatusBadge(
+                                drugFlagLabel(flag, l10n),
+                                tone: BadgeTone.warning,
+                              ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                isThreeLine: true,
                 onTap: () => widget.onSelected(item),
               );
             },

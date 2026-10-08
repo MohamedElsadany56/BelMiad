@@ -4105,6 +4105,468 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Increase'**
   String get increase;
+
+  /// No description provided for @drugForm_tablet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet'**
+  String get drugForm_tablet;
+
+  /// No description provided for @drugForm_capsule.
+  ///
+  /// In en, this message translates to:
+  /// **'Capsule'**
+  String get drugForm_capsule;
+
+  /// No description provided for @drugForm_sachet.
+  ///
+  /// In en, this message translates to:
+  /// **'Sachet'**
+  String get drugForm_sachet;
+
+  /// No description provided for @drugForm_ampoule.
+  ///
+  /// In en, this message translates to:
+  /// **'Ampoule'**
+  String get drugForm_ampoule;
+
+  /// No description provided for @drugForm_vial.
+  ///
+  /// In en, this message translates to:
+  /// **'Vial'**
+  String get drugForm_vial;
+
+  /// No description provided for @drugForm_syringe.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefilled syringe'**
+  String get drugForm_syringe;
+
+  /// No description provided for @drugForm_pen.
+  ///
+  /// In en, this message translates to:
+  /// **'Injection pen'**
+  String get drugForm_pen;
+
+  /// No description provided for @drugForm_suppository.
+  ///
+  /// In en, this message translates to:
+  /// **'Suppository'**
+  String get drugForm_suppository;
+
+  /// No description provided for @drugForm_lozenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Lozenge'**
+  String get drugForm_lozenge;
+
+  /// No description provided for @drugForm_patch.
+  ///
+  /// In en, this message translates to:
+  /// **'Patch'**
+  String get drugForm_patch;
+
+  /// No description provided for @drugForm_film.
+  ///
+  /// In en, this message translates to:
+  /// **'Oral film'**
+  String get drugForm_film;
+
+  /// No description provided for @drugForm_piece.
+  ///
+  /// In en, this message translates to:
+  /// **'Piece'**
+  String get drugForm_piece;
+
+  /// No description provided for @drugForm_teaBag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tea bag'**
+  String get drugForm_teaBag;
+
+  /// No description provided for @drugForm_syrup.
+  ///
+  /// In en, this message translates to:
+  /// **'Syrup'**
+  String get drugForm_syrup;
+
+  /// No description provided for @drugForm_suspension.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspension'**
+  String get drugForm_suspension;
+
+  /// No description provided for @drugForm_solution.
+  ///
+  /// In en, this message translates to:
+  /// **'Solution'**
+  String get drugForm_solution;
+
+  /// No description provided for @drugForm_drops.
+  ///
+  /// In en, this message translates to:
+  /// **'Drops'**
+  String get drugForm_drops;
+
+  /// No description provided for @drugForm_eyeDrops.
+  ///
+  /// In en, this message translates to:
+  /// **'Eye drops'**
+  String get drugForm_eyeDrops;
+
+  /// No description provided for @drugForm_earDrops.
+  ///
+  /// In en, this message translates to:
+  /// **'Ear drops'**
+  String get drugForm_earDrops;
+
+  /// No description provided for @drugForm_nasalSpray.
+  ///
+  /// In en, this message translates to:
+  /// **'Nasal spray'**
+  String get drugForm_nasalSpray;
+
+  /// No description provided for @drugForm_spray.
+  ///
+  /// In en, this message translates to:
+  /// **'Spray'**
+  String get drugForm_spray;
+
+  /// No description provided for @drugForm_inhaler.
+  ///
+  /// In en, this message translates to:
+  /// **'Inhaler'**
+  String get drugForm_inhaler;
+
+  /// No description provided for @drugForm_infusion.
+  ///
+  /// In en, this message translates to:
+  /// **'IV infusion'**
+  String get drugForm_infusion;
+
+  /// No description provided for @drugForm_injection.
+  ///
+  /// In en, this message translates to:
+  /// **'Injection'**
+  String get drugForm_injection;
+
+  /// No description provided for @drugForm_cream.
+  ///
+  /// In en, this message translates to:
+  /// **'Cream'**
+  String get drugForm_cream;
+
+  /// No description provided for @drugForm_ointment.
+  ///
+  /// In en, this message translates to:
+  /// **'Ointment'**
+  String get drugForm_ointment;
+
+  /// No description provided for @drugForm_gel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gel'**
+  String get drugForm_gel;
+
+  /// No description provided for @drugForm_lotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Lotion'**
+  String get drugForm_lotion;
+
+  /// No description provided for @drugForm_shampoo.
+  ///
+  /// In en, this message translates to:
+  /// **'Shampoo'**
+  String get drugForm_shampoo;
+
+  /// No description provided for @drugForm_mouthwash.
+  ///
+  /// In en, this message translates to:
+  /// **'Mouthwash'**
+  String get drugForm_mouthwash;
+
+  /// No description provided for @drugForm_powder.
+  ///
+  /// In en, this message translates to:
+  /// **'Powder'**
+  String get drugForm_powder;
+
+  /// No description provided for @drugForm_emulsion.
+  ///
+  /// In en, this message translates to:
+  /// **'Emulsion'**
+  String get drugForm_emulsion;
+
+  /// No description provided for @drugForm_oil.
+  ///
+  /// In en, this message translates to:
+  /// **'Oil'**
+  String get drugForm_oil;
+
+  /// No description provided for @drugForm_soap.
+  ///
+  /// In en, this message translates to:
+  /// **'Wash'**
+  String get drugForm_soap;
+
+  /// No description provided for @drugDetail_filmCoated.
+  ///
+  /// In en, this message translates to:
+  /// **'film-coated'**
+  String get drugDetail_filmCoated;
+
+  /// No description provided for @drugDetail_coated.
+  ///
+  /// In en, this message translates to:
+  /// **'coated'**
+  String get drugDetail_coated;
+
+  /// No description provided for @drugDetail_sugarCoated.
+  ///
+  /// In en, this message translates to:
+  /// **'sugar-coated'**
+  String get drugDetail_sugarCoated;
+
+  /// No description provided for @drugDetail_entericCoated.
+  ///
+  /// In en, this message translates to:
+  /// **'enteric-coated'**
+  String get drugDetail_entericCoated;
+
+  /// No description provided for @drugDetail_extendedRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'extended-release'**
+  String get drugDetail_extendedRelease;
+
+  /// No description provided for @drugDetail_delayedRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'delayed-release'**
+  String get drugDetail_delayedRelease;
+
+  /// No description provided for @drugDetail_chewable.
+  ///
+  /// In en, this message translates to:
+  /// **'chewable'**
+  String get drugDetail_chewable;
+
+  /// No description provided for @drugDetail_effervescent.
+  ///
+  /// In en, this message translates to:
+  /// **'effervescent'**
+  String get drugDetail_effervescent;
+
+  /// No description provided for @drugDetail_orodispersible.
+  ///
+  /// In en, this message translates to:
+  /// **'dissolves in the mouth'**
+  String get drugDetail_orodispersible;
+
+  /// No description provided for @drugDetail_dispersible.
+  ///
+  /// In en, this message translates to:
+  /// **'dispersible'**
+  String get drugDetail_dispersible;
+
+  /// No description provided for @drugDetail_sublingual.
+  ///
+  /// In en, this message translates to:
+  /// **'under the tongue'**
+  String get drugDetail_sublingual;
+
+  /// No description provided for @drugDetail_scored.
+  ///
+  /// In en, this message translates to:
+  /// **'scored'**
+  String get drugDetail_scored;
+
+  /// No description provided for @drugDetail_softGel.
+  ///
+  /// In en, this message translates to:
+  /// **'soft gel'**
+  String get drugDetail_softGel;
+
+  /// No description provided for @drugDetail_hardGelatin.
+  ///
+  /// In en, this message translates to:
+  /// **'hard gelatin'**
+  String get drugDetail_hardGelatin;
+
+  /// No description provided for @drugDetail_vaginal.
+  ///
+  /// In en, this message translates to:
+  /// **'vaginal'**
+  String get drugDetail_vaginal;
+
+  /// No description provided for @drugDetail_rectal.
+  ///
+  /// In en, this message translates to:
+  /// **'rectal'**
+  String get drugDetail_rectal;
+
+  /// No description provided for @drugDetail_paediatric.
+  ///
+  /// In en, this message translates to:
+  /// **'for children'**
+  String get drugDetail_paediatric;
+
+  /// No description provided for @drugDetail_intravenous.
+  ///
+  /// In en, this message translates to:
+  /// **'IV'**
+  String get drugDetail_intravenous;
+
+  /// No description provided for @drugDetail_intramuscular.
+  ///
+  /// In en, this message translates to:
+  /// **'IM'**
+  String get drugDetail_intramuscular;
+
+  /// No description provided for @drugDetail_subcutaneous.
+  ///
+  /// In en, this message translates to:
+  /// **'under the skin'**
+  String get drugDetail_subcutaneous;
+
+  /// No description provided for @drugDetail_transdermal.
+  ///
+  /// In en, this message translates to:
+  /// **'through the skin'**
+  String get drugDetail_transdermal;
+
+  /// No description provided for @drugRoute_oral.
+  ///
+  /// In en, this message translates to:
+  /// **'By mouth'**
+  String get drugRoute_oral;
+
+  /// No description provided for @drugRoute_topical.
+  ///
+  /// In en, this message translates to:
+  /// **'On the skin'**
+  String get drugRoute_topical;
+
+  /// No description provided for @drugRoute_injection.
+  ///
+  /// In en, this message translates to:
+  /// **'Injection'**
+  String get drugRoute_injection;
+
+  /// No description provided for @drugRoute_eye.
+  ///
+  /// In en, this message translates to:
+  /// **'Eye'**
+  String get drugRoute_eye;
+
+  /// No description provided for @drugRoute_ear.
+  ///
+  /// In en, this message translates to:
+  /// **'Ear'**
+  String get drugRoute_ear;
+
+  /// No description provided for @drugRoute_nasal.
+  ///
+  /// In en, this message translates to:
+  /// **'Nose'**
+  String get drugRoute_nasal;
+
+  /// No description provided for @drugRoute_inhalation.
+  ///
+  /// In en, this message translates to:
+  /// **'Inhaled'**
+  String get drugRoute_inhalation;
+
+  /// No description provided for @drugRoute_mouth.
+  ///
+  /// In en, this message translates to:
+  /// **'Mouth and throat'**
+  String get drugRoute_mouth;
+
+  /// No description provided for @drugRoute_vaginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaginal'**
+  String get drugRoute_vaginal;
+
+  /// No description provided for @drugRoute_rectal.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectal'**
+  String get drugRoute_rectal;
+
+  /// No description provided for @catalogAutofillNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Filled in from the drug catalog to save you typing. Please check it: you can change anything before saving.'**
+  String get catalogAutofillNote;
+
+  /// No description provided for @catalogSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested from the catalog'**
+  String get catalogSuggested;
+
+  /// No description provided for @otherFormsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The same medicine in another form, strength or pack size. Pick the one you have.'**
+  String get otherFormsHint;
+
+  /// No description provided for @catalogFlagCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawn from the market'**
+  String get catalogFlagCancelled;
+
+  /// No description provided for @catalogFlagIllegalImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Unregistered import'**
+  String get catalogFlagIllegalImport;
+
+  /// No description provided for @catalogFlagNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently unavailable'**
+  String get catalogFlagNotAvailable;
+
+  /// No description provided for @catalogFlagHospitalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Hospitals only'**
+  String get catalogFlagHospitalOnly;
+
+  /// No description provided for @catalogVariantSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get catalogVariantSelected;
+
+  /// No description provided for @catalogSourceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog entry: {name}'**
+  String catalogSourceName(String name);
+
+  /// No description provided for @otherFormsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Other forms and sizes ({count})'**
+  String otherFormsTitle(int count);
+
+  /// No description provided for @catalogPackOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {unit}'**
+  String catalogPackOf(int count, String unit);
+
+  /// No description provided for @stockFromCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested from the drug catalog: {pack}. Check it matches the pack you have.'**
+  String stockFromCatalog(String pack);
 }
 
 class _AppLocalizationsDelegate

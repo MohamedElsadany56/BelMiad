@@ -17,17 +17,17 @@ import 'package:belmiad/features/medications/data/medication_repository.dart';
 import 'package:belmiad/features/patients/data/patient_repository.dart';
 import 'package:belmiad/features/schedules/data/schedule_repository.dart';
 import 'package:belmiad/features/schedules/domain/recurrence_rule.dart';
-import 'dart:io';
 
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
+
+import 'helpers/real_fonts.dart';
 
 /// Renders every screen on small phones, large phones and tablets, in
 /// English and Arabic, at normal and large font sizes, and fails when any
@@ -173,39 +173,9 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
-/// Measures with the fonts phones use instead of the square test font.
-Future<void> _loadRealFonts() async {
-  Future<void> load(String family, List<String> paths) async {
-    final loader = FontLoader(family);
-    for (final path in paths) {
-      final bytes = File(path).readAsBytesSync();
-      loader.addFont(Future.value(ByteData.sublistView(bytes)));
-    }
-    await loader.load();
-  }
-
-  // The test runner lives under <flutter>/bin/cache/artifacts/engine/...
-  var dir = File(Platform.resolvedExecutable).parent;
-  while (!Directory('${dir.path}/material_fonts').existsSync() &&
-      dir.parent.path != dir.path) {
-    dir = dir.parent;
-  }
-  final material = '${dir.path}/material_fonts';
-  await load('Roboto', [
-    for (final w in ['regular', 'medium', 'bold'])
-      if (File('$material/roboto-$w.ttf').existsSync())
-        '$material/roboto-$w.ttf',
-  ]);
-  await load('MaterialIcons', ['$material/materialicons-regular.otf']);
-  await load('NotoNaskhArabic', [
-    'assets/fonts/NotoNaskhArabic-Regular.ttf',
-    'assets/fonts/NotoNaskhArabic-Bold.ttf',
-  ]);
-}
-
 void main() {
   setUpAll(() async {
-    await _loadRealFonts();
+    await loadRealFonts();
     tzdata.initializeTimeZones();
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   });

@@ -9,6 +9,7 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/widgets/common.dart';
 import '../../../core/utilities/scaled_quantity.dart';
 import '../../catalog/data/drug_catalog_repository.dart';
+import '../../catalog/presentation/catalog_labels.dart';
 import '../../catalog/presentation/catalog_search.dart';
 import '../data/medication_repository.dart';
 
@@ -41,6 +42,12 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
   bool _prn = false;
   String? _catalogId;
   double? _catalogPrice;
+
+  /// The catalog entry picked for a new medicine, the other forms and sizes
+  /// of the same medicine, and the values last filled in from the catalog.
+  DrugSearchResult? _catalogEntry;
+  List<DrugSearchResult> _variants = const [];
+  CatalogSuggestion? _suggested;
   bool _loading = true;
   bool _busy = false;
   bool _showForm = false;
@@ -104,14 +111,48 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
       ref.read(sharedPreferencesProvider),
       result.catalogId,
     );
-    setState(() {
-      _catalogId = result.catalogId;
-      _catalogPrice = result.priceEgp;
-      _nameEn.text = result.nameEn;
-      _nameAr.text = result.nameAr;
-      _showForm = true;
+    _applyCatalog(result);
+    setState(() => _showForm = true);
+    ref.read(catalogRepositoryProvider).variantsOf(result).then((variants) {
+      if (mounted) setState(() => _variants = variants);
     });
   }
+
+  /// Fills the form from a catalog entry. When switching to another form or
+  /// size, fields the user already changed are left as they are.
+  void _applyCatalog(DrugSearchResult entry) {
+    final next = CatalogSuggestion.from(entry, context.l10n);
+    final previous = _suggested;
+    void fill(TextEditingController field, String value, String? before) {
+      if (field.text.trim().isEmpty || field.text == before) field.text = value;
+    }
+
+    setState(() {
+      fill(_nameEn, next.nameEn, previous?.nameEn);
+      fill(_nameAr, next.nameAr, previous?.nameAr);
+      fill(_strength, next.strength, previous?.strength);
+      fill(_dosageForm, next.dosageForm, previous?.dosageForm);
+      fill(_route, next.route, previous?.route);
+      fill(_scientific, next.scientificName, previous?.scientificName);
+      if (next.doseUnit != null &&
+          (previous == null || _unit == previous.doseUnit)) {
+        _unit = next.doseUnit!;
+      }
+      _catalogEntry = entry;
+      _catalogId = entry.catalogId;
+      _catalogPrice = entry.priceEgp;
+      _suggested = next;
+    });
+  }
+
+  /// Marks a field whose value still comes from the catalog.
+  Widget? _suggestedMark(String current, String? suggested) =>
+      suggested != null && suggested.isNotEmpty && current == suggested
+          ? Tooltip(
+              message: context.l10n.catalogSuggested,
+              child: const Icon(Icons.auto_awesome_outlined, size: 18),
+            )
+          : null;
 
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
@@ -275,29 +316,14 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
     final l10n = context.l10n;
     return FormBody(
       children: [
-        if (_catalogId != null)
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.local_pharmacy_outlined),
-              title: Text(l10n.fromCatalog),
-              subtitle: Text(
-                '${l10n.catalogPrice(_catalogPrice?.toStringAsFixed(2) ?? '-')}\n'
-                '${l10n.referencePriceNote}',
-              ),
-              isThreeLine: true,
-              trailing: IconButton(
-                tooltip: l10n.delete,
-                icon: const Icon(Icons.link_off),
-                onPressed: () => setState(() {
-                  _catalogId = null;
-                  _catalogPrice = null;
-                }),
-              ),
-            ),
-          ),
+        if (_catalogId != null) _catalogCard(context),
         TextFormField(
           controller: _nameEn,
-          decoration: InputDecoration(labelText: l10n.nameEn),
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: l10n.nameEn,
+            suffixIcon: _suggestedMark(_nameEn.text, _suggested?.nameEn),
+          ),
           validator: (v) =>
               (v?.trim().isEmpty ?? true) && _nameAr.text.trim().isEmpty
                   ? l10n.error_nameRequired
@@ -306,16 +332,33 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         TextFormField(
           controller: _nameAr,
           textDirection: TextDirection.rtl,
-          decoration: InputDecoration(labelText: l10n.nameAr),
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: l10n.nameAr,
+            suffixIcon: _suggestedMark(_nameAr.text, _suggested?.nameAr),
+          ),
         ),
         TextFormField(
           controller: _strength,
-          decoration: InputDecoration(labelText: l10n.strength),
+          // Always Latin ("500 mg"): keep its order in Arabic too.
+          textDirection: TextDirection.ltr,
+          textAlign: context.isArabic ? TextAlign.right : TextAlign.left,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: l10n.strength,
+            suffixIcon: _suggestedMark(_strength.text, _suggested?.strength),
+          ),
         ),
         DropdownButtonFormField<String>(
           isExpanded: true,
           initialValue: doseUnits.contains(_unit) ? _unit : 'unit',
-          decoration: InputDecoration(labelText: l10n.doseUnit),
+          decoration: InputDecoration(
+            labelText: l10n.doseUnit,
+            helperText:
+                _suggested?.doseUnit != null && _unit == _suggested?.doseUnit
+                    ? l10n.catalogSuggested
+                    : null,
+          ),
           items: [
             for (final unit in doseUnits)
               DropdownMenuItem(value: unit, child: Text(unitLabel(unit, l10n))),
@@ -324,15 +367,32 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
         ),
         TextFormField(
           controller: _dosageForm,
-          decoration: InputDecoration(labelText: l10n.dosageForm),
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: l10n.dosageForm,
+            suffixIcon:
+                _suggestedMark(_dosageForm.text, _suggested?.dosageForm),
+          ),
         ),
         TextFormField(
           controller: _route,
-          decoration: InputDecoration(labelText: l10n.route),
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: l10n.route,
+            suffixIcon: _suggestedMark(_route.text, _suggested?.route),
+          ),
         ),
         TextFormField(
           controller: _scientific,
-          decoration: InputDecoration(labelText: l10n.scientificName),
+          // Always Latin ("500 mg"): keep its order in Arabic too.
+          textDirection: TextDirection.ltr,
+          textAlign: context.isArabic ? TextAlign.right : TextAlign.left,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: l10n.scientificName,
+            suffixIcon:
+                _suggestedMark(_scientific.text, _suggested?.scientificName),
+          ),
         ),
         Text(l10n.instructionsSeparateNote,
             style: Theme.of(context).textTheme.bodySmall),
@@ -389,6 +449,107 @@ class _MedicationFormScreenState extends ConsumerState<MedicationFormScreen> {
               validateUnitQuantity(v, l10n, _unit, required: false),
         ),
       ],
+    );
+  }
+
+  /// Where the values came from, a reminder to check them, and the other
+  /// forms and sizes of the same medicine.
+  Widget _catalogCard(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final entry = _catalogEntry;
+    final flags = entry?.facts?.flags ?? const <String>{};
+    final others = _variants.length - 1;
+    return Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.local_pharmacy_outlined),
+            title: Text(l10n.fromCatalog),
+            subtitle: Text(
+              [
+                if (entry != null)
+                  l10n.catalogSourceName('\u2068${entry.nameEn}\u2069'),
+                l10n.catalogPrice(_catalogPrice?.toStringAsFixed(2) ?? '-'),
+                l10n.referencePriceNote,
+              ].join('\n'),
+            ),
+            isThreeLine: true,
+            trailing: IconButton(
+              tooltip: l10n.delete,
+              icon: const Icon(Icons.link_off),
+              onPressed: () => setState(() {
+                _catalogId = null;
+                _catalogPrice = null;
+                _catalogEntry = null;
+                _variants = const [];
+                _suggested = null;
+              }),
+            ),
+          ),
+          if (_suggested != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.auto_awesome_outlined,
+                      size: 18, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.catalogAutofillNote,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (flags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final flag in flags)
+                    StatusBadge(
+                      drugFlagLabel(flag, l10n),
+                      tone: BadgeTone.warning,
+                      icon: Icons.warning_amber_rounded,
+                    ),
+                ],
+              ),
+            ),
+          if (others > 0)
+            ExpansionTile(
+              leading: const Icon(Icons.swap_horiz),
+              title: Text(l10n.otherFormsTitle(others)),
+              subtitle: Text(
+                l10n.otherFormsHint,
+                style: theme.textTheme.bodySmall,
+              ),
+              children: [
+                for (final variant in _variants)
+                  ListTile(
+                    leading: Icon(drugFormIcon(variant.facts?.form)),
+                    title: Text(catalogVariantSummary(variant, l10n)),
+                    subtitle: MixedText(variant.nameEn),
+                    selected: variant == entry,
+                    trailing: variant == entry
+                        ? Tooltip(
+                            message: l10n.catalogVariantSelected,
+                            child: const Icon(Icons.check_circle),
+                          )
+                        : null,
+                    onTap:
+                        variant == entry ? null : () => _applyCatalog(variant),
+                  ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

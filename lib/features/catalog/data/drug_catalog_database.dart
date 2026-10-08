@@ -13,7 +13,7 @@ const catalogAssetPath = 'assets/data/drug_catalog.sqlite';
 /// Bump when regenerating `assets/data/drug_catalog.sqlite` so devices copy
 /// the new catalog. Patient data lives in a separate database and is never
 /// touched by a catalog replacement (UC-DRUG-07).
-const catalogAssetVersion = 1;
+const catalogAssetVersion = 2;
 
 /// Read-only reference database holding the static drug catalog and its FTS5
 /// index. Queried with bound SQL only; the schema lives in [CatalogSchema].

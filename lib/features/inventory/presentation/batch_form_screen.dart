@@ -14,6 +14,8 @@ import '../../../core/time/local_date.dart';
 import '../../../core/utilities/scaled_quantity.dart';
 import '../../catalog/data/drug_catalog_repository.dart';
 import '../../medications/data/medication_repository.dart';
+import '../../catalog/domain/catalog_name_parser.dart';
+import '../../catalog/presentation/catalog_labels.dart';
 import '../../catalog/presentation/catalog_search.dart';
 import '../../medications/presentation/medications_screen.dart';
 import '../data/inventory_repository.dart';
@@ -71,6 +73,9 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
   bool _loading = true;
   bool _busy = false;
 
+  /// Pack size suggested from the drug catalog for the selected medicine.
+  String? _catalogPack;
+
   bool get _editing => widget.batchId != null;
   bool get _innerApplies => _hasInner && _outerWithInner.contains(_packaging);
 
@@ -117,6 +122,90 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
       }
     }
     if (mounted) setState(() => _loading = false);
+    if (!_editing && _medicationId != null) _suggestPack(_medicationId!);
+  }
+
+  void _selectMedication(String? id) {
+    setState(() {
+      _medicationId = id;
+      _catalogPack = null;
+    });
+    if (id != null) _suggestPack(id);
+  }
+
+  /// Pre-fills the packaging from the drug catalog (a box of 30 tablets, a
+  /// 120 ml bottle...). Only a suggestion: every field stays editable.
+  Future<void> _suggestPack(String medicationId) async {
+    if (_editing) return;
+    final medication =
+        await ref.read(medicationRepositoryProvider).get(medicationId);
+    final catalogId = medication?.catalogId;
+    if (medication == null || catalogId == null) return;
+    final entry = await ref.read(catalogRepositoryProvider).byId(catalogId);
+    final facts = entry?.facts;
+    if (facts == null || !mounted || _medicationId != medicationId) return;
+
+    String? packaging;
+    int? units;
+    int? strips;
+    int? perStrip;
+    final count = facts.packCount;
+    final amount = facts.contentAmount;
+    if (count != null && facts.doseUnit == medication.doseUnit) {
+      if (facts.stripCount != null && facts.unitsPerStrip != null) {
+        packaging = 'box';
+        strips = facts.stripCount;
+        perStrip = facts.unitsPerStrip;
+      } else if (count == 1 &&
+          (facts.form == DrugForms.vial || facts.form == DrugForms.ampoule)) {
+        packaging = facts.form;
+        units = 1;
+      } else {
+        packaging = 'box';
+        units = count;
+      }
+    } else if (medication.doseUnit == 'ml' &&
+        facts.contentUnit == 'ml' &&
+        amount != null &&
+        amount == amount.roundToDouble()) {
+      packaging = 'bottle';
+      units = amount.round();
+    } else {
+      packaging = switch (facts.form) {
+        DrugForms.cream || DrugForms.ointment || DrugForms.gel => 'tube',
+        DrugForms.syrup ||
+        DrugForms.suspension ||
+        DrugForms.solution ||
+        DrugForms.drops ||
+        DrugForms.eyeDrops ||
+        DrugForms.earDrops ||
+        DrugForms.nasalSpray ||
+        DrugForms.lotion ||
+        DrugForms.shampoo ||
+        DrugForms.mouthwash =>
+          'bottle',
+        _ => null,
+      };
+    }
+    if (packaging == null) return;
+    final pack = packSizeText(facts, context.l10n);
+    setState(() {
+      _packaging = packaging!;
+      if (strips != null && perStrip != null) {
+        _byPackages = true;
+        _packages.text = '1';
+        _hasInner = true;
+        _innerType = 'strip';
+        _innerPerPackage.text = '$strips';
+        _unitsPerPack.text = '$perStrip';
+      } else if (units != null) {
+        _byPackages = true;
+        _packages.text = '1';
+        _hasInner = false;
+        _unitsPerPack.text = '$units';
+      }
+      _catalogPack = pack ?? packagingLabel(packaging, context.l10n);
+    });
   }
 
   @override
@@ -276,7 +365,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
         builder: (_) => const StorageMedicineScreen(),
       ),
     );
-    if (id != null && mounted) setState(() => _medicationId = id);
+    if (id != null && mounted) _selectMedication(id);
   }
 
   /// Opened packs that can be drawn tablet by tablet.
@@ -492,7 +581,7 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
                       if (v == _newStorageMedicine) {
                         _createStorageMedicine();
                       } else {
-                        setState(() => _medicationId = v);
+                        _selectMedication(v);
                       }
                     },
             ),
@@ -500,6 +589,16 @@ class _BatchFormScreenState extends ConsumerState<BatchFormScreen> {
               Text(
                 l10n.storageOnlyHint,
                 style: Theme.of(context).textTheme.bodySmall,
+              ),
+            if (_catalogPack != null)
+              Card(
+                child: ListTile(
+                  leading: Icon(
+                    Icons.auto_awesome_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(l10n.stockFromCatalog(_catalogPack!)),
+                ),
               ),
             if (quantityLocked)
               Card(
@@ -744,13 +843,19 @@ class _StorageMedicineScreenState extends ConsumerState<StorageMedicineScreen> {
     super.dispose();
   }
 
-  void _selected(DrugSearchResult result) => setState(() {
-        _catalogId = result.catalogId;
-        _catalogPrice = result.priceEgp;
-        _nameEn.text = result.nameEn;
-        _nameAr.text = result.nameAr;
-        _showForm = true;
-      });
+  void _selected(DrugSearchResult result) {
+    // Pre-filled from the catalog; the user can still edit everything.
+    final suggestion = CatalogSuggestion.from(result, context.l10n);
+    setState(() {
+      _catalogId = result.catalogId;
+      _catalogPrice = result.priceEgp;
+      _nameEn.text = suggestion.nameEn;
+      _nameAr.text = suggestion.nameAr;
+      _strength.text = suggestion.strength;
+      _unit = suggestion.doseUnit ?? _unit;
+      _showForm = true;
+    });
+  }
 
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;

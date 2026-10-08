@@ -10,6 +10,8 @@ private nurses.**
 
 Flutter · Riverpod · Drift/SQLite · Arabic & English · Light & dark
 
+**English** · [العربية](README.ar.md)
+
 </div>
 
 Everything is stored on the phone in SQLite. There is no backend, no account
@@ -17,9 +19,9 @@ and no cloud: the app works fully offline, by design (see the
 [specification](docs/specification.md)).
 
 <p align="center">
-  <img src="docs/screenshots/today.jpg" width="220" alt="Today dashboard">
-  <img src="docs/screenshots/today-dark.jpg" width="220" alt="Today in dark mode">
-  <img src="docs/screenshots/today-arabic.jpg" width="220" alt="Today in Arabic (RTL)">
+  <img src="docs/screenshots/en/today.png" width="230" alt="Today: the day's doses, alerts and next appointment">
+  <img src="docs/screenshots/en/catalog-search.png" width="230" alt="Drug catalog search showing each form and pack size">
+  <img src="docs/screenshots/en/today-dark.png" width="230" alt="Today in dark mode">
 </p>
 
 ## Highlights
@@ -29,8 +31,9 @@ and no cloud: the app works fully offline, by design (see the
 Dose reminders pop up at the top of the screen like a chat message, with
 buttons you can press without opening the app:
 
-<p align="left">
-  <img src="docs/screenshots/pop-up-message.jpg" width="220" alt="pop-up-message">
+<p align="center">
+  <img src="docs/screenshots/pop-up-message.jpg" width="230" alt="A dose reminder on an Android phone with Take and Snooze buttons">
+  <img src="docs/screenshots/en/reminder-sound.png" width="230" alt="Choosing the reminder sound">
 </p>
 
 - **✓ Take** records the dose, deducts stock (first expiring first) and
@@ -49,18 +52,22 @@ buttons you can press without opening the app:
   enough stock), you're asked to open the app instead.
 
 Reminders use a high-priority channel so Android shows them as heads-up
-banners. OS notifications don't exist on the web build, so this part can't
-be screenshotted there.
+banners. The first screenshot above is from a real phone.
 
 ### Screenshots
 
-| Dose plan set once | Record a dose taken earlier | Medicines |
+All screenshots are at a phone resolution (1080 × 2340). The same screens in
+Arabic are in the [Arabic README](README.ar.md).
+
+| Search the drug catalog | Filled in from the catalog | Other forms and sizes |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/dose-plan.jpg" width="220"> | <img src="docs/screenshots/record-earlier.jpg" width="220"> | <img src="docs/screenshots/medicines.jpg" width="220"> |
+| <img src="docs/screenshots/en/catalog-search.png" width="230"> | <img src="docs/screenshots/en/catalog-autofill.png" width="230"> | <img src="docs/screenshots/en/catalog-other-forms.png" width="230"> |
+| **Dose plan set once** | **Record a dose taken earlier** | **Medicines** |
+| <img src="docs/screenshots/en/dose-plan.png" width="230"> | <img src="docs/screenshots/en/record-earlier.png" width="230"> | <img src="docs/screenshots/en/medicines.png" width="230"> |
 | **Stock overview** | **Box, strips and an opened strip** | **Vitals with context** |
-| <img src="docs/screenshots/stock.jpg" width="220"> | <img src="docs/screenshots/stock-batch.jpg" width="220"> | <img src="docs/screenshots/vitals.jpg" width="220"> |
-| **Doctor report** | | |
-| <img src="docs/screenshots/reports.jpg" width="220"> | | |
+| <img src="docs/screenshots/en/stock.png" width="230"> | <img src="docs/screenshots/en/stock-batch.png" width="230"> | <img src="docs/screenshots/en/vitals.png" width="230"> |
+| **Doctor report** | **Today** | **Dark mode** |
+| <img src="docs/screenshots/en/reports.png" width="230"> | <img src="docs/screenshots/en/today.png" width="230"> | <img src="docs/screenshots/en/today-dark.png" width="230"> |
 
 ## Features
 
@@ -70,6 +77,10 @@ be screenshotted there.
   - Past actions keep their caregiver even after that caregiver is removed.
 - **Medicines**
   - An offline Egyptian drug catalog: 25,065 entries with English and Arabic search.
+  - **Auto-fill from the catalog:** picking a medicine fills in the name, strength, dose unit (tablet, capsule, ml, drops…), dosage form, route and scientific name. Every filled field is marked ✨ and stays editable, because these are suggestions, not facts.
+  - **Same name, different form:** search results show each variant's form, strength and pack size (for example *Suspension · 312 mg/5 ml · 80 ml* or *Tablet (film-coated) · 625 mg · 10 tablets*). After picking one, *Other forms and sizes* switches to the syrup, drops or vial. Fields the user already changed are kept.
+  - **Pack size for stock:** adding stock for a catalog medicine suggests the pack, for example a box of 30 tablets, 25 strips × 10 tablets, a 120 ml bottle, or a single vial.
+  - Withdrawn, unregistered-import and unavailable products are labelled in search.
   - Custom medicines, separate English and Arabic instructions.
   - As-needed (PRN) medicines with a maximum daily quantity.
   - Archive, restore and trash.
@@ -151,13 +162,23 @@ alarms & reminders so doses fire on time.
 ### Demo data
 
 A demo build seeds two patients, four medicines, stock, vitals and an
-appointment. It was used for the screenshots above:
+appointment:
 
 ```bash
 flutter build web --dart-define=BELMIAD_DEMO=true -o build/web_demo
 ```
 
 Normal builds never include the demo data.
+
+### Regenerating the screenshots
+
+The README screenshots are rendered from the same demo data at 1080 × 2340,
+in English and Arabic, with the real fonts and drug catalog. To regenerate
+`docs/screenshots/en` and `docs/screenshots/ar` after changing the UI, run:
+
+```bash
+flutter test test_screenshots
+```
 
 ### App icon
 
@@ -192,6 +213,26 @@ After regenerating, bump `catalogAssetVersion` in
 the new catalog. Patient data lives in a separate database and isn't
 touched.
 
+While building, `lib/features/catalog/domain/catalog_name_parser.dart` reads
+these from each English name:
+
+- the brand;
+- the strength (`500 mg`, `160/25 mg`, `250 mg/5 ml`, `0.1%`);
+- the form and its details (film-coated, extended-release, chewable…);
+- the pack count;
+- strips × units, where the name gives them;
+- the bottle or tube size;
+- availability notes.
+
+It also stores the scientific name and route from the CSV. Names are typed by
+hand in the source data, so the result is a best-effort suggestion. In the
+current data it finds a pack count for 99% of tablets and capsules, and a
+size for 96% of syrups and creams. To review the extraction in a spreadsheet:
+
+```bash
+dart run tool/review_catalog_parser.dart review.csv
+```
+
 ### Tests
 
 ```bash
@@ -207,7 +248,8 @@ The tests are unit, Drift integration, widget and PDF tests. They cover:
 - dose generation and timezone changes;
 - notification actions and deduplication;
 - backup and merge, catalog search, and RTL/LTR layouts;
-- reminder sounds, and rescheduling reminders when the sound changes.
+- reminder sounds, and rescheduling reminders when the sound changes;
+- reading catalog names, and filling a new medicine in from the catalog.
 
 `test/layout_audit_test.dart` opens every screen on small, regular and
 large phones and on portrait and landscape tablets. It does this in English
@@ -229,7 +271,7 @@ directly. Dose and stock operations each run in a single Drift transaction.
 ├── docs/
 │   ├── specification.md         product specification
 │   ├── implementation-phases.md delivery plan
-│   └── screenshots/             images used in this README
+│   └── screenshots/             README images (en/, ar/)
 ├── lib/
 │   ├── app/        theme, router, providers, shared widgets, demo seed
 │   ├── core/       database, time, files, notifications, permissions,
@@ -240,6 +282,7 @@ directly. Dose and stock operations each run in a single Drift transaction.
 │   │               └── <feature>/{presentation,application,domain,data}
 │   └── l10n/       ARB files and generated localizations
 ├── test/           unit, integration and widget tests
+├── test_screenshots/  renders the README screenshots
 └── tool/           development scripts (catalog builder, reminder tones)
 ```
 

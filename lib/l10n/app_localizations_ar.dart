@@ -2268,4 +2268,245 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get increase => 'زيادة';
+
+  @override
+  String get drugForm_tablet => 'قرص';
+
+  @override
+  String get drugForm_capsule => 'كبسولة';
+
+  @override
+  String get drugForm_sachet => 'كيس';
+
+  @override
+  String get drugForm_ampoule => 'أمبول';
+
+  @override
+  String get drugForm_vial => 'فيال';
+
+  @override
+  String get drugForm_syringe => 'حقنة مُعبأة';
+
+  @override
+  String get drugForm_pen => 'قلم حقن';
+
+  @override
+  String get drugForm_suppository => 'لبوس';
+
+  @override
+  String get drugForm_lozenge => 'أقراص استحلاب';
+
+  @override
+  String get drugForm_patch => 'لصقة';
+
+  @override
+  String get drugForm_film => 'شريط فموي';
+
+  @override
+  String get drugForm_piece => 'قطعة';
+
+  @override
+  String get drugForm_teaBag => 'كيس شاي';
+
+  @override
+  String get drugForm_syrup => 'شراب';
+
+  @override
+  String get drugForm_suspension => 'معلق';
+
+  @override
+  String get drugForm_solution => 'محلول';
+
+  @override
+  String get drugForm_drops => 'نقط';
+
+  @override
+  String get drugForm_eyeDrops => 'قطرة عين';
+
+  @override
+  String get drugForm_earDrops => 'قطرة أذن';
+
+  @override
+  String get drugForm_nasalSpray => 'بخاخ أنف';
+
+  @override
+  String get drugForm_spray => 'بخاخ';
+
+  @override
+  String get drugForm_inhaler => 'بخاخ استنشاق';
+
+  @override
+  String get drugForm_infusion => 'محلول وريدي';
+
+  @override
+  String get drugForm_injection => 'حقن';
+
+  @override
+  String get drugForm_cream => 'كريم';
+
+  @override
+  String get drugForm_ointment => 'مرهم';
+
+  @override
+  String get drugForm_gel => 'جل';
+
+  @override
+  String get drugForm_lotion => 'لوشن';
+
+  @override
+  String get drugForm_shampoo => 'شامبو';
+
+  @override
+  String get drugForm_mouthwash => 'غسول فم';
+
+  @override
+  String get drugForm_powder => 'بودرة';
+
+  @override
+  String get drugForm_emulsion => 'مستحلب';
+
+  @override
+  String get drugForm_oil => 'زيت';
+
+  @override
+  String get drugForm_soap => 'غسول';
+
+  @override
+  String get drugDetail_filmCoated => 'مغلف';
+
+  @override
+  String get drugDetail_coated => 'مغلف';
+
+  @override
+  String get drugDetail_sugarCoated => 'مغلف بالسكر';
+
+  @override
+  String get drugDetail_entericCoated => 'مقاوم لحمض المعدة';
+
+  @override
+  String get drugDetail_extendedRelease => 'ممتد المفعول';
+
+  @override
+  String get drugDetail_delayedRelease => 'متأخر الإطلاق';
+
+  @override
+  String get drugDetail_chewable => 'للمضغ';
+
+  @override
+  String get drugDetail_effervescent => 'فوار';
+
+  @override
+  String get drugDetail_orodispersible => 'يذوب في الفم';
+
+  @override
+  String get drugDetail_dispersible => 'قابل للذوبان';
+
+  @override
+  String get drugDetail_sublingual => 'تحت اللسان';
+
+  @override
+  String get drugDetail_scored => 'قابل للقسمة';
+
+  @override
+  String get drugDetail_softGel => 'جيلاتيني لين';
+
+  @override
+  String get drugDetail_hardGelatin => 'جيلاتيني صلب';
+
+  @override
+  String get drugDetail_vaginal => 'مهبلي';
+
+  @override
+  String get drugDetail_rectal => 'شرجي';
+
+  @override
+  String get drugDetail_paediatric => 'للأطفال';
+
+  @override
+  String get drugDetail_intravenous => 'وريدي';
+
+  @override
+  String get drugDetail_intramuscular => 'عضلي';
+
+  @override
+  String get drugDetail_subcutaneous => 'تحت الجلد';
+
+  @override
+  String get drugDetail_transdermal => 'عبر الجلد';
+
+  @override
+  String get drugRoute_oral => 'بالفم';
+
+  @override
+  String get drugRoute_topical => 'موضعي';
+
+  @override
+  String get drugRoute_injection => 'حقن';
+
+  @override
+  String get drugRoute_eye => 'العين';
+
+  @override
+  String get drugRoute_ear => 'الأذن';
+
+  @override
+  String get drugRoute_nasal => 'الأنف';
+
+  @override
+  String get drugRoute_inhalation => 'استنشاق';
+
+  @override
+  String get drugRoute_mouth => 'الفم والحلق';
+
+  @override
+  String get drugRoute_vaginal => 'مهبلي';
+
+  @override
+  String get drugRoute_rectal => 'شرجي';
+
+  @override
+  String get catalogAutofillNote =>
+      'تم ملء البيانات من دليل الأدوية لتوفير الكتابة. راجعها من فضلك، ويمكنك تعديل أي شيء قبل الحفظ.';
+
+  @override
+  String get catalogSuggested => 'مقترح من الدليل';
+
+  @override
+  String get otherFormsHint =>
+      'نفس الدواء بشكل أو تركيز أو حجم عبوة مختلف. اختر الموجود لديك.';
+
+  @override
+  String get catalogFlagCancelled => 'تم سحبه من السوق';
+
+  @override
+  String get catalogFlagIllegalImport => 'استيراد غير مسجل';
+
+  @override
+  String get catalogFlagNotAvailable => 'غير متوفر حاليًا';
+
+  @override
+  String get catalogFlagHospitalOnly => 'للمستشفيات فقط';
+
+  @override
+  String get catalogVariantSelected => 'المختار';
+
+  @override
+  String catalogSourceName(String name) {
+    return 'اسم الدليل: $name';
+  }
+
+  @override
+  String otherFormsTitle(int count) {
+    return 'أشكال وأحجام أخرى ($count)';
+  }
+
+  @override
+  String catalogPackOf(int count, String unit) {
+    return '$count $unit';
+  }
+
+  @override
+  String stockFromCatalog(String pack) {
+    return 'مقترح من دليل الأدوية: $pack. تأكد أنه يطابق العبوة لديك.';
+  }
 }
